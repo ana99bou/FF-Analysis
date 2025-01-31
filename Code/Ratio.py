@@ -3,20 +3,81 @@ import Basic
 
 # Building the ratio and the ratio of jackknife blokcs
 
-def build_Ratio(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,pre,dsfit,bsfit):
+def build_Ratio(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,ed,mb,pre,dsfit,bsfit):
     avn0 = np.zeros(dt+1)
     errn0=np.zeros(shape=(dt+1))
-    for j in range(dt+1):    
-        avn0[j] = pre * (Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq) / ( np.sqrt(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]) * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * md) / (np.exp(-md * j) * np.exp(-mb * (dt - j))))
+    ratiojack=np.zeros(shape=(dt+1,nconf+1))
+    for j in range(dt+1):   
+        ratiojack[j][nconf]=pre * (Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq) / ( np.sqrt(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]) * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * ed) / (np.exp(-ed * j) * np.exp(-mb * (dt - j))))
+        #avn0[j] = pre * (Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq) / ( np.sqrt(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]) * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * md) / (np.exp(-md * j) * np.exp(-mb * (dt - j))))
         x=0
         for i in range(nconf):
-            x=x+((Basic.sum_with_prefacs(jb3pt[:,j,i], pref[nsq],nsq)/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))*pre-avn0[j])**2
+            #x=x+((Basic.sum_with_prefacs(jb3pt[:,j,i], pref[nsq],nsq)/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))*pre-avn0[j])**2
+            ratiojack[j][i]=(Basic.sum_with_prefacs(jb3pt[:,j,i], pref[nsq],nsq)/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))*pre
+            x=x+(ratiojack[j][i]-ratiojack[j][nconf])**2
         errn0[j]=np.sqrt((nconf-1)/nconf*x) 
     avn0[np.isnan(avn0)] = 0
     errn0[np.isnan(errn0)] = 0
-    return avn0,errn0
+    return ratiojack,errn0
+
+'''
+def build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,pre,dsfit,bsfit,A0comp,A1comp):
+    avn0 = np.zeros(dt+1)
+    errn0=np.zeros(shape=(dt+1))
+    ratiojack=np.zeros(shape=(dt+1,nconf+1))
+    for j in range(dt+1):   
+        ratiojack[j][nconf]=pre * (Basic.sum_with_prefacs_A2(jb3pt[:,j,nconf], pref[nsq], A0comp[j,nconf], A1comp[j,nconf], mb, md, ed, nsq)/ ( np.sqrt(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]) * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * ed) / (np.exp(-ed * j) * np.exp(-mb * (dt - j))))
+        #avn0[j] = pre * (Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq) / ( np.sqrt(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]) * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * md) / (np.exp(-md * j) * np.exp(-mb * (dt - j))))
+        x=0
+        for i in range(nconf):
+            #x=x+((Basic.sum_with_prefacs(jb3pt[:,j,i], pref[nsq],nsq)/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))*pre-avn0[j])**2
+            ratiojack[j][i]=(Basic.sum_with_prefacs_A2(jb3pt[:,j,i], pref[nsq], A0comp[j,i], A1comp[j,i], mb, md, ed, nsq)/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))*pre
+            x=x+(ratiojack[j][i]-ratiojack[j][nconf])**2
+        errn0[j]=np.sqrt((nconf-1)/nconf*x) 
+    avn0[np.isnan(avn0)] = 0
+    errn0[np.isnan(errn0)] = 0
+    return ratiojack,errn0
+'''
+
+##Need ot build ratio over one comp and then average in this case, num gives the number in the list
+
+def build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp):
+    avn0 = np.zeros(dt+1)
+    errn0=np.zeros(shape=(dt+1))
+    ratiojack=np.zeros(shape=(dt+1,nconf+1))
+    for j in range(dt+1):   
+        print(build_A2(nconf,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp[j,nconf],A1comp[j,nconf]))
+        ratiojack[j][nconf]=pre*build_A2(nconf,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp[j,nconf],A1comp[j,nconf])
+        #avn0[j] = pre * (Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq) / ( np.sqrt(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]) * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * md) / (np.exp(-md * j) * np.exp(-mb * (dt - j))))
+        x=0
+        for i in range(nconf):
+            ratiojack[j][i]=pre*build_A2(i,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,i,md,mb,ed,dsfit,bsfit,A0comp[j,i],A1comp[j,i])
+            x=x+(ratiojack[j][i]-ratiojack[j][nconf])**2
+        errn0[j]=np.sqrt((nconf-1)/nconf*x) 
+    avn0[np.isnan(avn0)] = 0
+    errn0[np.isnan(errn0)] = 0
+    return ratiojack,errn0
 
 
+def build_A2(i,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp,A1comp):
+    total=0
+    pref=pref[nsq]
+    #qsq=mb**2-md**2+2*ed**2-2*md*ed
+    #qsq=(mb-ed)**2+nsq
+    L=48
+    conv=(2*np.pi/L)
+    #conv=1
+    qsq=mb**2+ed**2-2*mb*ed
+    #qsq=(mb-ed)**2+(2*np.pi/L)**2*nsq
+    for num in range(len(pref)):
+        total+=1/(pref[num][1]**2*conv**2)*1/(1+(md**2-mb**2)/qsq)*(-2*(pref[num][1]**2*conv**2)*ed*mb/(qsq*md)*A0comp+(mb+md)*(1+(pref[num][1]**2*conv**2)/md**2+(ed*mb*(pref[num][1]**2*conv**2))/(md**2*qsq))*A1comp-pref[num][0]*build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit))
+    return total/len(pref)
+
+def build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit):
+    if i == nconf: return (jb3pt[num,j,i]/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i])))*np.sqrt((4*ed*mb)/(np.exp(-ed*j)*np.exp(-mb*(dt-j))))
+    else: return (jb3pt[num,j,i]/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))
+
+'''
 def build_Ratio_A2(jb3pt,jb3pt2,jbdx,jbdy,jbdz,jbb,pref,pref2,dt,nsq,nconf,md,mb,pre,dsfit,bsfit):
     avn0 = np.zeros(dt+1)
     errn0=np.zeros(shape=(dt+1))
@@ -31,3 +92,34 @@ def build_Ratio_A2(jb3pt,jb3pt2,jbdx,jbdy,jbdz,jbb,pref,pref2,dt,nsq,nconf,md,mb
     avn0[np.isnan(avn0)] = 0
     errn0[np.isnan(errn0)] = 0
     return avn0,errn0
+
+#alles passiert in basic sum
+def build_Ratio_A2_new(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,pre,dsfit,bsfit,A0comp,A1comp):
+    avn0 = np.zeros(dt+1)
+    errn0=np.zeros(shape=(dt+1))
+    for j in range(dt+1):    
+        avn0[j]=pre*(Basic.sum_with_prefacs_A2(jb3pt[:,j,nconf], pref, A0comp, A1comp, mb, md, ed, nsq))/(np.sqrt(1/3*(jbdx[j,nconf]+jbdy[j,nconf]+jbdz[j,nconf])*jbb[dt-j,nconf]))*np.sqrt((4*mb*md)/(np.exp(-md*j)*np.exp(-mb*(dt-j))))
+        x=0
+        for i in range(nconf):
+           x=x+(pre*(Basic.sum_with_prefacs(jb3pt2[:,j,i],pref2[nsq], nsq)+Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq))/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i]))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))-avn0[j])**2
+           #x=x+(pre*(Basic.sum_with_prefacs_A2(jb3pt[:,j,i],pref[nsq],jb3pt2[:,j,nconf],pref2[nsq], nsq))/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i]))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))-avn0[j])**2
+        errn0[j]=np.sqrt((nconf-1)/nconf*x) 
+    avn0[np.isnan(avn0)] = 0
+    errn0[np.isnan(errn0)] = 0
+    return avn0,errn0
+
+
+
+
+def build_Covarianz(reg_up,reg_low,ts,nconf):
+    cut=ts/2-1-reg_up
+    cut1=ts/2+1-reg_up
+    covmat=np.zeros(shape=(int(ts/2-1-reg_low-cut),int(ts/2-1-reg_low-cut)))
+    for t1 in range(int(ts/2-1-reg_low-cut)):
+        for t2 in range(int(ts/2-1-reg_low-cut)):
+            x=0
+            for i in range(nconf):  
+                #x=x+(Basic.sum_with_prefacs(jb3pt[:,t1+reg_low,i], pref[nsq],nsq)/(np.sqrt(1/3*(jbdx[t1+reg_low,i]+jbdy[t1+reg_low,i]+jbdz[t1+reg_low,i])*jbb[dt-t1+reg_low,i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-(t1+reg_low)))))*pre
+            covmat[t1][t2]=x
+            covmat[t2][t1]=x  
+'''        

@@ -35,10 +35,12 @@ def sum_with_prefacs(lst,pref,nsq):
         total+=pref[i]*lst[i]
     return total/len(lst)
 
-def sum_with_prefacs_A2(lst,lst2,pref,pref2,nsq):
+#include k^2 information as second input in pref list in terms of pref [i,1]
+def sum_with_prefacs_A2(lst,pref,A0comp,A1comp,mb,md,ed,nsq):
     total=0
+    qsq=mb**2-md**2+2*ed**2-2*md*ed
     for i in range(0,len(lst)):
-        total+=pref[i]*lst[i]+pref2[i]*lst2[i]
+        total+=1/pref[i][1]**2*1/(1+(md**2-mb**2)/qsq)*(-2*pref[i][1]**2*ed*mb/(qsq*md)*A0comp+(mb+md)*(1+pref[i][1]**2/md**2+(ed*mb*pref[i][1]**2)/(md**2*qsq))*A1comp-pref[i][0]*lst[i])
     return total/len(lst)
         
 def sum_with_prefacs_jack(lst,pref,nsq,j,i):

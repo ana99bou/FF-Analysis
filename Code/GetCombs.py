@@ -100,17 +100,18 @@ def get_moms_and_prefacs_V():
 def get_moms_and_prefacs_A0():
     directions = ["GX", "GY", "GZ"]
     prefactors = {"GX": 1, "GY": -1, "GZ": 1}
+    direction_positions = {"GX": 1, "GY": 2, "GZ": 3}  # Added mapping for positions
     momentum_list = []
     prefactor_list = []
-
+    
     for nsq in range(6):
         nsq_momentum = []
         nsq_prefactors = []
-
         for dx in range(-nsq, nsq + 1):
             for dy in range(-nsq, nsq + 1):
                 for dz in range(-nsq, nsq + 1):
                     if dx**2 + dy**2 + dz**2 == nsq:  # Check for correct n^2
+                        momenta = [dx, dy, dz]  # Store momenta for easy indexing
                         for direction in directions:
                             if (direction == "GX" and dx != 0) or \
                                (direction == "GY" and dy != 0) or \
@@ -120,12 +121,17 @@ def get_moms_and_prefacs_A0():
                                     f"n2_{nsq}/{dx}_{dy}_{dz}"
                                 )
                                 nsq_momentum.append(element)
-                                nsq_prefactors.append(prefactors[direction])
-
+                                # Get the position based on direction and corresponding momentum
+                                pos = direction_positions[direction] - 1  # -1 for 0-based indexing
+                                second_element = momenta[pos]
+                                nsq_prefactors.append([prefactors[direction], second_element])
         momentum_list.append(nsq_momentum)
         prefactor_list.append(nsq_prefactors)
-
     return momentum_list, prefactor_list
+
+print(get_moms_and_prefacs_A0())
+
+
 
 def get_moms_and_prefacs_A1():
     directions = ["GX", "GY", "GZ"]
@@ -171,13 +177,6 @@ def get_moms_and_prefacs_A1():
         prefactor_list.append(nsq_prefactors)
 
     return momentum_list, prefactor_list
-
-'''
-def get_moms_and_prefacs_A2():
-    mom1,pref1=get_moms_and_prefacs_A0()
-    mom2,pref2=get_moms_and_prefacs_A1()
-    return mom1,pref1,mom2,pref2
-'''
 
 
 def combine_momentum_lists():
@@ -249,55 +248,59 @@ def combine_momentum_lists():
     
     return combined_lists
 
-def compute_combined_prefactors(x):
+
+
+def compute_combined_prefactors(mb, md, ed):
     combined_lists=combine_momentum_lists()
-    def compute_prefactor_A0(entry):
-        # Map for final state directions
-        direction_map = {"GX": 1, "GY": 2, "GZ": 3}
-        # Map for operator directions
-        operator_map = {"GammaXGamma5": 1, "GammaYGamma5": 2, "GammaZGamma5": 3}
-        
-        # Split the string into its components
+    def get_k_and_k_squared(entry):
+        """
+        Extract k value and k² based on the direction and relevant momentum component
+        e.g., for GX use x component, for GY use y component, for GZ use z component
+        """
         parts = entry.split("/")
-        final_state = parts[0]  # e.g., final_state_GX
-        operator = parts[1]    # e.g., operator_GammaXGamma5
-        momentum_components = parts[3]  # e.g., "1_0_0"
+        direction = parts[0].split("_")[2]  # GX, GY, or GZ
+        momentum = parts[3].split("_")  # e.g., ["2", "1", "0"]
         
-        # Extract the direction from the final_state
-        direction = final_state.split("_")[2]  # Extract GX, GY, GZ
-        # Extract the operator direction
-        operator_direction = operator.split("_")[1]  # Extract GammaXGamma5, etc.
+        # Convert momentum components to integers
+        dx, dy, dz = map(int, momentum)
         
-        # Get l and j from the direction and operator_direction
-        l = direction_map[direction]
-        j = operator_map[operator_direction]
-        
-        # Extract momentum components dx, dy, dz
-        dx, dy, dz = map(int, momentum_components.split("_"))
-        momentum_values = [dx, dy, dz]
-        
-        # Calculate prefactor: jth * lth / x and include -1 if j == l
-        prefactor = (momentum_values[j - 1] * momentum_values[l - 1]) / x
-        if j == l:
-            prefactor -= 1
+        # Return appropriate component based on direction
+        if direction == "GX":
+            k = dx
+            k_squared = dx * dx
+        elif direction == "GY":
+            k = dy
+            k_squared = dy * dy
+        elif direction == "GZ":
+            k = dz
+            k_squared = dz * dz
             
-        return prefactor
+        return abs(k), k_squared
+        
+    def compute_new_prefactor(k):
+        """Compute new prefactor with given formula"""
+        k_squared = k * k
+        numerator = k_squared * (ed * mb - md * md)
+        denominator = (mb - ed) * (mb - ed) * md * md
+        
+        return (numerator/denominator - 1)
 
     def get_prefactors(entry_pair):
         first_entry = entry_pair[0]
         second_entry = entry_pair[1]
         
-        # First prefactor: based on X/Z vs Y in first string
-        has_Y_first = "final_state_GY" in first_entry
-        prefactor1 = -1 if has_Y_first else 1
+        k, k_squared = get_k_and_k_squared(first_entry)
+        k_squared_factor = 1.0 / k_squared if k_squared > 0 else 1.0
         
-        # Second prefactor: computed from function on first string
-        prefactor2 = compute_prefactor_A0(first_entry)
-        # Add -1 factor if second string has Y
+        has_Y_first = "final_state_GY" in first_entry
+        prefactor1 = (-1 if has_Y_first else 1) * k_squared_factor
+        
+        prefactor2 = compute_new_prefactor(k) * k_squared_factor
+       
         if "final_state_GY" in second_entry:
             prefactor2 *= -1
         
-        return [prefactor1, prefactor2]
+        return [prefactor1, prefactor2, k_squared]
 
     prefactor_lists = []
     
@@ -314,15 +317,15 @@ def compute_combined_prefactors(x):
     
     return prefactor_lists
 
-def get_moms_and_prefacs_A2(x):
+
+def get_moms_and_prefacs_A2(mb,md,ed):
     A0=[]
     A1=[]
     prefA0=[]
     prefA1=[]
-    for i in range(5):
+    for i in range(6):
         A0.append([sublist[0] for sublist in combine_momentum_lists()[i]])
         A1.append([sublist[1] for sublist in combine_momentum_lists()[i]])#
-        prefA0.append([sublist[0] for sublist in compute_combined_prefactors(x)[i]])
-        prefA1.append([sublist[1] for sublist in compute_combined_prefactors(x)[i]])
+        prefA0.append([sublist[0] for sublist in compute_combined_prefactors(mb,md,ed)[i]])
+        prefA1.append([sublist[1] for sublist in compute_combined_prefactors(mb,md,ed)[i]])
     return A0,prefA0,A1,prefA1
-print(get_moms_and_prefacs_A2(10))
