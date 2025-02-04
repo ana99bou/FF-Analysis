@@ -67,10 +67,10 @@ def build_A2(i,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit
     L=48
     conv=(2*np.pi/L)
     #conv=1
-    qsq=mb**2+ed**2-2*mb*ed
+    qsq=mb**2+md**2-2*mb*ed
     #qsq=(mb-ed)**2+(2*np.pi/L)**2*nsq
     for num in range(len(pref)):
-        total+=1/(pref[num][1]**2*conv**2)*1/(1+(md**2-mb**2)/qsq)*(-2*(pref[num][1]**2*conv**2)*ed*mb/(qsq*md)*A0comp+(mb+md)*(1+(pref[num][1]**2*conv**2)/md**2+(ed*mb*(pref[num][1]**2*conv**2))/(md**2*qsq))*A1comp-pref[num][0]*build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit))
+        total+=1/(pref[num][1]**2*conv**2)*1/(1+(md**2-mb**2)/qsq)*(-2*(pref[num][1]**2*conv**2)*ed*mb/(qsq*md)*A0comp+(mb+md)*(1+(pref[num][1]**2*conv**2)/qsq**2+(ed*mb*(pref[num][1]**2*conv**2))/(md**2*qsq))*A1comp-pref[num][0]*build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit))
     return total/len(pref)
 
 def build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit):

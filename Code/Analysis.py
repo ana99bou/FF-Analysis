@@ -12,8 +12,8 @@ import Basic
 import Regression
  
 #########Choose Params
-FF='A2'
-nsq=5
+FF='A0'
+nsq=1
 ensemble='F1S'
 cmass=Ens.getCmass(ensemble)[0] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 reg_low=18
