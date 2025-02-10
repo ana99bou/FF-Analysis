@@ -53,6 +53,8 @@ def build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit
         for i in range(nconf):
             ratiojack[j][i]=pre*build_A2(i,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,i,md,mb,ed,dsfit,bsfit,A0comp[j,i],A1comp[j,i])
             x=x+(ratiojack[j][i]-ratiojack[j][nconf])**2
+            #print(i,j)
+            #print(ratiojack[j][i]-ratiojack[j][nconf])
         errn0[j]=np.sqrt((nconf-1)/nconf*x) 
     avn0[np.isnan(avn0)] = 0
     errn0[np.isnan(errn0)] = 0
@@ -67,10 +69,12 @@ def build_A2(i,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit
     #L=48
     conv=(2*np.pi/L)
     #conv=1
-    qsq=mb**2+ed**2-2*mb*ed
+    qsq=mb**2+md**2-2*mb*ed
     #qsq=(mb-ed)**2+(2*np.pi/L)**2*nsq
     for num in range(len(pref)):
-        total+=1/(pref[num][1]**2*conv**2)*1/(1+(md**2-mb**2)/qsq)*(-2*(pref[num][1]**2*conv**2)*ed*mb/(qsq*md)*A0comp+(mb+md)*(1+(pref[num][1]**2*conv**2)/md**2+(ed*mb*(pref[num][1]**2*conv**2))/(md**2*qsq))*A1comp-pref[num][0]*build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit))
+        #total+=1/(pref[num][1]**2*conv**2)*1/(1+(md**2-mb**2)/qsq)*(-2*(pref[num][1]**2*conv**2)*ed*mb/(qsq*md)*A0comp+(mb+md)*(1+(pref[num][1]**2*conv**2)/md**2+(ed*mb*(pref[num][1]**2*conv**2))/(md**2*qsq))*A1comp-pref[num][0]*build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit))
+        print(-2*ed*mb/(qsq*md)*A0comp+(mb+md)*(1/md**2+(ed*mb)/(md**2*qsq))*A1comp+(mb+md)/(pref[num][1]**2*conv**2)*A1comp,-1/(pref[num][1]**2*conv**2)*pref[num][0]*build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit))
+        total+=qsq/(qsq+md**2-mb**2)*(-2*ed*mb/(qsq*md)*A0comp+(mb+md)*(1/md**2+(ed*mb)/(md**2*qsq))*A1comp+(mb+md)/(pref[num][1]**2*conv**2)*A1comp-1/(pref[num][1]**2*conv**2)*pref[num][0]*build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit))
     return total/len(pref)
 
 def build_mat(num,j,i,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit):
