@@ -20,18 +20,18 @@ pre1=-(mb+md0)/(2*mb)
 pre2=pre1
 pre4=pre1
 
-nsq3=pd.read_csv('./Ratios/V/V-nsq3.txt',sep=' ',header=None)
-nsq1=pd.read_csv('./Ratios/V/V-nsq1.txt',sep=' ',header=None)
-nsq2=pd.read_csv('./Ratios/V/V-nsq2.txt',sep=' ',header=None)
-nsq4=pd.read_csv('./Ratios/V/V-nsq4.txt',sep=' ',header=None)
-nsq5=pd.read_csv('./Ratios/V/V-nsq5.txt',sep=' ',header=None)
+nsq3=pd.read_csv('Ratios/V/V-nsq3.txt', sep=' ', header=None)
+nsq1=pd.read_csv('Ratios/V/V-nsq1.txt', sep=' ', header=None)
+nsq2=pd.read_csv('Ratios/V/V-nsq2.txt', sep=' ', header=None)
+nsq4=pd.read_csv('Ratios/V/V-nsq4.txt', sep=' ', header=None)
+nsq5=pd.read_csv('Ratios/V/V-nsq5.txt', sep=' ', header=None)
 
 #nsq0plt=pd.read_csv('./Fits/hA1-Av-nsq0-Fit.csv',sep='\s')
-nsq1plt=pd.read_csv('./Fits/V-Av-nsq1-Fit.csv',sep='\s')
-nsq2plt=pd.read_csv('./Fits/V-Av-nsq2-Fit.csv',sep='\s')
-nsq3plt=pd.read_csv('./Fits/V-Av-nsq3-Fit.csv',sep='\s')
-nsq4plt=pd.read_csv('./Fits/V-Av-nsq4-Fit.csv',sep='\s')
-nsq5plt=pd.read_csv('./Fits/V-Av-nsq5-Fit.csv',sep='\s')
+nsq1plt=pd.read_csv('Fits/V-Av-nsq1-Fit.csv', sep='\s')
+nsq2plt=pd.read_csv('Fits/V-Av-nsq2-Fit.csv', sep='\s')
+nsq3plt=pd.read_csv('Fits/V-Av-nsq3-Fit.csv', sep='\s')
+nsq4plt=pd.read_csv('Fits/V-Av-nsq4-Fit.csv', sep='\s')
+nsq5plt=pd.read_csv('Fits/V-Av-nsq5-Fit.csv', sep='\s')
 
 #x0, y0 = [-1, 32], [nsq0plt['EffectiveMass'], nsq0plt['EffectiveMass']]
 x1, y1 = [-1, 32], [nsq1plt['EffectiveMass'], nsq1plt['EffectiveMass']]

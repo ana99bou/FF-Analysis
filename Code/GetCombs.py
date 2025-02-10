@@ -97,7 +97,40 @@ def get_moms_and_prefacs_V():
     
     return momentum_list, prefactor_list
 
+
 def get_moms_and_prefacs_A0():
+    directions = ["GX", "GY", "GZ"]
+    prefactors = {"GX": 1, "GY": -1, "GZ": 1}
+    direction_positions = {"GX": 1, "GY": 2, "GZ": 3}  # Added mapping for positions
+    momentum_list = []
+    prefactor_list = []
+
+    for nsq in range(6):
+        nsq_momentum = []
+        nsq_prefactors = []
+        for dx in range(-nsq, nsq + 1):
+            for dy in range(-nsq, nsq + 1):
+                for dz in range(-nsq, nsq + 1):
+                    if dx ** 2 + dy ** 2 + dz ** 2 == nsq:  # Check for correct n^2
+                        momenta = [dx, dy, dz]  # Store momenta for easy indexing
+                        for direction in directions:
+                            if (direction == "GX" and dx != 0) or \
+                                    (direction == "GY" and dy != 0) or \
+                                    (direction == "GZ" and dz != 0):
+                                element = (
+                                    f"final_state_{direction}/operator_Gamma{direction[-1]}Gamma5/"
+                                    f"n2_{nsq}/{dx}_{dy}_{dz}"
+                                )
+                                nsq_momentum.append(element)
+                                # Get the position based on direction and corresponding momentum
+                                pos = direction_positions[direction] - 1  # -1 for 0-based indexing
+                                nsq_prefactors.append(prefactors[direction])
+        momentum_list.append(nsq_momentum)
+        prefactor_list.append(nsq_prefactors)
+    return momentum_list, prefactor_list
+
+
+def get_moms_and_prefacs_A2():
     directions = ["GX", "GY", "GZ"]
     prefactors = {"GX": 1, "GY": -1, "GZ": 1}
     direction_positions = {"GX": 1, "GY": 2, "GZ": 3}  # Added mapping for positions
@@ -128,9 +161,6 @@ def get_moms_and_prefacs_A0():
         momentum_list.append(nsq_momentum)
         prefactor_list.append(nsq_prefactors)
     return momentum_list, prefactor_list
-
-print(get_moms_and_prefacs_A0())
-
 
 
 def get_moms_and_prefacs_A1():

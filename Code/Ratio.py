@@ -41,13 +41,13 @@ def build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,pre,dsfit
 
 ##Need ot build ratio over one comp and then average in this case, num gives the number in the list
 
-def build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp):
+def build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L):
     avn0 = np.zeros(dt+1)
     errn0=np.zeros(shape=(dt+1))
     ratiojack=np.zeros(shape=(dt+1,nconf+1))
     for j in range(dt+1):   
-        print(build_A2(nconf,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp[j,nconf],A1comp[j,nconf]))
-        ratiojack[j][nconf]=pre*build_A2(nconf,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp[j,nconf],A1comp[j,nconf])
+        #print(build_A2(nconf,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp[j,nconf],A1comp[j,nconf]))
+        ratiojack[j][nconf]=pre*build_A2(nconf,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp[j,nconf],A1comp[j,nconf],L)
         #avn0[j] = pre * (Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq) / ( np.sqrt(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]) * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * md) / (np.exp(-md * j) * np.exp(-mb * (dt - j))))
         x=0
         for i in range(nconf):
@@ -59,12 +59,12 @@ def build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit
     return ratiojack,errn0
 
 
-def build_A2(i,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp,A1comp):
+def build_A2(i,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L):
     total=0
     pref=pref[nsq]
     #qsq=mb**2-md**2+2*ed**2-2*md*ed
     #qsq=(mb-ed)**2+nsq
-    L=48
+    #L=48
     conv=(2*np.pi/L)
     #conv=1
     qsq=mb**2+ed**2-2*mb*ed

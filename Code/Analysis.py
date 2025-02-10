@@ -12,10 +12,10 @@ import Basic
 import Regression
  
 #########Choose Params
-FF='A2'
+FF='A0'
 nsq=5
-ensemble='F1S'
-cmass=Ens.getCmass(ensemble)[0] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
+ensemble='C1'
+cmass=Ens.getCmass(ensemble)[2] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 reg_low=18
 reg_up=25
 ##########
@@ -27,15 +27,14 @@ smass=Ens.getSmass(ensemble)
 
 
 # Ensemble details
-nconf,dt,ts= Ens.getEns(ensemble)
+nconf,dt,ts,L= Ens.getEns(ensemble)
 
 
 # Read h5 file -> 
 ##################TODO three h5files for each 3pt and 2pt and get the naming consistent
-f3pt = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble), "r")
-f2ptBs = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble), "r")
-f2ptDs = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble), "r")
-
+f3pt = h5py.File("../Data/{}/BsDsStar_{}_3pt.h5".format(ensemble,ensemble), "r")
+f2ptBs = h5py.File("../Data/{}/BsDsStar_{}_2ptBs.h5".format(ensemble,ensemble), "r")
+f2ptDs = h5py.File("../Data/{}/BsDsStar_{}_2ptDs.h5".format(ensemble,ensemble), "r")
 
 # Eff. Masses central values
 edlist=[pd.read_csv('../Data/{}/2pt/Ds{}Result-0.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
@@ -56,7 +55,7 @@ elif FF == 'A0':
 elif FF == 'A1':
     mom,pref=GetCombs.get_moms_and_prefacs_A1()
 elif FF == 'A2':
-    mom,pref=GetCombs.get_moms_and_prefacs_A0()
+    mom,pref=GetCombs.get_moms_and_prefacs_A2()
     #mom,pref,mom2,pref2=GetCombs.get_moms_and_prefacs_A2(mb,md,ed)
    
 
@@ -70,11 +69,18 @@ dsetsb=[f3pt["/CHARM_PT_SEQ_SM{}_s{}/c{}/dT{}/{}/backward/data".format(sm,smass,
 
 
 # Read 2pt data
-ptmom=['0_0_0','1_0_0','1_1_0','1_1_1', '2_0_0','2_1_0']
-dsxn0=f2ptDs["/CHARM_SM{}_SM{}_s{}/c{}/operator_GammaX/{}/data".format(sm,sm,smass,cmass,ptmom[nsq])]
-dsyn0=f2ptDs["/CHARM_SM{}_SM{}_s{}/c{}/operator_GammaY/{}/data".format(sm,sm,smass,cmass,ptmom[nsq])]
-dszn0=f2ptDs["/CHARM_SM{}_SM{}_s{}/c{}/operator_GammaZ/{}/data".format(sm,sm,smass,cmass,ptmom[nsq])]
-bsn0=f2ptBs["/rhq_m2.42_csw2.68_zeta1.52_SM{}_SM{}_s{}/operator_Gamma5/0_0_0/data".format(sm,sm,smass)]
+dsxn0=f2ptDs[("/cl_SM{}_SM{}_{}/c{}/operator_GammaX/n2_{}/data").format(sm,sm,smass,cmass,nsq)]
+dsyn0=f2ptDs[("/cl_SM{}_SM{}_{}/c{}/operator_GammaY/n2_{}/data").format(sm,sm,smass,cmass,nsq)]
+dszn0=f2ptDs[("/cl_SM{}_SM{}_{}/c{}/operator_GammaZ/n2_{}/data").format(sm,sm,smass,cmass,nsq)]
+bsn0=f2ptBs["/hl_SM{}_SM{}_{}_m7.47_csw4.92_zeta2.93/operator_Gamma5/n2_0/data".format(sm,sm,smass)]
+
+
+#Can ignore, only for old F1S dataset
+#ptmom=['0_0_0','1_0_0','1_1_0','1_1_1', '2_0_0','2_1_0']
+#dsxn0=f2ptDs["/CHARM_SM{}_SM{}_s{}/c{}/operator_GammaX/{}/data".format(sm,sm,smass,cmass,ptmom[nsq])]
+#dsyn0=f2ptDs["/CHARM_SM{}_SM{}_s{}/c{}/operator_GammaY/{}/data".format(sm,sm,smass,cmass,ptmom[nsq])]
+#dszn0=f2ptDs["/CHARM_SM{}_SM{}_s{}/c{}/operator_GammaZ/{}/data".format(sm,sm,smass,cmass,ptmom[nsq])]
+#bsn0=f2ptBs["/rhq_m2.42_csw2.68_zeta1.52_SM{}_SM{}_s{}/operator_Gamma5/0_0_0/data".format(sm,sm,smass)]
 
 
 # Additional datasets for A2
@@ -122,7 +128,7 @@ jbb=Jackblocks.create_blocks_2pt(avb,dt,nconf)
 
 # Calculate Ratio
 if FF == 'A2':
-    ratiojack,errn0 =Ratio.build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp)
+    ratiojack,errn0 =Ratio.build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L)
 else:
     ratiojack,errn0 =Ratio.build_Ratio(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,ed,mb,pre,dsfit,bsfit)
 
@@ -132,9 +138,9 @@ plt.xlabel('time')
 plt.ylabel(rf'$\widetilde{{{FF}}}$')
 plt.errorbar(list(range(dt)), np.absolute(avn0)[0:dt], yerr=errn0[0:dt],ls='none',fmt='x',label='nsq={}'.format(nsq))
 plt.legend()
-plt.savefig('../Results/Ratios/{}/{}-nsq{}.png'.format(FF,FF,nsq))
-np.savetxt('../Results/Ratios/{}/{}-nsq{}.txt'.format(FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
-np.save('../Results/Ratios/{}/Jackknife/nsq{}.npy'.format(FF,nsq), ratiojack)
+plt.savefig('../Results/{}/Ratios/{}/{}-nsq{}.png'.format(ensemble,FF,FF,nsq))
+np.savetxt('../Results/{}/Ratios/{}/{}-nsq{}.txt'.format(ensemble,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
+np.save('../Results/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,FF,nsq), ratiojack)
 
 
 ###############################################################################
