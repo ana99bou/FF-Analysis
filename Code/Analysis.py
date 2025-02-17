@@ -13,7 +13,7 @@ import Regression
  
 #########Choose Params
 FF='A2'
-nsq=1
+nsq=5
 ensemble='F1S'
 cmass=Ens.getCmass(ensemble)[0] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 reg_low=18
@@ -94,6 +94,11 @@ bsn0=f2ptBs["/rhq_m2.42_csw2.68_zeta1.52_SM{}_SM{}_s{}/operator_Gamma5/0_0_0/dat
 if FF == 'A2':
     A0comp = np.load('../Results/{}/Ratios/A0/Jackknife/nsq{}.npy'.format(ensemble,nsq))
     A1comp = np.load('../Results/{}/Ratios/A1/Jackknife/nsq{}.npy'.format(ensemble,nsq))
+    A0fit=np.load('../Results/{}/Fits/A0/A0-nsq{}.npy'.format(ensemble, nsq))
+    A1fit=np.load('../Results/{}/Fits/A1/A1-nsq{}.npy'.format(ensemble, nsq))
+print(A0fit)
+print(A1fit)
+
 # Read eff. fit jackknife blocks
 bsfit=pd.read_csv('../Data/{}/2pt/Bs-blocks.csv'.format(ensemble),sep='\s')
 dsfit=pd.read_csv('../Data/{}/2pt/Ds{}-nsq{}-blocks.csv'.format(ensemble,cmass,nsq),sep='\s')
@@ -128,10 +133,11 @@ jbdy=Jackblocks.create_blocks_2pt(avdy,dt,nconf)
 jbdz=Jackblocks.create_blocks_2pt(avdz,dt,nconf)
 jbb=Jackblocks.create_blocks_2pt(avb,dt,nconf)
 
+print(pref)
 
 # Calculate Ratio
 if FF == 'A2':
-    ratiojack,errn0 =Ratio.build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L)
+    ratiojack,errn0 =Ratio.build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit)
 else:
     ratiojack,errn0 =Ratio.build_Ratio(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,ed,mb,pre,dsfit,bsfit)
 
@@ -147,7 +153,6 @@ np.save('../Results/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,FF,nsq), r
 
 
 ###############################################################################
-
 
 '''
 #Covarianze matrix (without prefactor, not squarrooted)
@@ -169,10 +174,21 @@ def chijack(a,k):
 
 
 #Std Deviatson for all jakcknife blocks
+
+jblocks=np.zeros(nconf)
 h=0
 for i in range(nconf):
+    tmp=minimize(chijack,0.1,args=(i),method='Nelder-Mead', tol=1e-6).x[0]
+    jblocks[i]=tmp
     h=h+(minimize(chijack,0.1,args=(i),method='Nelder-Mead', tol=1e-6).x[0]-mbar.x[0])**2
 sigma=np.sqrt((nconf-1-reg_low-cut)/(nconf-reg_low-cut)*h)
+
+#np.savetxt('../Results/{}/Fits/{}/{}-nsq{}.txt'.format(ensemble,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
+np.save('../Results/{}/Fits/{}/{}-nsq{}.npy'.format(ensemble,FF,FF,nsq), jblocks)
+
+#df4 = pd.DataFrame(columns=['EffectiveMass'])
+#df4['EffectiveMass']=jblocks
+#df4.to_csv('../Results/{}/Fits/{}/{}-nsq{}-Block.csv'.format(ensemble,FF,FF,nsq), sep='\t')
 
 print(mbar,sigma)
 
@@ -186,12 +202,12 @@ plt.axhline(y = mbar.x[0], color = 'r', linestyle = 'dashed')
 plt.fill_between(list(range(dt))[reg_low:reg_up], mbar.x[0]+sigma, mbar.x[0]-sigma, color='r',alpha=0.2)
 #ax.set_yscale('log')
 
-plt.savefig('../Results/Fits/V-Av-nsq{}-Fit.png'.format(nsq))
+plt.savefig('../Results/{}/Fits/{}/{}-Av-nsq{}-Fit.png'.format(ensemble,FF,FF,nsq))
 
 df3 = pd.DataFrame(columns=['EffectiveMass','Error','RegUp','RegLow'])
 df3['EffectiveMass']=mbar.x
 df3['Error']=sigma  
 df3['RegUp']=reg_up
 df3['RegLow']=reg_low    
-df3.to_csv('../Results/Fits/V-Av-nsq{}-Fit.csv'.format(nsq), sep='\t')
+df3.to_csv('../Results/{}/Fits/{}/{}-Av-nsq{}-Fit.csv'.format(ensemble,FF,FF,nsq), sep='\t')
 '''
