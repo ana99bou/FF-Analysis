@@ -26,7 +26,7 @@ pre5=-1/(mb+md5)
 #nsq0=pd.read_csv('./hA1/hA1-nsq0.txt',sep=' ',header=None)
 nsq1=pd.read_csv('Ratios/A2/A2-nsq1.txt', sep=' ', header=None)
 nsq2=pd.read_csv('Ratios/A2/A2-nsq2.txt', sep=' ', header=None)
-nsq3=pd.read_csv('F1S/Ratios/A2/A2-nsq3.txt', sep=' ', header=None)
+#nsq3=pd.read_csv('F1S/Ratios/A2/A2-nsq3.txt', sep=' ', header=None)
 nsq4=pd.read_csv('Ratios/A2/A2-nsq4.txt', sep=' ', header=None)
 nsq5=pd.read_csv('Ratios/A2/A2-nsq5.txt', sep=' ', header=None)
 

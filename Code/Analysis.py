@@ -27,14 +27,21 @@ smass=Ens.getSmass(ensemble)
 
 
 # Ensemble details
-nconf,dt,ts= Ens.getEns(ensemble)
-
+nconf,dt,ts,L= Ens.getEns(ensemble)
+# Not needed for old F1S
+#m,csw,zeta=Ens.getRHQparams(ensemble)
 
 # Read h5 file -> 
 ##################TODO three h5files for each 3pt and 2pt and get the naming consistent
-f3pt = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble), "r")
-f2ptBs = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble), "r")
-f2ptDs = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble), "r")
+'''
+f3pt = h5py.File("../Data/{}/BsDsStar_{}_3pt.h5".format(ensemble,ensemble), "r")
+f2ptDs = h5py.File("../Data/{}/BsDsStar_{}_2ptDs.h5".format(ensemble,ensemble), "r")
+f2ptBs = h5py.File("../Data/{}/BsDsStar_{}_2ptBs.h5".format(ensemble,ensemble), "r")
+'''
+
+f3pt = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble,ensemble), "r")
+f2ptDs = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble,ensemble), "r")
+f2ptBs = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble,ensemble), "r")
 
 
 # Eff. Masses central values
@@ -56,8 +63,7 @@ elif FF == 'A0':
 elif FF == 'A1':
     mom,pref=GetCombs.get_moms_and_prefacs_A1()
 elif FF == 'A2':
-    mom,pref=GetCombs.get_moms_and_prefacs_A0()
-    #mom,pref,mom2,pref2=GetCombs.get_moms_and_prefacs_A2(mb,md,ed)
+    mom,pref=GetCombs.get_moms_and_prefacs_A2()
    
 
 # Number of combinations of directions
@@ -70,21 +76,24 @@ dsetsb=[f3pt["/CHARM_PT_SEQ_SM{}_s{}/c{}/dT{}/{}/backward/data".format(sm,smass,
 
 
 # Read 2pt data
+'''
+dsxn0=f2ptDs["/cl_SM{}_SM{}_{}/c{}/operator_GammaX/n2_{}/data".format(sm,sm,smass,cmass,nsq)]
+dsyn0=f2ptDs["/cl_SM{}_SM{}_{}/c{}/operator_GammaY/n2_{}/data".format(sm,sm,smass,cmass,nsq)]
+dszn0=f2ptDs["/cl_SM{}_SM{}_{}/c{}/operator_GammaZ/n2_{}/data".format(sm,sm,smass,cmass,nsq)]
+bsn0=f2ptBs["/hl_SM{}_SM{}_{}_m{}_csw{}_zeta{}/operator_Gamma5/n2_0/data".format(sm,sm,smass,m,csw,zeta)]
+'''
+
+#For old F1S format
 ptmom=['0_0_0','1_0_0','1_1_0','1_1_1', '2_0_0','2_1_0']
 dsxn0=f2ptDs["/CHARM_SM{}_SM{}_s{}/c{}/operator_GammaX/{}/data".format(sm,sm,smass,cmass,ptmom[nsq])]
 dsyn0=f2ptDs["/CHARM_SM{}_SM{}_s{}/c{}/operator_GammaY/{}/data".format(sm,sm,smass,cmass,ptmom[nsq])]
 dszn0=f2ptDs["/CHARM_SM{}_SM{}_s{}/c{}/operator_GammaZ/{}/data".format(sm,sm,smass,cmass,ptmom[nsq])]
 bsn0=f2ptBs["/rhq_m2.42_csw2.68_zeta1.52_SM{}_SM{}_s{}/operator_Gamma5/0_0_0/data".format(sm,sm,smass)]
 
-
 # Additional datasets for A2
 if FF == 'A2':
-    A0comp = np.load('../Results/Ratios/A0/Jackknife/nsq{}.npy'.format(nsq))
-    A1comp = np.load('../Results/Ratios/A1/Jackknife/nsq{}.npy'.format(nsq))
-    #dsets2=[f3pt["/CHARM_PT_SEQ_SM{}_s{}/c{}/dT{}/{}/forward/data".format(sm,smass,cmass,dt,mom2[nsq][i])] for i in range(len(mom2[nsq]))]
-    #dsetsb2=[f3pt["/CHARM_PT_SEQ_SM{}_s{}/c{}/dT{}/{}/backward/data".format(sm,smass,cmass,dt,mom2[nsq][i])] for i in range(len(mom2[nsq]))]
-
-
+    A0comp = np.load('../Results/{}/Ratios/A0/Jackknife/nsq{}.npy'.format(ensemble,nsq))
+    A1comp = np.load('../Results/{}/Ratios/A1/Jackknife/nsq{}.npy'.format(ensemble,nsq))
 # Read eff. fit jackknife blocks
 bsfit=pd.read_csv('../Data/{}/2pt/Bs-blocks.csv'.format(ensemble),sep='\s')
 dsfit=pd.read_csv('../Data/{}/2pt/Ds{}-nsq{}-blocks.csv'.format(ensemble,cmass,nsq),sep='\s')
@@ -92,7 +101,7 @@ dsfit=pd.read_csv('../Data/{}/2pt/Ds{}-nsq{}-blocks.csv'.format(ensemble,cmass,n
 
 # Prefactor and folding
 if FF == 'V':
-    pre=-(mb+md)/(2*mb)*48/(2*np.pi)
+    pre=-(mb+md)/(2*mb)*L/(2*np.pi)
     av1n0=Folding.folding3ptVec(dsets, dsetsb, nmom, dt, nconf, ts)
 elif FF == 'A0':
     pre=md / (2 * ed * mb)
@@ -122,7 +131,7 @@ jbb=Jackblocks.create_blocks_2pt(avb,dt,nconf)
 
 # Calculate Ratio
 if FF == 'A2':
-    ratiojack,errn0 =Ratio.build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp)
+    ratiojack,errn0 =Ratio.build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L)
 else:
     ratiojack,errn0 =Ratio.build_Ratio(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,ed,mb,pre,dsfit,bsfit)
 
@@ -132,9 +141,9 @@ plt.xlabel('time')
 plt.ylabel(rf'$\widetilde{{{FF}}}$')
 plt.errorbar(list(range(dt)), np.absolute(avn0)[0:dt], yerr=errn0[0:dt],ls='none',fmt='x',label='nsq={}'.format(nsq))
 plt.legend()
-plt.savefig('../Results/Ratios/{}/{}-nsq{}.png'.format(FF,FF,nsq))
-np.savetxt('../Results/Ratios/{}/{}-nsq{}.txt'.format(FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
-np.save('../Results/Ratios/{}/Jackknife/nsq{}.npy'.format(FF,nsq), ratiojack)
+plt.savefig('../Results/{}/Ratios/{}/{}-nsq{}.png'.format(ensemble,FF,FF,nsq))
+np.savetxt('../Results/{}/Ratios/{}/{}-nsq{}.txt'.format(ensemble,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
+np.save('../Results/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,FF,nsq), ratiojack)
 
 
 ###############################################################################

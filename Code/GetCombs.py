@@ -347,7 +347,7 @@ def compute_combined_prefactors(mb, md, ed):
     
     return prefactor_lists
 
-
+'''
 def get_moms_and_prefacs_A2(mb,md,ed):
     A0=[]
     A1=[]
@@ -359,3 +359,4 @@ def get_moms_and_prefacs_A2(mb,md,ed):
         prefA0.append([sublist[0] for sublist in compute_combined_prefactors(mb,md,ed)[i]])
         prefA1.append([sublist[1] for sublist in compute_combined_prefactors(mb,md,ed)[i]])
     return A0,prefA0,A1,prefA1
+'''

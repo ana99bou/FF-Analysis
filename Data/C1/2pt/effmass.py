@@ -124,7 +124,7 @@ df2 = pd.DataFrame(columns=['EffectiveMass','Error'])
 df2['EffectiveMass']=mass
 df2['Error']=errors    
 df2.to_csv('Mass-Bs.csv', sep='\t')
-#df2.to_csv('Mass-Ds400-1.csv', sep='\t')
+#df2.to_csv('Mass-Ds0.400-1.csv', sep='\t')
 
 
 

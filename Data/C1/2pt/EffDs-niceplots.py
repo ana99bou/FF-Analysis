@@ -18,12 +18,12 @@ md2=0.7567413345078149
 pre1=md0/(2*md1*mb)
 pre2=md0/(2*md2*mb)
 
-nsq0=pd.read_csv('./Mass-Ds400-0.csv',sep='\s')
-nsq1=pd.read_csv('./Mass-Ds400-1.csv',sep='\s')
-nsq2=pd.read_csv('./Mass-Ds400-2.csv',sep='\s')
-nsq3=pd.read_csv('./Mass-Ds400-3.csv',sep='\s')
-nsq4=pd.read_csv('./Mass-Ds400-4.csv',sep='\s')
-nsq5=pd.read_csv('./Mass-Ds400-5.csv',sep='\s')
+nsq0=pd.read_csv('Mass-Ds0.400-0.csv', sep='\s')
+nsq1=pd.read_csv('Mass-Ds0.400-1.csv', sep='\s')
+nsq2=pd.read_csv('Mass-Ds0.400-2.csv', sep='\s')
+nsq3=pd.read_csv('Mass-Ds0.400-3.csv', sep='\s')
+nsq4=pd.read_csv('Mass-Ds0.400-4.csv', sep='\s')
+nsq5=pd.read_csv('Mass-Ds0.400-5.csv', sep='\s')
 
 nsq0plt=pd.read_csv('Ds0.400Result-0.csv', sep='\s')
 nsq1plt=pd.read_csv('Ds0.400Result-1.csv', sep='\s')
