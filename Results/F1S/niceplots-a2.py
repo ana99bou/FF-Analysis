@@ -74,7 +74,7 @@ plt.errorbar(list(range(30)), nsq1[0][0:30], yerr=nsq1[1][0:30],ls='none',fmt='x
 plt.errorbar(list(range(30)), nsq2[0][0:30], yerr=nsq2[1][0:30],ls='none',fmt='x',label='$n^2=2$',color='orange')
 #plt.errorbar(list(range(30)), nsq3[0][0:30], yerr=nsq3[1][0:30],ls='none',fmt='x',label='$n^2=3$',color='brown')
 plt.errorbar(list(range(30)), nsq4[0][0:30], yerr=nsq4[1][0:30],ls='none',fmt='x',label='$n^2=4$',color='red')
-plt.errorbar(list(range(30)), nsq5[0][0:30], yerr=nsq5[1][0:30],ls='none',fmt='x',label='$n^2=5$',color='magenta')
+#plt.errorbar(list(range(30)), nsq5[0][0:30], yerr=nsq5[1][0:30],ls='none',fmt='x',label='$n^2=5$',color='magenta')
 
 #plt.plot(x0,y0,color='g')
 #plt.fill_between(list(range(47))[int(reg_low0):int(reg_up0+1)], -nsq0plt['EffectiveMass']+sigma0, -nsq0plt['EffectiveMass']-sigma0, color='g',alpha=0.2)
