@@ -64,7 +64,6 @@ def build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit
 def build_A2(i,j,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit):
     total=0
     pref=pref[nsq]
-    print(A0fit,A1fit)
     #A0tmp=0.3275769042968758
     #A1tmp=0.4757202148437489
     #A0tmp=0.3172631835937508

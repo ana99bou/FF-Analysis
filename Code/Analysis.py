@@ -96,8 +96,6 @@ if FF == 'A2':
     A1comp = np.load('../Results/{}/Ratios/A1/Jackknife/nsq{}.npy'.format(ensemble,nsq))
     A0fit=np.load('../Results/{}/Fits/A0/A0-nsq{}.npy'.format(ensemble, nsq))
     A1fit=np.load('../Results/{}/Fits/A1/A1-nsq{}.npy'.format(ensemble, nsq))
-print(A0fit)
-print(A1fit)
 
 # Read eff. fit jackknife blocks
 bsfit=pd.read_csv('../Data/{}/2pt/Bs-blocks.csv'.format(ensemble),sep='\s')
@@ -133,8 +131,6 @@ jbdy=Jackblocks.create_blocks_2pt(avdy,dt,nconf)
 jbdz=Jackblocks.create_blocks_2pt(avdz,dt,nconf)
 jbb=Jackblocks.create_blocks_2pt(avb,dt,nconf)
 
-print(pref)
-
 # Calculate Ratio
 if FF == 'A2':
     ratiojack,errn0 =Ratio.build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit)
@@ -154,23 +150,28 @@ np.save('../Results/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,FF,nsq), r
 
 ###############################################################################
 
-'''
+
 #Covarianze matrix (without prefactor, not squarrooted)
-covmat=Regression.build_Covarianz(reg_up, reg_low, ts, jb3pt, jbdx, jbdy, jbdz, jbb, pref, dt, nsq, nconf, md, mb, pre, dsfit, bsfit, avn0)
+#covmat=Regression.build_Covarianz(reg_up, reg_low, ts, jb3pt, jbdx, jbdy, jbdz, jbb, pref, dt, nsq, nconf, md, mb, pre, dsfit, bsfit, avn0)
+covmat=Regression.build_Covarianz_A2(reg_up,reg_low,ts,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,pre,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit,avn0)
 
 cut=ts/2-1-reg_up
-   
+
 def chi(a):
     return (nconf-1-reg_low-cut)/(nconf-reg_low-cut)*np.dot(np.transpose([i-a for i in avn0[reg_low:reg_up]]),np.matmul(np.linalg.inv(covmat),[i-a for i in avn0[reg_low:reg_up]]))
 
 mbar=minimize(chi,0.1,method='Nelder-Mead', tol=1e-6)
-
-
+'''
 def jackmass(t1,i):
     return (((Basic.sum_with_prefacs(jb3pt[:,t1,i], pref[nsq],nsq)))/(np.sqrt(1/3*(jbdx[t1,i]+jbdy[t1,i]+jbdz[t1,i])*jbb[dt-(t1),i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*(t1))*np.exp(-bsfit['EffectiveMass'][i]*(dt-(t1)))))*pre
 
 def chijack(a,k):
     return np.dot(np.transpose([jackmass(i+reg_low,k)-a for i in range(int(ts/2-1-reg_low-cut))]),np.matmul(np.linalg.inv(covmat),[jackmass(i+reg_low,k)-a for i in range(int(ts/2-1-reg_low-cut))]))
+'''
+def chijack(a,k):
+    return np.dot(np.transpose([Regression.jackratio_A2(k,i + reg_low,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit) - a for i in range(int(ts / 2 - 1 - reg_low - cut))]),
+                  np.matmul(np.linalg.inv(covmat),
+                            [Regression.jackratio_A2(k,i + reg_low,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit) - a for i in range(int(ts / 2 - 1 - reg_low - cut))]))
 
 
 #Std Deviatson for all jakcknife blocks
@@ -210,4 +211,3 @@ df3['Error']=sigma
 df3['RegUp']=reg_up
 df3['RegLow']=reg_low    
 df3.to_csv('../Results/{}/Fits/{}/{}-Av-nsq{}-Fit.csv'.format(ensemble,FF,FF,nsq), sep='\t')
-'''
