@@ -51,7 +51,7 @@ v_errors=[0.01554307531103453,0.017223192786267657,0.019543059435496852,0.022493
 
 #plt.errorbar(x2_coords, a1_coords, yerr=a1_errors, fmt='o', ecolor='orange', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_1$')
 
-plt.errorbar(x3_coords, a2_coords, yerr=a2_errors, fmt='o', ecolor='green', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_2$')
+plt.errorbar(x3_coords, a2_coords, yerr=a2_errors, fmt='o',color='green', ecolor='green', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_2$')
 
 #plt.errorbar(x_coords, v_coords, yerr=v_errors, fmt='o', ecolor='red', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{V}$')
 

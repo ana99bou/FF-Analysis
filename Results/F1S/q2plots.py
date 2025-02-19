@@ -53,7 +53,7 @@ plt.errorbar(x2_coords, a1_coords, yerr=a1_errors, fmt='o', ecolor='orange', cap
 
 #plt.errorbar(x3_coords, a2_coords, yerr=a2_errors, fmt='o', ecolor='green', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_2$')
 
-plt.errorbar(x_coords, v_coords, yerr=v_errors, fmt='o', ecolor='red', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{V}$')
+plt.errorbar(x_coords, v_coords, yerr=v_errors, fmt='o', color='red',ecolor='red', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{V}$')
 
 plt.axis((0,12,0.22,0.9))
 
