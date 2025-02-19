@@ -47,15 +47,15 @@ v_errors=[0.01554307531103453,0.017223192786267657,0.019543059435496852,0.022493
 #v_errors = [0.0017511783572122202, 0.0019407292847015043, 0.0022020939011495504,0.0025940767769486203,0.0028204901729288936]
 
 # Create a scatter plot with error bars
-plt.errorbar(x_coords, a0_coords, yerr=a0_errors, fmt='o', ecolor='blue', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_0$')
+#plt.errorbar(x_coords, a0_coords, yerr=a0_errors, fmt='o', ecolor='blue', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_0$')
 
-plt.errorbar(x2_coords, a1_coords, yerr=a1_errors, fmt='o', ecolor='orange', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_1$')
+#plt.errorbar(x2_coords, a1_coords, yerr=a1_errors, fmt='o', ecolor='orange', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_1$')
 
-#plt.errorbar(x3_coords, a2_coords, yerr=a2_errors, fmt='o', ecolor='green', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_2$')
+plt.errorbar(x3_coords, a2_coords, yerr=a2_errors, fmt='o', ecolor='green', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{A}_2$')
 
-plt.errorbar(x_coords, v_coords, yerr=v_errors, fmt='o', ecolor='red', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{V}$')
+#plt.errorbar(x_coords, v_coords, yerr=v_errors, fmt='o', ecolor='red', capsize=5, capthick=2, elinewidth=1,label=r'$\widetilde{V}$')
 
-plt.axis((0,12,0.22,0.9))
+plt.axis((0,12,0.1,1.9))
 
 # Create a scatter plot
 #plt.scatter(x_coords, a0_coords, color='blue')
@@ -71,10 +71,10 @@ plt.axis((0,12,0.22,0.9))
 plt.xlabel(r'$q^2[GeV]^2$',fontsize=15)
 plt.ylabel('Lattice Form Factors',fontsize=15)
 
-plt.tick_params(axis='both', which='major', labelsize=14) 
+plt.tick_params(axis='both', which='major', labelsize=14)
 plt.legend()
 plt.annotate(r'$\bf{preliminary}$',xy=(0.65,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=1)
 
 # Show plot
 #plt.grid(True)
-plt.savefig('FF-q^2.pdf',transparent=True,bbox_inches='tight')
+plt.savefig('FF-q^2-A2.pdf',transparent=True,bbox_inches='tight')
