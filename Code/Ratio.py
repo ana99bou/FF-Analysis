@@ -9,13 +9,13 @@ def build_Ratio(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,ed,mb,pre,dsfit,bsfit
     ratiojack=np.zeros(shape=(dt+1,nconf+1))
     for j in range(dt+1):   
         ratiojack[j][nconf]=pre * (Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq) / ( np.sqrt(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]) * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * ed) / (np.exp(-ed * j) * np.exp(-mb * (dt - j))))
-        #print(j)
-        #print('3pt')
-        #print(Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq))
-        #print('2ptBs')
-        #print(jbb[dt-j,nconf])
-        #print('2ptDs')
-        #print(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]))
+        print(j)
+        print('3pt')
+        print(Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq))
+        print('2ptBs')
+        print(jbb[dt-j,nconf])
+        print('2ptDs')
+        print(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]))
         #avn0[j] = pre * (Basic.sum_with_prefacs(jb3pt[:,j,nconf],pref[nsq], nsq) / ( np.sqrt(1/3*(jbdx[j,nconf] + jbdy[j,nconf] + jbdz[j,nconf]) * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * md) / (np.exp(-md * j) * np.exp(-mb * (dt - j))))
         x=0
         for i in range(nconf):

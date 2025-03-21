@@ -26,9 +26,9 @@ def calculate_value(a, md, p, L):
 
 disprel=[]
 vecs=[[0,0,0],[1,0,0],[1,1,0],[1,1,1],[2,0,0],[2,1,0]]
-for i in range(num_files):
-    disprel.append(calculate_value(1/1.7848,effective_mass[i],vecs[i],24))
 
+for i in range(num_files):
+    disprel.append(calculate_value(1/1.7848,effective_mass[0],vecs[i],24))
 print(disprel)
 
 plt.errorbar(x_values, effective_mass, yerr=errors, fmt='o', capsize=5, label='Effective Mass')

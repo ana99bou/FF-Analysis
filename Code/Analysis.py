@@ -13,7 +13,7 @@ import Regression
  
 #########Choose Params
 FF='V'
-nsq=5
+nsq=1
 ensemble='M2'
 cmass=Ens.getCmass(ensemble)[2] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 #reg_low=18
@@ -132,15 +132,6 @@ jbdx=Jackblocks.create_blocks_2pt(avdx,dt,nconf)
 jbdy=Jackblocks.create_blocks_2pt(avdy,dt,nconf)
 jbdz=Jackblocks.create_blocks_2pt(avdz,dt,nconf)
 jbb=Jackblocks.create_blocks_2pt(avb,dt,nconf)
-
-print(bsfit)
-print(dsfit)
-print(nconf)
-print(jb3pt.shape)
-print(jbdx.shape)
-print(jbdy.shape)
-print(jbdz.shape)
-print(jbb.shape)
 
 # Calculate Ratio
 if FF == 'A2':
