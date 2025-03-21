@@ -142,7 +142,7 @@ df2.to_csv('Mass-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 
 ###############################################################################
 
-reg_low=10
+reg_low=18
 reg_up=25
 
 #Covarianze matrix (without prefactor, not squarrooted)

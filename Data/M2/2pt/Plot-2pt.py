@@ -17,11 +17,11 @@ x_values = list(range(num_files))
 
 
 def calculate_value(a, md, p, L):
-    term1 = np.sinh(md / (2 * a)) ** 2
-    term2 = np.sin(p[0] * np.pi / (L * a)) ** 2
-    term3 = np.sin(p[1] * np.pi / (L * a)) ** 2
-    term4 = np.sin(p[2] * np.pi / (L * a)) ** 2
-    result = 2 * a * np.arcsinh(np.sqrt(term1 + term2 + term3 + term4))
+    term1 = np.sinh(md / (2)) ** 2
+    term2 = np.sin(p[0] * np.pi / (L )) ** 2
+    term3 = np.sin(p[1] * np.pi / (L)) ** 2
+    term4 = np.sin(p[2] * np.pi / (L)) ** 2
+    result = 2  * np.arcsinh(np.sqrt(term1 + term2 + term3 + term4))
     return result
 
 disprel=[]

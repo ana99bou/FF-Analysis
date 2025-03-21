@@ -13,18 +13,18 @@ def read_csv_files(pattern, names, skiprows=1):
         data.append(df)
     return data
 
-# Read all Mass-Ds0.400-*.csv files
-mass_data = read_csv_files('Mass-Ds0.400-*.csv', names=['Time', 'EffectiveMass', 'Error'])
+# Read all Mass-Ds0.340-*.csv files
+mass_data = read_csv_files('Mass-Ds0.340-*.csv', names=['Time', 'EffectiveMass', 'Error'])
 
-# Read all Ds0.400Result-*.csv files
-result_data = read_csv_files('Ds0.400Result-*.csv', names=['Time', 'EffectiveMass', 'Error', 'RegUp', 'RegLow'])
+# Read all Ds0.340Result-*.csv files
+result_data = read_csv_files('Ds0.340Result-*.csv', names=['Time', 'EffectiveMass', 'Error', 'RegUp', 'RegLow'])
 
 print(result_data)
 
 # Plot the data
 plt.xlabel('Time')
 plt.ylabel('Effective Mass')
-plt.ylim(1.0, 1.6)  # Restrict the y-axis to the range from 0.8 to 1.2
+plt.ylim(0.8, 1.2)  # Restrict the y-axis to the range from 0.8 to 1.2
 
 colors = ['g', 'b', 'orange', 'brown', 'red', 'cyan']
 labels = [f'$n^2={i}$' for i in range(len(mass_data))]

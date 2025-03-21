@@ -12,7 +12,7 @@ import Basic
 import Regression
  
 #########Choose Params
-FF='A0'
+FF='V'
 nsq=5
 ensemble='M2'
 cmass=Ens.getCmass(ensemble)[2] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
