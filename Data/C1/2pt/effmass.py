@@ -6,6 +6,14 @@ import matplotlib.pyplot as plt
 import cmath
 import pandas as pd
 from scipy.optimize import minimize
+import sys 
+import os
+
+# Add the Code directory to the system path
+code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../Code'))
+sys.path.append(code_dir)
+
+import Ensemble as Ens
 
 def exp_val(data):
     return sum(data)/len(data)
@@ -28,18 +36,20 @@ def extract(lst,number):
     return [item[number] for item in lst]
 
 
-#f = h5py.File("../BsDsStar-2ptBs_C1.h5", "r")
-f = h5py.File("../BsDsStar_2ptData_C1.h5", "r")
+#f = h5py.File("../BsDsStar_C1_2ptBs.h5", "r")
+f = h5py.File("../BsDsStar_C1_2ptDs.h5", "r")
 
+nsq=1
+cmass=Ens.getCmass('C1')[1]
 
-bsn0=f["/cl_SM7.86_SM7.86_0.03224/c0.400/operator_GammaX/n2_5/data"]
-bsn0y=f["/cl_SM7.86_SM7.86_0.03224/c0.400/operator_GammaY/n2_5/data"]
-bsn0z=f["/cl_SM7.86_SM7.86_0.03224/c0.400/operator_GammaZ/n2_5/data"]
+bsn0=f["/cl_SM7.86_PT_0.03224/c{}/operator_GammaX/n2_{}/data".format(cmass,nsq)]
+bsn0y=f["/cl_SM7.86_PT_0.03224/c{}/operator_GammaY/n2_{}/data".format(cmass,nsq)]
+bsn0z=f["/cl_SM7.86_PT_0.03224/c{}/operator_GammaZ/n2_{}/data".format(cmass,nsq)]
 
 '''
-bsn0=f["/hl_SM7.86_SM7.86_0.03224_m7.47_csw4.92_zeta2.93/operator_Gamma5/n2_0/data"]
-bsn0y=f["/hl_SM7.86_SM7.86_0.03224_m7.47_csw4.92_zeta2.93/operator_Gamma5/n2_0/data"]
-bsn0z=f["/hl_SM7.86_SM7.86_0.03224_m7.47_csw4.92_zeta2.93/operator_Gamma5/n2_0/data"]
+bsn0=f["/hl_SM7.86_PT_0.03224_m7.47_csw4.92_zeta2.93/operator_Gamma5/n2_0/data"]
+bsn0y=f["/hl_SM7.86_PT_0.03224_m7.47_csw4.92_zeta2.93/operator_Gamma5/n2_0/data"]
+bsn0z=f["/hl_SM7.86_PT_0.03224_m7.47_csw4.92_zeta2.93/operator_Gamma5/n2_0/data"]
 '''
 
 ti=64
@@ -57,9 +67,9 @@ for k in range(configs):
     miry[k][0]=(np.real(bsn0y[k][0][0]))
     mirz[k][0]=(np.real(bsn0z[k][0][0]))
     for j in range(int(ti/2)):
-        mir[k][j+1]=(np.real(bsn0[k][0][j+1])+np.real(bsn0[k][0][64-1-j]))/2
-        miry[k][j+1]=(np.real(bsn0y[k][0][j+1])+np.real(bsn0y[k][0][64-1-j]))/2
-        mirz[k][j+1]=(np.real(bsn0z[k][0][j+1])+np.real(bsn0z[k][0][64-1-j]))/2
+        mir[k][j+1]=(np.real(bsn0[k][0][j+1])+np.real(bsn0[k][0][ti-1-j]))/2
+        miry[k][j+1]=(np.real(bsn0y[k][0][j+1])+np.real(bsn0y[k][0][ti-1-j]))/2
+        mirz[k][j+1]=(np.real(bsn0z[k][0][j+1])+np.real(bsn0z[k][0][ti-1-j]))/2
 
 '''
 mir = np.zeros(shape=(configs, int(ti/2+1)))
@@ -118,20 +128,21 @@ for j in range(int(ti/2-1)):
 df1 = pd.DataFrame(columns=['Correlator','Error'])
 df1['Correlator']=res
 df1['Error']=error
+df1.to_csv('Corr-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 #df1.to_csv('Corr-Bs.csv', sep='\t')
 
 df2 = pd.DataFrame(columns=['EffectiveMass','Error'])
 df2['EffectiveMass']=mass
 df2['Error']=errors    
-df2.to_csv('Mass-Bs.csv', sep='\t')
-#df2.to_csv('Mass-Ds0.400-1.csv', sep='\t')
+#df2.to_csv('Mass-Bs.csv', sep='\t')
+df2.to_csv('Mass-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 
 
 
 ###############################################################################
 
-reg_low=8
-reg_up=13
+reg_low=18
+reg_up=25
 
 #Covarianze matrix (without prefactor, not squarrooted)
 cut=ti/2-1-reg_up
@@ -170,8 +181,8 @@ sigma=np.sqrt((configs-1-reg_low-cut)/(configs-reg_low-cut)*h)
 
 df4 = pd.DataFrame(columns=['EffectiveMass'])
 df4['EffectiveMass']=jblocks   
-df4.to_csv('Ds0.400-nsq5-blocks.csv', sep='\t')
-
+df4.to_csv('Ds{}-nsq{}-blocks.csv'.format(cmass,nsq), sep='\t')
+#df4.to_csv('Bs-blocks.csv', sep='\t')
 
 print(mbar,sigma)
 
@@ -183,7 +194,7 @@ plt.axhline(y = mbar.x[0], color = 'r', linestyle = 'dashed', label = "red line"
 plt.fill_between(list(range(47))[reg_low:reg_up], mbar.x[0]+sigma, mbar.x[0]-sigma, color='r',alpha=0.2)
 plt.yscale('log')
 #plt.savefig('Zoom-Bs-Reg.pdf')
-#plt.savefig('Zoom-Ds400-Reg-5.pdf')
+plt.savefig('Zoom-Ds{}-Reg-{}.pdf'.format(cmass,nsq))
 
 df3 = pd.DataFrame(columns=['EffectiveMass','Error','RegUp','RegLow'])
 df3['EffectiveMass']=mbar.x
@@ -191,7 +202,7 @@ df3['Error']=sigma
 df3['RegUp']=reg_up
 df3['RegLow']=reg_low    
 #df3.to_csv('BsResult.csv', sep='\t')
-#df3.to_csv('Ds0.400Result-5.csv', sep='\t')
+df3.to_csv('Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
 
 
 

@@ -6,6 +6,15 @@ import matplotlib.pyplot as plt
 import cmath
 import pandas as pd
 from scipy.optimize import minimize
+import sys
+import os
+
+# Add the Code directory to the system path
+code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../Code'))
+sys.path.append(code_dir)
+
+import Ensemble as Ens
+
 
 def exp_val(data):
     return sum(data)/len(data)
@@ -28,19 +37,21 @@ def extract(lst,number):
     return [item[number] for item in lst]
 
 
-f = h5py.File("../BsDsStar_M2_2ptBs.h5", "r")
-#f = h5py.File("../BsDsStar_M2_2ptDs.h5", "r")
+#f = h5py.File("../BsDsStar_M2_2ptBs.h5", "r")
+f = h5py.File("../BsDsStar_M2_2ptDs.h5", "r")
+
+nsq=5
+cmass=Ens.getCmass('M2')[2]
+
+bsn0=f["/cl_SM10.36_PT_0.025/c{}/operator_GammaX/n2_{}/data".format(cmass,nsq)]
+bsn0y=f["/cl_SM10.36_PT_0.025/c{}/operator_GammaY/n2_{}/data".format(cmass,nsq)]
+bsn0z=f["/cl_SM10.36_PT_0.025/c{}/operator_GammaZ/n2_{}/data".format(cmass,nsq)]
 
 '''
-bsn0=f["/cl_SM10.36_PT_0.025/c0.340/operator_GammaX/n2_5/data"]
-bsn0y=f["/cl_SM10.36_PT_0.025/c0.340/operator_GammaY/n2_5/data"]
-bsn0z=f["/cl_SM10.36_PT_0.025/c0.340/operator_GammaZ/n2_5/data"]
-'''
-
-
 bsn0=f["/hl_SM10.36_PT_0.025_m3.49_csw3.07_zeta1.76/operator_Gamma5/n2_0/data"]
 bsn0y=f["/hl_SM10.36_PT_0.025_m3.49_csw3.07_zeta1.76/operator_Gamma5/n2_0/data"]
 bsn0z=f["/hl_SM10.36_PT_0.025_m3.49_csw3.07_zeta1.76/operator_Gamma5/n2_0/data"]
+'''
 
 ti=64
 configs=889
@@ -118,14 +129,14 @@ for j in range(int(ti/2-1)):
 df1 = pd.DataFrame(columns=['Correlator','Error'])
 df1['Correlator']=res
 df1['Error']=error
-#df1.to_csv('Corr-Ds0.340-5.csv', sep='\t')
-df1.to_csv('Corr-Bs.csv', sep='\t')
+df1.to_csv('Corr-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
+#df1.to_csv('Corr-Bs.csv', sep='\t')
 
 df2 = pd.DataFrame(columns=['EffectiveMass','Error'])
 df2['EffectiveMass']=mass
 df2['Error']=errors    
-df2.to_csv('Mass-Bs.csv', sep='\t')
-#df2.to_csv('Mass-Ds0.340-5.csv', sep='\t')
+#df2.to_csv('Mass-Bs.csv', sep='\t')
+df2.to_csv('Mass-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 
 
 
@@ -171,8 +182,8 @@ sigma=np.sqrt((configs-1-reg_low-cut)/(configs-reg_low-cut)*h)
 
 df4 = pd.DataFrame(columns=['EffectiveMass'])
 df4['EffectiveMass']=jblocks   
-#df4.to_csv('Ds0.340-nsq4-blocks.csv', sep='\t')
-df4.to_csv('Bs-blocks.csv', sep='\t')
+df4.to_csv('Ds{}-nsq{}-blocks.csv'.format(cmass,nsq), sep='\t')
+#df4.to_csv('Bs-blocks.csv', sep='\t')
 
 print(mbar,sigma)
 
@@ -183,16 +194,16 @@ plt.errorbar(list(range(47))[1:30], mass[1:30], yerr=errors[1:30],fmt='x')
 plt.axhline(y = mbar.x[0], color = 'r', linestyle = 'dashed', label = "red line")
 plt.fill_between(list(range(47))[reg_low:reg_up], mbar.x[0]+sigma, mbar.x[0]-sigma, color='r',alpha=0.2)
 plt.yscale('log')
-plt.savefig('Zoom-Bs-Reg.pdf')
-#plt.savefig('Zoom-Ds340-Reg-4.pdf')
+#plt.savefig('Zoom-Bs-Reg.pdf')
+plt.savefig('Zoom-Ds{}-Reg-{}.pdf'.format(cmass,nsq))
 
 df3 = pd.DataFrame(columns=['EffectiveMass','Error','RegUp','RegLow'])
 df3['EffectiveMass']=mbar.x
 df3['Error']=sigma  
 df3['RegUp']=reg_up
 df3['RegLow']=reg_low    
-df3.to_csv('BsResult.csv', sep='\t')
-#df3.to_csv('Ds0.340Result-4.csv', sep='\t')
+#df3.to_csv('BsResult.csv', sep='\t')
+df3.to_csv('Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
 
 
 
