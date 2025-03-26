@@ -13,7 +13,7 @@ import Regression
  
 #########Choose Params
 FF='V'
-nsq=1
+nsq=2
 ensemble='M2'
 cmass=Ens.getCmass(ensemble)[2] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 #reg_low=18
@@ -152,7 +152,7 @@ np.save('../Results/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,FF,nsq), r
 
 ###############################################################################
 
-'''
+
 #Covarianze matrix (without prefactor, not squarrooted)
 covmat=Regression.build_Covarianz(reg_up, reg_low, ts, jb3pt, jbdx, jbdy, jbdz, jbb, pref, dt, nsq, nconf, md, mb, pre, dsfit, bsfit, avn0)
 
@@ -173,7 +173,7 @@ def chijack(a,k):
     return np.dot(np.transpose([jackmass(i+reg_low,k)-a for i in range(int(ts/2-1-reg_low-cut))]),np.matmul(np.linalg.inv(covmat),[jackmass(i+reg_low,k)-a for i in range(int(ts/2-1-reg_low-cut))]))
 
 
-'''
+
 '''
 
 
@@ -184,7 +184,7 @@ def chijack(a,k):
                             [Regression.jackratio_A2(k,i + reg_low,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit) - a for i in range(int(ts / 2 - 1 - reg_low - cut))]))
 
 '''
-'''
+
 #Std Deviatson for all jakcknife blocks
 
 jblocks=np.zeros(nconf)
@@ -222,4 +222,3 @@ df3['Error']=sigma
 df3['RegUp']=reg_up
 df3['RegLow']=reg_low    
 df3.to_csv('../Results/{}/Fits/{}/{}-Av-nsq{}-Fit.csv'.format(ensemble,FF,FF,nsq), sep='\t')
-'''
