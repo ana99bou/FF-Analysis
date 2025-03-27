@@ -12,13 +12,14 @@ import Basic
 import Regression
  
 #########Choose Params
-FF='V'
-nsq=2
-ensemble='M2'
+FF='A1'
+nsq=5
+ensemble='C1'
 cmass=Ens.getCmass(ensemble)[2] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 #reg_low=18
 #reg_up=25
-reg_low=13
+#C1 12-16 laufen lassen, F1S 18-25
+reg_low=12
 reg_up=16
 ##########
 
@@ -39,6 +40,7 @@ m,csw,zeta=Ens.getRHQparams(ensemble)
 f3pt = h5py.File("../Data/{}/BsDsStar_{}_3pt.h5".format(ensemble,ensemble), "r")
 f2ptDs = h5py.File("../Data/{}/BsDsStar_{}_2ptDs.h5".format(ensemble,ensemble), "r")
 f2ptBs = h5py.File("../Data/{}/BsDsStar_{}_2ptBs.h5".format(ensemble,ensemble), "r")
+
 
 '''
 f3pt = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble,ensemble), "r")
@@ -83,7 +85,6 @@ dsyn0=f2ptDs["/cl_SM{}_SM{}_{}/c{}/operator_GammaY/n2_{}/data".format(sm,sm,smas
 dszn0=f2ptDs["/cl_SM{}_SM{}_{}/c{}/operator_GammaZ/n2_{}/data".format(sm,sm,smass,cmass,nsq)]
 bsn0=f2ptBs["/hl_SM{}_SM{}_{}_m{}_csw{}_zeta{}/operator_Gamma5/n2_0/data".format(sm,sm,smass,m,csw,zeta)]
 
-
 '''
 #For old F1S format
 ptmom=['0_0_0','1_0_0','1_1_0','1_1_1', '2_0_0','2_1_0']
@@ -95,15 +96,14 @@ bsn0=f2ptBs["/rhq_m2.42_csw2.68_zeta1.52_SM{}_SM{}_s{}/operator_Gamma5/0_0_0/dat
 
 # Additional datasets for A2
 if FF == 'A2':
-    A0comp = np.load('../Results/{}/Ratios/A0/Jackknife/nsq{}.npy'.format(ensemble,nsq))
-    A1comp = np.load('../Results/{}/Ratios/A1/Jackknife/nsq{}.npy'.format(ensemble,nsq))
-    A0fit=np.load('../Results/{}/Fits/A0/A0-nsq{}.npy'.format(ensemble, nsq))
-    A1fit=np.load('../Results/{}/Fits/A1/A1-nsq{}.npy'.format(ensemble, nsq))
+    #A0comp = np.load('../Results/{}/Ratios/A0/Jackknife/nsq{}.npy'.format(ensemble,nsq))
+    #A1comp = np.load('../Results/{}/Ratios/A1/Jackknife/nsq{}.npy'.format(ensemble,nsq))
+    A0fit=pd.read_csv('../Results/{}/Fits/A0/A0-Av-nsq{}-Fit.csv'.format(ensemble, nsq),sep='\t')['EffectiveMass']
+    A1fit=pd.read_csv('../Results/{}/Fits/A1/A1-Av-nsq{}-Fit.csv'.format(ensemble, nsq),sep='\t')['EffectiveMass']
 
 # Read eff. fit jackknife blocks
 bsfit=pd.read_csv('../Data/{}/2pt/Bs-blocks.csv'.format(ensemble),sep='\s')
 dsfit=pd.read_csv('../Data/{}/2pt/Ds{}-nsq{}-blocks.csv'.format(ensemble,cmass,nsq),sep='\s')
-
 
 # Prefactor and folding
 if FF == 'V':
@@ -133,9 +133,14 @@ jbdy=Jackblocks.create_blocks_2pt(avdy,dt,nconf)
 jbdz=Jackblocks.create_blocks_2pt(avdz,dt,nconf)
 jbb=Jackblocks.create_blocks_2pt(avb,dt,nconf)
 
+
+print(mb)
+print(md)
+print(ed)
+
 # Calculate Ratio
 if FF == 'A2':
-    ratiojack,errn0 =Ratio.build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit)
+    ratiojack,errn0 =Ratio.build_Ratio_A2(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,L,A0fit,A1fit)
 else:
     ratiojack,errn0 =Ratio.build_Ratio(jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,ed,mb,pre,dsfit,bsfit)
 
@@ -154,7 +159,10 @@ np.save('../Results/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,FF,nsq), r
 
 
 #Covarianze matrix (without prefactor, not squarrooted)
-covmat=Regression.build_Covarianz(reg_up, reg_low, ts, jb3pt, jbdx, jbdy, jbdz, jbb, pref, dt, nsq, nconf, md, mb, pre, dsfit, bsfit, avn0)
+if FF == 'A2':
+    covmat=Regression.build_Covarianz_A2(reg_up,reg_low,ts,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,pre,dsfit,bsfit,L,A0fit,A1fit,avn0)
+else:
+    covmat=Regression.build_Covarianz(reg_up, reg_low, ts, jb3pt, jbdx, jbdy, jbdz, jbb, pref, dt, nsq, nconf, md, mb, pre, dsfit, bsfit, avn0)
 
 ##For A2
 #covmat=Regression.build_Covarianz_A2(reg_up,reg_low,ts,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,md,mb,ed,pre,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit,avn0)
@@ -164,26 +172,21 @@ cut=ts/2-1-reg_up
 def chi(a):
     return (nconf-1-reg_low-cut)/(nconf-reg_low-cut)*np.dot(np.transpose([i-a for i in avn0[reg_low:reg_up]]),np.matmul(np.linalg.inv(covmat),[i-a for i in avn0[reg_low:reg_up]]))
 
-mbar=minimize(chi,0.1,method='Nelder-Mead', tol=1e-6)
+mbar=minimize(chi,0.1,method='Nelder-Mead', tol=1e-8)
 
 def jackmass(t1,i):
     return (((Basic.sum_with_prefacs(jb3pt[:,t1,i], pref[nsq],nsq)))/(np.sqrt(1/3*(jbdx[t1,i]+jbdy[t1,i]+jbdz[t1,i])*jbb[dt-(t1),i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*(t1))*np.exp(-bsfit['EffectiveMass'][i]*(dt-(t1)))))*pre
 
-def chijack(a,k):
-    return np.dot(np.transpose([jackmass(i+reg_low,k)-a for i in range(int(ts/2-1-reg_low-cut))]),np.matmul(np.linalg.inv(covmat),[jackmass(i+reg_low,k)-a for i in range(int(ts/2-1-reg_low-cut))]))
 
-
-
-'''
-
-
-###For A2
-def chijack(a,k):
-    return np.dot(np.transpose([Regression.jackratio_A2(k,i + reg_low,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit) - a for i in range(int(ts / 2 - 1 - reg_low - cut))]),
+if FF == 'A2':
+    def chijack(a,k):
+        return np.dot(np.transpose([Regression.jackratio_A2(k,i + reg_low,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,L,A0fit,A1fit) - a for i in range(int(ts / 2 - 1 - reg_low - cut))]),
                   np.matmul(np.linalg.inv(covmat),
-                            [Regression.jackratio_A2(k,i + reg_low,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,A0comp,A1comp,L,A0fit,A1fit) - a for i in range(int(ts / 2 - 1 - reg_low - cut))]))
+                            [Regression.jackratio_A2(k,i + reg_low,jb3pt,jbdx,jbdy,jbdz,jbb,pref,dt,nsq,nconf,pre,md,mb,ed,dsfit,bsfit,L,A0fit,A1fit) - a for i in range(int(ts / 2 - 1 - reg_low - cut))]))
+else:
+    def chijack(a,k):
+        return np.dot(np.transpose([jackmass(i+reg_low,k)-a for i in range(int(ts/2-1-reg_low-cut))]),np.matmul(np.linalg.inv(covmat),[jackmass(i+reg_low,k)-a for i in range(int(ts/2-1-reg_low-cut))]))
 
-'''
 
 #Std Deviatson for all jakcknife blocks
 
