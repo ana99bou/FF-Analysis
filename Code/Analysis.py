@@ -13,14 +13,14 @@ import Regression
  
 #########Choose Params
 FF='A2'
-nsq=1
-ensemble='C1'
-cmass=Ens.getCmass(ensemble)[2] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
+nsq=5
+ensemble='F1S'
+cmass=Ens.getCmass(ensemble)[0] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 #reg_low=18
 #reg_up=25
 #C1 12-16 laufen lassen, F1S 18-25
-reg_up=16
-reg_low=12
+reg_up=25
+reg_low=18
 ##########
 
 # Get strange mass and smearing radius
@@ -118,20 +118,26 @@ elif FF == 'A2':
     #pre=(mb+md)*md**2*(mb-ed)/(2*(mb**2*ed))
     #pre=md**2*(mb-md)/(ed*mb)*(ed*mb+md**2)/(ed*mb-mb**2)*(ed**2-2*md**2+ed*mb)/(md**2-ed*mb)
     pre=md**2*(mb+md)/(ed*mb)
-    av1n0=Folding.folding3ptAx(dsets, dsetsb, nmom, dt, nconf, ts,pref,nsq)   
+    av1n0=Folding.folding3ptAxA2(dsets, dsetsb, nmom, dt, nconf, ts,pref,nsq)   
     #av1n02=Folding.folding3ptAx(dsets2, dsetsb2, nmom, dt, nconf, ts)   
 
 
 avdx=Folding.folding2pt3(dsxn0, dsyn0, dszn0, nmom, dt, nconf, ts)
 avb=Folding.folding2pt(bsn0, nmom, dt, nconf, ts)
 
-#Create Jackknife Blocks, nconf's component is the mean
-jb3pt=Jackblocks.create_blocks_2pt(av1n0, dt, nconf)
-#if FF == 'A2': jb3pt2=Jackblocks.create_blocks_3pt(av1n02,nmom, dt, nconf)
-jbdx=Jackblocks.create_blocks_2pt(avdx,dt,nconf)
-#jbdy=Jackblocks.create_blocks_2pt(avdy,dt,nconf)
-#jbdz=Jackblocks.create_blocks_2pt(avdz,dt,nconf)
-jbb=Jackblocks.create_blocks_2pt(avb,dt,nconf)
+if FF == 'A2':
+    jb3pt=Jackblocks.create_blocks_3pt(av1n0,nmom, dt, nconf)
+    #if FF == 'A2': jb3pt2=Jackblocks.create_blocks_3pt(av1n02,nmom, dt, nconf)
+    jbdx=Jackblocks.create_blocks_2pt(avdx,dt,nconf)
+    jbb=Jackblocks.create_blocks_2pt(avb,dt,nconf)
+else:
+    #Create Jackknife Blocks, nconf's component is the mean
+    jb3pt=Jackblocks.create_blocks_2pt(av1n0, dt, nconf)
+    #if FF == 'A2': jb3pt2=Jackblocks.create_blocks_3pt(av1n02,nmom, dt, nconf)
+    jbdx=Jackblocks.create_blocks_2pt(avdx,dt,nconf)
+    #jbdy=Jackblocks.create_blocks_2pt(avdy,dt,nconf)
+    #jbdz=Jackblocks.create_blocks_2pt(avdz,dt,nconf)
+    jbb=Jackblocks.create_blocks_2pt(avb,dt,nconf)
 
 
 # Calculate Ratio
