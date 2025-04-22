@@ -57,6 +57,14 @@ def sum_with_prefacs_jack_A2(lst,lst2,pref,pref2,nsq,j,i):
         total+=pref[k]*jack(lst[k][j],i)+pref2[k]*jack(lst2[k][j],i)
     return total/len(lst)
 
+def ds_mean(datax,datay,dataz,dt):
+    res=np.array(dt+1)
+    for i in range(dt+1):
+        res[i]=np.sqrt(datax[i]**2+datay[i]**2+dataz[i]**2)
+    return res
+
+
+
 #information on i and j included in block
 #def sum_with_prefacs_jack(block,pref,nsq):
 #    total=0

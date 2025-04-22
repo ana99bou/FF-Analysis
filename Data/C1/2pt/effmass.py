@@ -39,8 +39,14 @@ def extract(lst,number):
 #f = h5py.File("../BsDsStar_C1_2ptBs.h5", "r")
 f = h5py.File("../BsDsStar_C1_2ptDs.h5", "r")
 
-nsq=2
-cmass=Ens.getCmass('C1')[1]
+#########
+nsq=0
+ensemble='C1'
+
+
+cmass=Ens.getCmass(ensemble)[1]
+configs,dt,ti,L= Ens.getEns(ensemble)
+
 
 bsn0=f["/cl_SM7.86_PT_0.03224/c{}/operator_GammaX/n2_{}/data".format(cmass,nsq)]
 bsn0y=f["/cl_SM7.86_PT_0.03224/c{}/operator_GammaY/n2_{}/data".format(cmass,nsq)]
@@ -52,8 +58,8 @@ bsn0y=f["/hl_SM7.86_PT_0.03224_m7.47_csw4.92_zeta2.93/operator_Gamma5/n2_0/data"
 bsn0z=f["/hl_SM7.86_PT_0.03224_m7.47_csw4.92_zeta2.93/operator_Gamma5/n2_0/data"]
 '''
 
-ti=64
-configs=1636
+#ti=64
+#configs=1636
 
 print(bsn0[0][:])
 
@@ -67,9 +73,9 @@ for k in range(configs):
     miry[k][0]=(np.real(bsn0y[k][0][0]))
     mirz[k][0]=(np.real(bsn0z[k][0][0]))
     for j in range(int(ti/2)):
-        mir[k][j+1]=(np.real(bsn0[k][0][j+1])+np.real(bsn0[k][0][ti-1-j]))/2
-        miry[k][j+1]=(np.real(bsn0y[k][0][j+1])+np.real(bsn0y[k][0][ti-1-j]))/2
-        mirz[k][j+1]=(np.real(bsn0z[k][0][j+1])+np.real(bsn0z[k][0][ti-1-j]))/2
+        mir[k][j+1]=((np.real(bsn0[k][0][j+1])+np.real(bsn0[k][0][ti-1-j]))/2+(np.real(bsn0y[k][0][j+1])+np.real(bsn0y[k][0][ti-1-j]))/2+(np.real(bsn0z[k][0][j+1])+np.real(bsn0z[k][0][ti-1-j]))/2)/3
+        #miry[k][j+1]=(np.real(bsn0y[k][0][j+1])+np.real(bsn0y[k][0][ti-1-j]))/2
+        #mirz[k][j+1]=(np.real(bsn0z[k][0][j+1])+np.real(bsn0z[k][0][ti-1-j]))/2
 
 '''
 mir = np.zeros(shape=(configs, int(ti/2+1)))
@@ -90,16 +96,18 @@ res= np.zeros(int(ti/2+1))
 error=np.zeros(int(ti/2+1))
  
 for j in range(int(ti/2+1)):
-    res[j]=(exp_val(extract(mir,j))+exp_val(extract(miry,j))+exp_val(extract(mirz,j)))/3
+    #res[j]=(exp_val(extract(mir,j))+exp_val(extract(miry,j))+exp_val(extract(mirz,j)))/3
+    res[j]=exp_val(extract(mir,j))
     r=0
     for i in range(configs):
-        r=r+((jack(extract(mir,j),i)+jack(extract(miry,j),i)+jack(extract(mirz,j),i))/3-res[j])**2
+        #r=r+((jack(extract(mir,j),i)+jack(extract(miry,j),i)+jack(extract(mirz,j),i))/3-res[j])**2
+        r=r+(jack(extract(mir,j),i)-res[j])**2
     error[j]=np.sqrt((configs-1)/configs*r)
 
 
 mirtr=np.transpose(mir)  
-mirtry=np.transpose(miry)  
-mirtrz=np.transpose(mirz)  
+#mirtry=np.transpose(miry)  
+#mirtrz=np.transpose(mirz)  
 
 #f = plt.figure(figsize=(10,4))
 #plt.subplots_adjust(bottom=0.5)
@@ -120,7 +128,8 @@ errors=np.zeros(int(ti/2-1))
 for j in range(int(ti/2-1)):
     x=0
     for i in range(configs):    
-        x=x+(np.arccosh(((jack(mirtr[j],i)+jack(mirtry[j],i)+jack(mirtrz[j],i))/3+(jack(mirtr[j+2],i)+jack(mirtry[j+2],i)+jack(mirtrz[j+2],i))/3)/(2*(jack(mirtr[j+1],i)+jack(mirtry[j+1],i)+jack(mirtrz[j+1],i))/3))-mass[j])**2
+        #x=x+(np.arccosh(((jack(mirtr[j],i)+jack(mirtry[j],i)+jack(mirtrz[j],i))/3+(jack(mirtr[j+2],i)+jack(mirtry[j+2],i)+jack(mirtrz[j+2],i))/3)/(2*(jack(mirtr[j+1],i)+jack(mirtry[j+1],i)+jack(mirtrz[j+1],i))/3))-mass[j])**2
+        x=x+(np.arccosh((jack(mirtr[j],i)+jack(mirtr[j+2],i))/(2*jack(mirtr[j+1],i)))-mass[j])**2
     errors[j]=(np.sqrt((configs-1)/configs*x))
 
     
@@ -137,7 +146,7 @@ df2['Error']=errors
 #df2.to_csv('Mass-Bs.csv', sep='\t')
 df2.to_csv('Mass-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 
-
+print('Test1')
 
 ###############################################################################
 
@@ -152,22 +161,25 @@ for t1 in range(int(ti/2-1-reg_low-cut)):
     for t2 in range(int(ti/2-1-reg_low-cut)):
         x=0
         for i in range(configs):  
-            x=x+(np.arccosh(((jack(mirtr[t1+reg_low],i)+jack(mirtry[t1+reg_low],i)+jack(mirtrz[t1+reg_low],i))/3+(jack(mirtr[t1+2+reg_low],i)+jack(mirtry[t1+2+reg_low],i)+jack(mirtrz[t1+2+reg_low],i))/3)/(2*(jack(mirtr[t1+1+reg_low],i)+jack(mirtry[t1+1+reg_low],i)+jack(mirtrz[t1+1+reg_low],i))/3))-mass[t1+reg_low])*(np.arccosh(((jack(mirtr[t2+reg_low],i)+jack(mirtry[t2+reg_low],i)+jack(mirtrz[t2+reg_low],i))/3+(jack(mirtr[t2+2+reg_low],i)+jack(mirtry[t2+2+reg_low],i)+jack(mirtrz[t2+2+reg_low],i))/3)/(2*(jack(mirtr[t2+1+reg_low],i)+jack(mirtry[t2+1+reg_low],i)+jack(mirtrz[t2+1+reg_low],i))/3))-mass[t2+reg_low])
+            #x=x+(np.arccosh(((jack(mirtr[t1+reg_low],i)+jack(mirtry[t1+reg_low],i)+jack(mirtrz[t1+reg_low],i))/3+(jack(mirtr[t1+2+reg_low],i)+jack(mirtry[t1+2+reg_low],i)+jack(mirtrz[t1+2+reg_low],i))/3)/(2*(jack(mirtr[t1+1+reg_low],i)+jack(mirtry[t1+1+reg_low],i)+jack(mirtrz[t1+1+reg_low],i))/3))-mass[t1+reg_low])*(np.arccosh(((jack(mirtr[t2+reg_low],i)+jack(mirtry[t2+reg_low],i)+jack(mirtrz[t2+reg_low],i))/3+(jack(mirtr[t2+2+reg_low],i)+jack(mirtry[t2+2+reg_low],i)+jack(mirtrz[t2+2+reg_low],i))/3)/(2*(jack(mirtr[t2+1+reg_low],i)+jack(mirtry[t2+1+reg_low],i)+jack(mirtrz[t2+1+reg_low],i))/3))-mass[t2+reg_low])
+            x=x+(np.arccosh((jack(mirtr[t1+reg_low],i)+jack(mirtr[t1+2+reg_low],i))/(2*jack(mirtr[t1+1+reg_low],i)))-mass[t1+reg_low])*(np.arccosh((jack(mirtr[t2+reg_low],i)+jack(mirtr[t2+2+reg_low],i))/(2*jack(mirtr[t2+1+reg_low],i)))-mass[t2+reg_low])
         covmat[t1][t2]=x
         covmat[t2][t1]=x  
         
-        
+print('test')
+invcovmat=np.linalg.inv(covmat)        
 def chi(a):
-    return (configs-1-reg_low-cut)/(configs-reg_low-cut)*np.dot(np.transpose([i-a for i in mass[reg_low:reg_up]]),np.matmul(np.linalg.inv(covmat),[i-a for i in mass[reg_low:reg_up]]))
+    return (configs)/(configs-1)*np.dot(np.transpose([i-a for i in mass[reg_low:reg_up]]),np.matmul(invcovmat,[i-a for i in mass[reg_low:reg_up]]))
 
-mbar=minimize(chi,0.1,method='Nelder-Mead', tol=1e-6)
+mbar=minimize(chi,0.1,method='Nelder-Mead', tol=1e-8)
 
 
 def jackmass(t1,i):
-    return np.arccosh(((jack(mirtr[t1],i)+jack(mirtry[t1],i)+jack(mirtrz[t1],i))/3+(jack(mirtr[t1+2],i)+jack(mirtry[t1+2],i)+jack(mirtrz[t1+2],i))/3)/(2*(jack(mirtr[t1+1],i)+jack(mirtry[t1+1],i)+jack(mirtrz[t1+1],i))/3))
+    #return np.arccosh(((jack(mirtr[t1],i)+jack(mirtry[t1],i)+jack(mirtrz[t1],i))/3+(jack(mirtr[t1+2],i)+jack(mirtry[t1+2],i)+jack(mirtrz[t1+2],i))/3)/(2*(jack(mirtr[t1+1],i)+jack(mirtry[t1+1],i)+jack(mirtrz[t1+1],i))/3))
+    return np.arccosh((jack(mirtr[t1],i)+jack(mirtr[t1+2],i))/(2*jack(mirtr[t1+1],i)))
 
 def chijack(a,k):
-    return np.dot(np.transpose([jackmass(i+reg_low,k)-a for i in range(int(ti/2-1-reg_low-cut))]),np.matmul(np.linalg.inv(covmat),[jackmass(i+reg_low,k)-a for i in range(int(ti/2-1-reg_low-cut))]))
+    return np.dot(np.transpose([jackmass(i+reg_low,k)-a for i in range(int(ti/2-1-reg_low-cut))]),np.matmul(invcovmat,[jackmass(i+reg_low,k)-a for i in range(int(ti/2-1-reg_low-cut))]))
 
 
 #Std Deviation for all jakcknife blocks
@@ -177,7 +189,7 @@ for i in range(configs):
     tmp=minimize(chijack,0.1,args=(i),method='Nelder-Mead', tol=1e-6).x[0]
     jblocks[i]=tmp
     h=h+(tmp-mbar.x[0])**2
-sigma=np.sqrt((configs-1-reg_low-cut)/(configs-reg_low-cut)*h)
+sigma=np.sqrt((configs-1)/(configs)*h)
 
 df4 = pd.DataFrame(columns=['EffectiveMass'])
 df4['EffectiveMass']=jblocks   
