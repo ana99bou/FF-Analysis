@@ -37,7 +37,7 @@ nsq2plt=pd.read_csv('./Fits/A1/A1-Av-nsq2-Fit.csv',sep='\s')
 nsq4plt=pd.read_csv('./Fits/A1/A1-Av-nsq4-Fit.csv',sep='\s')
 nsq5plt=pd.read_csv('./Fits/A1/A1-Av-nsq5-Fit.csv',sep='\s')
 
-x0, y0 = [-1, 32], [-nsq0plt['EffectiveMass'], -nsq0plt['EffectiveMass']]
+x0, y0 = [-1, 32], [nsq0plt['EffectiveMass'], nsq0plt['EffectiveMass']]
 x1, y1 = [-1, 32], [nsq1plt['EffectiveMass'], nsq1plt['EffectiveMass']]
 x2, y2 = [-1, 32], [nsq2plt['EffectiveMass'], nsq2plt['EffectiveMass']]
 #x3, y3 = [-1, 32], [nsq3plt['EffectiveMass'], nsq3plt['EffectiveMass']]
@@ -80,7 +80,7 @@ plt.errorbar(list(range(30)), nsq4[0][0:30], yerr=nsq4[1][0:30],ls='none',fmt='x
 plt.errorbar(list(range(30)), nsq5[0][0:30], yerr=nsq5[1][0:30],ls='none',fmt='x',label='$n^2=5$',color='magenta')
 
 plt.plot(x0,y0,color='g')
-plt.fill_between(list(range(47))[int(reg_low0):int(reg_up0+1)], -nsq0plt['EffectiveMass']+sigma0, -nsq0plt['EffectiveMass']-sigma0, color='g',alpha=0.2)
+plt.fill_between(list(range(47))[int(reg_low0):int(reg_up0+1)], nsq0plt['EffectiveMass']+sigma0, nsq0plt['EffectiveMass']-sigma0, color='g',alpha=0.2)
 
 plt.plot(x1,y1, color='b',linewidth=0.5)
 plt.fill_between(list(range(47))[int(reg_low1):int(reg_up1+1)], nsq1plt['EffectiveMass']+sigma1, nsq1plt['EffectiveMass']-sigma1, color='b',alpha=0.2)
