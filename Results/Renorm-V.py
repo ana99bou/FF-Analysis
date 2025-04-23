@@ -108,14 +108,14 @@ v_coords_m2 = [mrho_Vi*np.sqrt(M2Zall*M2ZVbb)*x for x in v_coords_m2]
 
 
 
-plt.errorbar(c1x_coords, v_coords_c1, yerr=v_errors_c1, fmt='o', color='red',ecolor='red', capsize=5, capthick=2, elinewidth=1,label=r'C1')
-plt.errorbar(f1sx_coords, v_coords_f1s, yerr=v_errors_f1s, fmt='o', color='green',ecolor='green', capsize=5, capthick=2, elinewidth=1,label=r'F1S')
-plt.errorbar(m2x_coords, v_coords_m2, yerr=v_errors_m2, fmt='o', color='blue',ecolor='blue', capsize=5, capthick=2, elinewidth=1,label=r'M2')
+plt.errorbar(c1x_coords, v_coords_c1, yerr=v_errors_c1, fmt='o', color='red',ecolor='red', capsize=5, capthick=2, elinewidth=1,label=r'C1, $m_c=0.400$')
+plt.errorbar(f1sx_coords, v_coords_f1s, yerr=v_errors_f1s, fmt='o', color='green',ecolor='green', capsize=5, capthick=2, elinewidth=1,label=r'F1S, $m_c=0.248$')
+plt.errorbar(m2x_coords, v_coords_m2, yerr=v_errors_m2, fmt='o', color='blue',ecolor='blue', capsize=5, capthick=2, elinewidth=1,label=r'M2, $m_c=0.340$')
 
 plt.axis((0,12,0.8,1.4))
 
 plt.xlabel(r'$q^2[GeV]^2$',fontsize=15)
-plt.ylabel('Lattice Form Factors',fontsize=15)
+plt.ylabel(r'V',fontsize=15)
 
 plt.tick_params(axis='both', which='major', labelsize=14) 
 plt.legend()
