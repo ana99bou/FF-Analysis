@@ -23,7 +23,7 @@ print(result_data)
 
 # Plot the data
 plt.xlabel('Time')
-plt.ylabel('Effective Mass')
+plt.ylabel(r'Effective Mass $D_s^*$ C1')
 plt.ylim(1.0, 1.6)  # Restrict the y-axis to the range from 0.8 to 1.2
 
 colors = ['g', 'b', 'orange', 'brown', 'red', 'cyan']

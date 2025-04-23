@@ -33,7 +33,7 @@ for i in range(num_files):
 plt.errorbar(x_values, effective_mass, yerr=errors, fmt='o', capsize=5, label='Effective Mass')
 plt.scatter(x_values, disprel, label='Dispersion Relation', color='red')
 plt.xlabel(r'$n^2$')
-plt.ylabel(r'Effective Eenrgy $D_s^*$')
+plt.ylabel(r'Effective Energy $D_s^* M2$')
 #plt.title('Effective Mass vs File Index')
 plt.legend()
 #plt.grid(True)
