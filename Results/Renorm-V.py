@@ -54,6 +54,8 @@ f1sr=[2.785**2*(mbf1s**2+md0f1s**2-2*mbf1s*md0f1s),2.785**2*(mbf1s**2+md0f1s**2-
 c1r=[1.7848**2*(mbc1**2+md0c1**2-2*mbc1*md0c1),1.7848**2*(mbc1**2+md0c1**2-2*mbc1*md1c1),1.7848**2*(mbc1**2+md0c1**2-2*mbc1*md2c1),1.7848**2*(mbc1**2+md0c1**2-2*mbc1*md3c1),1.7848**2*(mbc1**2+md0c1**2-2*mbc1*md4c1),1.7848**2*(mbc1**2+md0c1**2-2*mbc1*md5c1)]
 m2r=[2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md0m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md1m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md2m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md3m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md4m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md5m2)]
 
+print(md0c1*1.7848,md0m2*2.3833,md0f1s*2.785)
+
 print((mbc1**2+md0c1**2-2*mbc1*md0c1))
 print((mbm2**2+md0m2**2-2*mbm2*md0m2))
 print((mbf1s**2+md0f1s**2-2*mbf1s*md0f1s))
@@ -102,17 +104,17 @@ v_errors_m2=[m2nsq1plt['Error'].iloc[0],m2nsq2plt['Error'].iloc[0],m2nsq3plt['Er
 
 print(v_coords_c1)
 
-v_coords_c1 = [crho_Vi*np.sqrt(C1Zall*C1ZVbb)*x for x in v_coords_c1]
-v_coords_f1s = [frho_Vi*np.sqrt(F1SZall*F1SZVbb)*x for x in v_coords_f1s]
-v_coords_m2 = [mrho_Vi*np.sqrt(M2Zall*M2ZVbb)*x for x in v_coords_m2]
+v_coords_c1 = [crho_Vi*np.sqrt(C1Zacc*C1ZVbb)*x for x in v_coords_c1]
+v_coords_f1s = [frho_Vi*np.sqrt(F1SZacc*F1SZVbb)*x for x in v_coords_f1s]
+v_coords_m2 = [mrho_Vi*np.sqrt(M2Zacc*M2ZVbb)*x for x in v_coords_m2]
 
 
 
-plt.errorbar(c1x_coords, v_coords_c1, yerr=v_errors_c1, fmt='o', color='red',ecolor='red', capsize=5, capthick=2, elinewidth=1,label=r'C1, $m_c=0.400$')
-plt.errorbar(f1sx_coords, v_coords_f1s, yerr=v_errors_f1s, fmt='o', color='green',ecolor='green', capsize=5, capthick=2, elinewidth=1,label=r'F1S, $m_c=0.248$')
-plt.errorbar(m2x_coords, v_coords_m2, yerr=v_errors_m2, fmt='o', color='blue',ecolor='blue', capsize=5, capthick=2, elinewidth=1,label=r'M2, $m_c=0.340$')
+plt.errorbar(c1x_coords, v_coords_c1, yerr=v_errors_c1, fmt='o', color='red',ecolor='red', capsize=5, capthick=2, elinewidth=1,label=r'C1, $m_c=a0.400$')
+plt.errorbar(f1sx_coords, v_coords_f1s, yerr=v_errors_f1s, fmt='o', color='green',ecolor='green', capsize=5, capthick=2, elinewidth=1,label=r'F1S, $m_c=a0.248$')
+plt.errorbar(m2x_coords, v_coords_m2, yerr=v_errors_m2, fmt='o', color='blue',ecolor='blue', capsize=5, capthick=2, elinewidth=1,label=r'M2, $m_c=a0.340$')
 
-plt.axis((0,12,0.8,1.4))
+#plt.axis((0,12,0.8,1.4))
 
 plt.xlabel(r'$q^2[GeV]^2$',fontsize=15)
 plt.ylabel(r'V',fontsize=15)
