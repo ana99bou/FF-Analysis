@@ -97,7 +97,7 @@ plt.tick_params(axis='both', which='major', labelsize=14)  # For major ticks
 
 plt.axvline(x=18, color='grey', linestyle='--', linewidth=0.8, label='Fit Range')  # At x=1
 plt.axvline(x=25, color='grey', linestyle='--', linewidth=0.8)  # At x=4
-plt.axis((0,46,0.71,0.875))
+plt.axis((0,46,0.65,0.95))
 
 
 #plt.yscale('log')

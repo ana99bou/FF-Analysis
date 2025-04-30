@@ -8,6 +8,14 @@ import pandas as pd
 from scipy.optimize import minimize
 import sys 
 import os
+import scipy
+
+
+def pvalue(chi2, dof):
+    r"""Compute the $p$-value corresponding to a $\chi^2$ with `dof` degrees
+    of freedom."""
+    return 1 - scipy.stats.chi2.cdf(chi2, dof)
+
 
 # Add the Code directory to the system path
 code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../Code'))
@@ -172,6 +180,7 @@ def chi(a):
 
 mbar=minimize(chi,0.1,method='Nelder-Mead', tol=1e-8)
 
+print(pvalue(mbar.fun,reg_up-reg_low))
 
 def jackmass(t1,i):
     #return np.arccosh(((jack(mirtr[t1],i)+jack(mirtry[t1],i)+jack(mirtrz[t1],i))/3+(jack(mirtr[t1+2],i)+jack(mirtry[t1+2],i)+jack(mirtrz[t1+2],i))/3)/(2*(jack(mirtr[t1+1],i)+jack(mirtry[t1+1],i)+jack(mirtrz[t1+1],i))/3))
@@ -215,6 +224,9 @@ df3['RegLow']=reg_low
 #df3.to_csv('BsResult.csv', sep='\t')
 df3.to_csv('Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
 
+df4 = pd.DataFrame(columns=['pval'])
+df4['pval']=pvalue(mbar.fun,reg_up-reg_low)
+df4.to_csv('pval-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 
 
 

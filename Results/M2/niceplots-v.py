@@ -38,11 +38,11 @@ nsq4plt=pd.read_csv('./Fits/V/V-Av-nsq4-Fit.csv',sep='\s')
 nsq5plt=pd.read_csv('./Fits/V/V-Av-nsq5-Fit.csv',sep='\s')
 
 #x0, y0 = [-1, 32], [-nsq0plt['EffectiveMass'], -nsq0plt['EffectiveMass']]
-x1, y1 = [-1, 20], [nsq1plt['EffectiveMass'], nsq1plt['EffectiveMass']]
-x2, y2 = [-1, 20], [nsq2plt['EffectiveMass'], nsq2plt['EffectiveMass']]
-x3, y3 = [-1, 20], [nsq3plt['EffectiveMass'], nsq3plt['EffectiveMass']]
-x4, y4 = [-1, 20], [nsq4plt['EffectiveMass'], nsq4plt['EffectiveMass']]
-x5, y5 = [-1, 20], [nsq5plt['EffectiveMass'], nsq5plt['EffectiveMass']]
+x1, y1 = [-1, 24], [nsq1plt['EffectiveMass'], nsq1plt['EffectiveMass']]
+x2, y2 = [-1, 24], [nsq2plt['EffectiveMass'], nsq2plt['EffectiveMass']]
+x3, y3 = [-1, 24], [nsq3plt['EffectiveMass'], nsq3plt['EffectiveMass']]
+x4, y4 = [-1, 24], [nsq4plt['EffectiveMass'], nsq4plt['EffectiveMass']]
+x5, y5 = [-1, 24], [nsq5plt['EffectiveMass'], nsq5plt['EffectiveMass']]
 
 reg_low1=nsq1plt['RegLow']
 reg_up1=nsq1plt['RegUp']
@@ -70,11 +70,11 @@ plt.ylabel(r'$\widetilde{V}$',fontsize=15)
 #plt.plot(range(96),avn00)
 #plt.errorbar(list(range(20)), -pre0*nsq0[0][0:20], yerr=-pre0*nsq0[1][0:20],ls='none',fmt='x',label='$n^2=0$',color='g')
 
-plt.errorbar(list(range(20)), nsq1[0][0:20], yerr=nsq1[1][0:20],ls='none',fmt='x',label='$n^2=1$',color='b')
-plt.errorbar(list(range(20)), nsq2[0][0:20], yerr=nsq2[1][0:20],ls='none',fmt='x',label='$n^2=2$',color='orange')
-plt.errorbar(list(range(20)), nsq3[0][0:20], yerr=nsq3[1][0:20],ls='none',fmt='x',label='$n^2=3$',color='brown')
-plt.errorbar(list(range(20)), nsq4[0][0:20], yerr=nsq4[1][0:20],ls='none',fmt='x',label='$n^2=4$',color='red')
-plt.errorbar(list(range(20)), nsq5[0][0:20], yerr=nsq5[1][0:20],ls='none',fmt='x',label='$n^2=5$',color='magenta')
+plt.errorbar(list(range(24)), nsq1[0][0:24], yerr=nsq1[1][0:24],ls='none',fmt='x',label='$n^2=1$',color='b')
+plt.errorbar(list(range(24)), nsq2[0][0:24], yerr=nsq2[1][0:24],ls='none',fmt='x',label='$n^2=2$',color='orange')
+plt.errorbar(list(range(24)), nsq3[0][0:24], yerr=nsq3[1][0:24],ls='none',fmt='x',label='$n^2=3$',color='brown')
+plt.errorbar(list(range(24)), nsq4[0][0:24], yerr=nsq4[1][0:24],ls='none',fmt='x',label='$n^2=4$',color='red')
+plt.errorbar(list(range(24)), nsq5[0][0:24], yerr=nsq5[1][0:24],ls='none',fmt='x',label='$n^2=5$',color='magenta')
 
 #plt.plot(x0,y0,color='g')
 #plt.fill_between(list(range(47))[int(reg_low0):int(reg_up0+1)], -nsq0plt['EffectiveMass']+sigmV, -nsq0plt['EffectiveMass']-sigmV, color='g',alpha=0.2)
@@ -91,7 +91,7 @@ plt.plot(x5,y5, color='magenta',linewidth=0.5)
 plt.fill_between(list(range(47))[int(reg_low5):int(reg_up5+1)], nsq5plt['EffectiveMass']+sigma5, nsq5plt['EffectiveMass']-sigma5, color='magenta',alpha=0.2)
 
 plt.annotate(r'$\bf{preliminary}$',xy=(0.17,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=.7)
-plt.axis((0,20,0.4,0.7))
+plt.axis((0,24,0.4,0.7))
 plt.tick_params(axis='both', which='major', labelsize=14)  # For ma
 
 

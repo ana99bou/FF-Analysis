@@ -9,6 +9,12 @@ from scipy.optimize import minimize
 import sys 
 import os
 
+def pvalue(chi2, dof):
+    r"""Compute the $p$-value corresponding to a $\chi^2$ with `dof` degrees
+    of freedom."""
+    return 1 - scipy.stats.chi2.cdf(chi2, dof)
+ 
+
 # Add the Code directory to the system path
 code_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../Code'))
 sys.path.append(code_dir)
@@ -36,28 +42,27 @@ def extract(lst,number):
     return [item[number] for item in lst]
 
 
-f = h5py.File("../BsDsStar_M2_2ptBs.h5", "r")
-#f = h5py.File("../BsDsStar_M2_2ptDs.h5", "r")
+#f = h5py.File("../BsDsStar_M2_2ptBs.h5", "r")
+f = h5py.File("../BsDsStar_M2_2ptDs.h5", "r")
 
 #########
-nsq=0
+nsq=5
 ensemble='M2'
 
 
 cmass=Ens.getCmass(ensemble)[2]
 configs,dt,ti,L= Ens.getEns(ensemble)
 
-'''
+
 bsn0=f["/cl_SM10.36_PT_0.025/c{}/operator_GammaX/n2_{}/data".format(cmass,nsq)]
 bsn0y=f["/cl_SM10.36_PT_0.025/c{}/operator_GammaY/n2_{}/data".format(cmass,nsq)]
 bsn0z=f["/cl_SM10.36_PT_0.025/c{}/operator_GammaZ/n2_{}/data".format(cmass,nsq)]
+
 '''
-
-
 bsn0=f["/hl_SM10.36_PT_0.025_m3.49_csw3.07_zeta1.76/operator_Gamma5/n2_0/data"]
 bsn0y=f["/hl_SM10.36_PT_0.025_m3.49_csw3.07_zeta1.76/operator_Gamma5/n2_0/data"]
 bsn0z=f["/hl_SM10.36_PT_0.025_m3.49_csw3.07_zeta1.76/operator_Gamma5/n2_0/data"]
-
+'''
 
 #ti=64
 #configs=1636
@@ -138,20 +143,20 @@ for j in range(int(ti/2-1)):
 df1 = pd.DataFrame(columns=['Correlator','Error'])
 df1['Correlator']=res
 df1['Error']=error
-#df1.to_csv('Corr-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
-df1.to_csv('Corr-Bs.csv', sep='\t')
+df1.to_csv('Corr-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
+#df1.to_csv('Corr-Bs.csv', sep='\t')
 
 df2 = pd.DataFrame(columns=['EffectiveMass','Error'])
 df2['EffectiveMass']=mass
 df2['Error']=errors    
-df2.to_csv('Mass-Bs.csv', sep='\t')
-#df2.to_csv('Mass-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
+#df2.to_csv('Mass-Bs.csv', sep='\t')
+df2.to_csv('Mass-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 
 print('Test1')
 
 ###############################################################################
 
-reg_low=10
+reg_low=12
 reg_up=25
 
 #Covarianze matrix (without prefactor, not squarrooted)
@@ -194,8 +199,8 @@ sigma=np.sqrt((configs-1)/(configs)*h)
 
 df4 = pd.DataFrame(columns=['EffectiveMass'])
 df4['EffectiveMass']=jblocks   
-#df4.to_csv('Ds{}-nsq{}-blocks.csv'.format(cmass,nsq), sep='\t')
-df4.to_csv('Bs-blocks.csv', sep='\t')
+df4.to_csv('Ds{}-nsq{}-blocks.csv'.format(cmass,nsq), sep='\t')
+#df4.to_csv('Bs-blocks.csv', sep='\t')
 
 print(mbar,sigma)
 
@@ -214,8 +219,14 @@ df3['EffectiveMass']=mbar.x
 df3['Error']=sigma  
 df3['RegUp']=reg_up
 df3['RegLow']=reg_low    
-df3.to_csv('BsResult.csv', sep='\t')
-#df3.to_csv('Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
+#df3.to_csv('BsResult.csv', sep='\t')
+df3.to_csv('Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
+
+
+
+df4 = pd.DataFrame(columns=['pval'])
+df4['pval']=pvalue(mbar.fun,reg_up-reg_low)
+df4.to_csv('pval-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 
 
 

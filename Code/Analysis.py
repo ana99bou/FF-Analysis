@@ -10,16 +10,22 @@ import Jackblocks
 import Ratio
 import Basic
 import Regression
+import scipy
+
+def pvalue(chi2, dof):
+    r"""Compute the $p$-value corresponding to a $\chi^2$ with `dof` degrees
+    of freedom."""
+    return 1 - scipy.stats.chi2.cdf(chi2, dof)
  
 #########Choose Params
 FF='V'
-nsq=1
-ensemble='F1S'
-cmass=Ens.getCmass(ensemble)[0] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
+nsq=5
+ensemble='M2'
+cmass=Ens.getCmass(ensemble)[2] #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 #reg_low=18
 #reg_up=25
-#C1 12-16 laufen lassen, F1S 18-25
-reg_up=25
+#C1 19-24 laufen lassen, F1S 18-25
+reg_up=23
 reg_low=18
 ##########
 
@@ -182,6 +188,8 @@ def chi(a):
 
 mbar=minimize(chi,0.1,method='Nelder-Mead', tol=1e-8)
 
+print(pvalue(mbar.fun, reg_up-reg_low))
+
 def jackmass(t1,i):
     return (((jb3pt[t1,i]))/(np.sqrt(jbdx[t1,i]*jbb[dt-(t1),i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*(t1))*np.exp(-bsfit['EffectiveMass'][i]*(dt-(t1)))))*pre
 
@@ -233,3 +241,10 @@ df3['Error']=sigma
 df3['RegUp']=reg_up
 df3['RegLow']=reg_low    
 df3.to_csv('../Results/{}/Fits/{}/{}-Av-nsq{}-Fit.csv'.format(ensemble,FF,FF,nsq), sep='\t')
+
+df4 = pd.DataFrame(columns=['pval'])
+df4['pval']=pvalue(mbar.fun,reg_up-reg_low)
+df4.to_csv('../Results/{}/Fits/{}/pval-{}-nsq{}.csv'.format(ensemble,FF,FF,nsq), sep='\t')
+
+
+
