@@ -97,6 +97,9 @@ def get_moms_and_prefacs_V():
     
     return momentum_list, prefactor_list
 
+#for n in range(6):
+#    for i in range(len(get_moms_and_prefacs_V()[0][n][:])):
+#        print(get_moms_and_prefacs_V()[0][n][i], get_moms_and_prefacs_V()[1][n][i])
 
 def get_moms_and_prefacs_A0():
     directions = ["GX", "GY", "GZ"]
@@ -346,6 +349,15 @@ def compute_combined_prefactors(mb, md, ed):
         prefactor_lists.append(nsq_prefactors)
     
     return prefactor_lists
+
+with open("A1-strings.txt", "w") as f:
+    for n in range(6):
+        for i in range(len(get_moms_and_prefacs_A1()[0][n])):
+            val1 = get_moms_and_prefacs_A1()[0][n][i]
+            val2 = get_moms_and_prefacs_A1()[1][n][i]
+            print(val1, val2, file=f)
+
+
 
 '''
 def get_moms_and_prefacs_A2(mb,md,ed):

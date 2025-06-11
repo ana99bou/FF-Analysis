@@ -40,7 +40,7 @@ def extract(lst,number):
 f = h5py.File("../BsDsStar_C1_2ptDs.h5", "r")
 
 #########
-nsq=0
+nsq=4
 ensemble='C1'
 
 

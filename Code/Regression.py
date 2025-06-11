@@ -1,8 +1,51 @@
 import numpy as np
 import Basic
 from scipy.optimize import minimize
+import scipy
 
-def build_Covarianz(reg_up,reg_low,ts,jb3pt,jbdx,jbb,pref,dt,nsq,nconf,md,mb,pre,dsfit,bsfit,avn0):
+def pvalue(chi2, dof):
+    r"""Compute the $p$-value corresponding to a $\chi^2$ with `dof` degrees
+    of freedom."""
+    return 1 - scipy.stats.chi2.cdf(chi2, dof)
+
+
+def build_Covarianz(reg_up,reg_low,data,nconf):
+    covmat=np.zeros(shape=(int(reg_up-reg_low),int(reg_up-reg_low)))
+    for t1 in range(int(reg_up-reg_low)):
+        for t2 in range(int(reg_up-reg_low)):
+            x=0
+            for i in range(nconf): 
+                x=x+(data[t1,i]-data[t1,nconf])*(data[t2,i]-data[t2,nconf])
+            covmat[t1][t2]=x
+            covmat[t2][t1]=x  
+    return covmat
+
+def get_fit(reg_up,reg_low,covmat,nconf,data,fit_function):
+    invcovmat=np.linalg.inv(covmat)
+
+    #k=nconf for mean
+    #insert function in terms of a
+    def build_chisquare(a,k):
+        return (nconf)/(nconf-1)*np.dot(np.transpose([i-fit_function(a) for i in data[reg_low:reg_up,k]]),np.matmul(invcovmat,[i-fit_function(a) for i in data[reg_low:reg_up,k]]))
+    fit_res = minimize(build_chisquare, 0.1, args=(nconf), method='Nelder-Mead', options={'xatol': 1e-8})
+    pval=pvalue(fit_res.fun, reg_up-reg_low)
+
+    #uncertainty
+    jblocks=np.zeros(nconf)
+    h=0
+    for i in range(nconf):
+        tmp=minimize(build_chisquare,0.1,args=(i),method='Nelder-Mead', tol=1e-8).x[0]
+        jblocks[i]=tmp
+        h=h+(tmp-fit_res.x[0])**2
+    sigma=np.sqrt((nconf-1)/(nconf)*h)
+
+    return fit_res.x[0], sigma, pval
+
+
+
+########OLD
+
+def build_Covarianz_OLD(reg_up,reg_low,ts,jb3pt,jbdx,jbb,pref,dt,nsq,nconf,md,mb,pre,dsfit,bsfit,avn0):
     cut=ts/2-1-reg_up
     cut1=ts/2+1-reg_up
     covmat=np.zeros(shape=(int(ts/2-1-reg_low-cut),int(ts/2-1-reg_low-cut)))
@@ -15,7 +58,6 @@ def build_Covarianz(reg_up,reg_low,ts,jb3pt,jbdx,jbb,pref,dt,nsq,nconf,md,mb,pre
             covmat[t1][t2]=x
             covmat[t2][t1]=x  
     return covmat
-
 
 def chi(a,reg_up,reg_low,nconf,cut,avn0,covmat):
     return (nconf-1-reg_low-cut)/(nconf-reg_low-cut)*np.dot(np.transpose([i-a for i in avn0[reg_low:reg_up]]),np.matmul(np.linalg.inv(covmat),[i-a for i in avn0[reg_low:reg_up]]))
@@ -87,4 +129,5 @@ def build_A2(i,j,jb3pt,jbdx,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit,L,A0fit,A
 def build_mat(num,j,i,jb3pt,jbdx,jbb,pref,dt,nsq,nconf,md,mb,ed,dsfit,bsfit):
     if i == nconf: return (jb3pt[num,j,i]/(np.sqrt(jbdx[j,i]*jbb[dt-j,i])))*np.sqrt((4*ed*mb)/(np.exp(-ed*j)*np.exp(-mb*(dt-j))))
     else: return (jb3pt[num,j,i]/(np.sqrt(jbdx[j,i]*jbb[dt-j,i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))
+
 

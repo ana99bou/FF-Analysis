@@ -5,7 +5,24 @@ def jack(x,j):
     for i in range(len(x)):
         if i!=j:
             r=r+x[i]
-    return 1/(len(x)-1)*r      
+    return 1/(len(x)-1)*r  
+
+
+def jack_not_mean(x,dt,nconf):
+    #tmp=np.zeros((dt,nconf,nconf-1))
+    tmp=[]
+    for t in range(dt+1):
+        tmp3=[]
+        for j in range(nconf):
+            tmp2=[]
+            for i in range(nconf):
+                if i!=j:
+                    #print(i,j,x[i])
+                    #tmp[t,j,i]=x[t,i]
+                    tmp2.append(x[t,i])
+            tmp3.append(tmp2)
+        tmp.append(tmp3)
+    return np.array(tmp)   
 
 def create_blocks_3pt(dat,nmom,dt,nconf):
     res=np.zeros((nmom,dt+1,nconf+1))

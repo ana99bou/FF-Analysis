@@ -39,7 +39,7 @@ def extract(lst,number):
 #f = h5py.File("../BsDsStar_C1_2ptBs.h5", "r")
 f = h5py.File("../BsDsStar_C2_2ptDs.h5", "r")
 
-nsq=2
+nsq=0
 cmass=Ens.getCmass('C2')[2]
 
 bsn0=f["/cl_SM7.86_PT_0.03224/c{}/operator_GammaX/n2_{}/data".format(cmass,nsq)]

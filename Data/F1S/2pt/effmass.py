@@ -49,7 +49,7 @@ f = h5py.File("../BsDsStar.h5", "r")
 #########
 nsq=5
 ensemble='F1S'
-cmass=Ens.getCmass(ensemble)[0]
+cmass=Ens.getCmass(ensemble)[2]
 configs,dt,ti,L= Ens.getEns(ensemble)
 
 mom=['0_0_0','1_0_0','1_1_0','1_1_1','2_0_0','2_1_0']

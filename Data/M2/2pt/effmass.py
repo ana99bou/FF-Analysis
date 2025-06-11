@@ -46,11 +46,11 @@ def extract(lst,number):
 f = h5py.File("../BsDsStar_M2_2ptDs.h5", "r")
 
 #########
-nsq=5
+nsq=0
 ensemble='M2'
 
 
-cmass=Ens.getCmass(ensemble)[2]
+cmass=Ens.getCmass(ensemble)[1]
 configs,dt,ti,L= Ens.getEns(ensemble)
 
 
