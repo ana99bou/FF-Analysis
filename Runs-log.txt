@@ -1,0 +1,33 @@
+Latest Runs:
+
+2ptBs
+--F1S CHECKED 
+--M1 CHECKED
+--M2 NOT CHECKED
+--M3 CHECKED
+--C1 NOT CHECKED
+
+2ptDs
+F1S
+--0.248 nsq0-5 CHECKED 
+--0.259 nsq0-5 CHECKED
+--0.275 nsq0-5 CHECKED
+
+M1
+--0.280 nsq0-5 CHECKED
+--0.340 nsq0-5 CHECKED
+
+M2
+--0.280 nsq0-5 NOT CHECKED
+--0.340 nsq0-5 Not ran
+
+M3
+--0.280 nsq0-5 CHECKED
+--0.340 NOT ran
+
+C1
+--0.300 Not ran
+--0.350 Not ran
+--0.400 Not ran
+
+

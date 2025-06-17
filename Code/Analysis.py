@@ -13,19 +13,25 @@ import Regression
 import scipy
  
 #########Choose Params
-FF='V'
-nsq=1
+FF='A0'
+nsq=5
 cmass_index=0
-ensemble='M2'
+ensemble='M1'
 
 #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 cmass=Ens.getCmass(ensemble)[cmass_index]
 
-#C1 12-16 laufen lassen, F1S 18-25
-#M2 19-24
-reg_up=25
-reg_low=18
-##########
+#Fit range
+if ensemble == 'F1S':
+    reg_up=26
+    reg_low=20
+elif ensemble in ['M1', 'M2', 'M3']:
+    reg_up=22
+    reg_low=18
+elif ensemble in ['C1', 'C2']:
+    reg_up=16
+    reg_low=12
+
 
 # Get strange mass and smearing radius
 sm=Ens.getSM(ensemble)
@@ -98,7 +104,8 @@ if FF == 'A2':
 # Read eff. fit jackknife blocks
 bsfit=pd.read_csv('../Data/{}/2pt/Bs-blocks.csv'.format(ensemble),sep='\s')
 dsfit=pd.read_csv('../Data/{}/2pt/Ds{}-nsq{}-blocks.csv'.format(ensemble,cmass,nsq),sep='\s')
-
+#bsfit=0
+#dsfit=0
 
 # Prefactor and folding
 if FF == 'V':
@@ -213,18 +220,28 @@ plt.fill_between(list(range(dt))[reg_low:reg_up], mbar+sigma, mbar-sigma, color=
 
 plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.png'.format(ensemble,cmass,FF,FF,nsq))
 
-df3 = pd.DataFrame(columns=['EffectiveMass','Error','RegUp','RegLow'])
-df3['EffectiveMass']=mbar
-df3['Error']=sigma  
-df3['RegUp']=reg_up
-df3['RegLow']=reg_low    
+df3 = pd.DataFrame([{
+    'EffectiveMass': mbar,
+    'Error': sigma,
+    'RegUp': reg_up,
+    'RegLow': reg_low
+}])
+
+#df3 = pd.DataFrame(columns=['EffectiveMass','Error','RegUp','RegLow'])
+#df3['EffectiveMass']=mbar
+#df3['Error']=sigma  
+#df3['RegUp']=reg_up
+#df3['RegLow']=reg_low    
 df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
 
 df4 = pd.DataFrame(columns=['pval'])
 if FF == 'A2':
-    df4['pval']=Regression.pvalue(mbar.fun,reg_up-reg_low)
+    #df4['pval']=Regression.pvalue(mbar.fun,reg_up-reg_low)
+    pval=Regression.pvalue(mbar.fun,reg_up-reg_low)
+    df4 = pd.DataFrame({'pval': [pval]})
 else:
-    df4['pval']=pval
+    #df4['pval']=pval
+    df4 = pd.DataFrame({'pval': [pval]})
 df4.to_csv('../Results/{}/{}/Fits/{}/pval-{}-nsq{}.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
 
 

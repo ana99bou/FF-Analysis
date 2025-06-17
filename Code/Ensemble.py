@@ -17,6 +17,7 @@ def getEns(s):
 def getSM(s):
     if s=='F1S': return 12.14
     elif s=='C1': return 7.86
+    elif s=='C2': return 7.86
     elif s=='M1': return 10.36
     elif s=='M2': return 10.36
     elif s=='M3': return 10.36
@@ -24,6 +25,7 @@ def getSM(s):
 def getSmass(s):
     if s=='F1S': return 0.02144
     elif s=='C1': return 0.03224
+    elif s=='C2': return 0.03224
     elif s=='M1': return 0.025
     elif s=='M2': return 0.025
     elif s=='M3': return 0.025
@@ -45,3 +47,4 @@ def getRHQparams(s):
     elif s=='M3':return [3.49,3.07,1.76]
     elif s=='F1S':return [2.42,2.68,1.52]
     elif s=='C1':return [7.47,4.92,2.93]
+    elif s=='C2':return [7.47,4.92,2.93]

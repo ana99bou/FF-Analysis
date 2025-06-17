@@ -16,8 +16,8 @@ def build_Covarianz(reg_up,reg_low,data,nconf):
             x=0
             for i in range(nconf): 
                 x=x+(data[t1,i]-data[t1,nconf])*(data[t2,i]-data[t2,nconf])
-            covmat[t1][t2]=x
-            covmat[t2][t1]=x  
+            covmat[t1][t2]=(nconf-1)/nconf*x
+            covmat[t2][t1]=(nconf-1)/nconf*x  
     return covmat
 
 def get_fit(reg_up,reg_low,covmat,nconf,data,fit_function):
@@ -26,7 +26,7 @@ def get_fit(reg_up,reg_low,covmat,nconf,data,fit_function):
     #k=nconf for mean
     #insert function in terms of a
     def build_chisquare(a,k):
-        return (nconf)/(nconf-1)*np.dot(np.transpose([i-fit_function(a) for i in data[reg_low:reg_up,k]]),np.matmul(invcovmat,[i-fit_function(a) for i in data[reg_low:reg_up,k]]))
+        return np.dot(np.transpose([i-fit_function(a) for i in data[reg_low:reg_up,k]]),np.matmul(invcovmat,[i-fit_function(a) for i in data[reg_low:reg_up,k]]))
     fit_res = minimize(build_chisquare, 0.1, args=(nconf), method='Nelder-Mead', options={'xatol': 1e-8})
     pval=pvalue(fit_res.fun, reg_up-reg_low)
 
