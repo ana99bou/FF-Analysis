@@ -13,9 +13,9 @@ import Regression
 import scipy
  
 #########Choose Params
-FF='A0'
+FF='A1'
 nsq=5
-cmass_index=0
+cmass_index=2
 ensemble='M1'
 
 #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one

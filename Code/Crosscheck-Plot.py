@@ -1,13 +1,17 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+ens= 'M1'  # or 'M1', 'M2', etc.
+ens_ow='004'
+m='0.340'
+
 # === Load data1 ===
-df1 = pd.read_csv("../Results/Crosscheck-M1-0.280.csv", sep="\t", header=None, names=["value", "error", "pval"])
+df1 = pd.read_csv("../Results/Crosscheck-{}-{}.csv".format(ens,m), sep="\t", header=None, names=["value", "error", "pval"])
 #df1 = df1.iloc[0:15].reset_index(drop=True)
 df1["id"] = df1.index
 #print(df1)
 # === Load data2 ===
-df2 = pd.read_csv("../Results/004-amc0.280.txt", sep="\s+", header=None, names=["index", "value", "error", "other1", "other2"])
+df2 = pd.read_csv("../Results/{}-amc{}.txt".format(ens_ow,m), sep="\s+", header=None, names=["index", "value", "error", "other1", "other2"])
 
 # Map indices from your list
 #map_indices = [1, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
@@ -41,7 +45,7 @@ def plot_range(start, end, df1, df2, title,labels=None,ylim=None):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig('../Results/Comparison-{}-{}.png'.format(start, end), dpi=300)
+    plt.savefig('../Results/Comparison-{}-{}_{}-{}.png'.format(start, end,ens,m), dpi=300)
     plt.close()
 
 df1["value"] = pd.to_numeric(df1["value"], errors="coerce")
@@ -50,5 +54,5 @@ df2_selected["value"] = pd.to_numeric(df2_selected["value"], errors="coerce")
 df2_selected["error"] = pd.to_numeric(df2_selected["error"], errors="coerce")
 
 # === Plot in two parts ===
-plot_range(0, 6, df1, df2_selected, "",labels=observable_names,ylim=(0.825, 0.925))
+plot_range(0, 6, df1, df2_selected, "",labels=observable_names,ylim=(0.8, 2.3))
 plot_range(7, 21, df1, df2_selected, "",labels=observable_names,)
