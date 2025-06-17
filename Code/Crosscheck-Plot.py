@@ -11,7 +11,7 @@ df2 = pd.read_csv("../Results/004-amc0.280.txt", sep="\s+", header=None, names=[
 
 # Map indices from your list
 #map_indices = [1, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-map_indices = [0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+map_indices = [0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,22,23,24,25,26,27]
 df2_selected = df2.loc[map_indices].reset_index(drop=True)
 df2_selected["id"] = df2_selected.index
 
@@ -51,4 +51,4 @@ df2_selected["error"] = pd.to_numeric(df2_selected["error"], errors="coerce")
 
 # === Plot in two parts ===
 plot_range(0, 6, df1, df2_selected, "",labels=observable_names,ylim=(0.825, 0.925))
-plot_range(7, 14, df1, df2_selected, "",labels=observable_names,)
+plot_range(7, 21, df1, df2_selected, "",labels=observable_names,)
