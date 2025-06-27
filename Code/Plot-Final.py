@@ -204,6 +204,8 @@ for ens, masses in ens_masses.items():
             print(f"Error processing {filepath}: {e}")
 
 plt.legend()
+plt.xlabel(r"$q^2 [GeV]$")  # z. B. "Energy [GeV²]"
+plt.ylabel(r"V")
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Test.pdf')
+plt.savefig('V-FPlot.pdf')
