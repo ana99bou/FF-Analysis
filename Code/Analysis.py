@@ -11,13 +11,21 @@ import Ratio
 import Basic
 import Regression
 import scipy
+import sys
  
 #########Choose Params
-FF='A1'
-nsq=5
-cmass_index=2
-ensemble='M1'
 
+FF = sys.argv[1]
+nsq = int(sys.argv[2])
+cmass_index = int(sys.argv[3])
+ensemble = sys.argv[4]
+
+'''
+FF='V'
+nsq=1
+cmass_index=0
+ensemble='M3'
+'''
 #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 cmass=Ens.getCmass(ensemble)[cmass_index]
 
@@ -32,6 +40,7 @@ elif ensemble in ['C1', 'C2']:
     reg_up=16
     reg_low=12
 
+reg_up=reg_up+1
 
 # Get strange mass and smearing radius
 sm=Ens.getSM(ensemble)
@@ -102,8 +111,8 @@ if FF == 'A2':
     A1fit=pd.read_csv('../Results/{}/{}/Fits/A1/A1-Av-nsq{}-Fit.csv'.format(ensemble,cmass, nsq),sep='\t')['EffectiveMass']
 
 # Read eff. fit jackknife blocks
-bsfit=pd.read_csv('../Data/{}/2pt/Bs-blocks.csv'.format(ensemble),sep='\s')
-dsfit=pd.read_csv('../Data/{}/2pt/Ds{}-nsq{}-blocks.csv'.format(ensemble,cmass,nsq),sep='\s')
+bsfit=pd.read_csv('../Data/{}/2pt/Bs-blocks.csv'.format(ensemble),sep='\s',engine="python")
+dsfit=pd.read_csv('../Data/{}/2pt/Ds{}-nsq{}-blocks.csv'.format(ensemble,cmass,nsq),sep='\s',engine="python")
 #bsfit=0
 #dsfit=0
 
@@ -124,6 +133,7 @@ elif FF == 'A2':
     av1n0=Folding.folding3ptAxA2(dsets, dsetsb, nmom, dt, nconf, ts,pref,nsq)   
     #av1n02=Folding.folding3ptAx(dsets2, dsetsb2, nmom, dt, nconf, ts)   
 
+print(md)
 
 avdx=Folding.folding2pt3(dsxn0, dsyn0, dszn0, nmom, dt, nconf, ts)
 avb=Folding.folding2pt(bsn0, nmom, dt, nconf, ts)

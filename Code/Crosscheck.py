@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-ens = 'M1'  # or 'M1', 'M2', etc.
-m='0.340'
+ens = 'C2'  # or 'M1', 'M2', etc.
+m='0.300'
 
 bs2pt=pd.read_csv('../Data/{}/2pt/BsResult.csv'.format(ens), sep='\s')['EffectiveMass'].iloc[0]
 ds2pt0=pd.read_csv('../Data/{}/2pt/Ds{}Result-0.csv'.format(ens,m), sep='\s')['EffectiveMass'].iloc[0]
@@ -95,4 +95,4 @@ df3 = pd.DataFrame(columns=['Value','Error','pval'])
 df3['Value']=data
 df3['Error']=error
 df3['pval']=pval
-df3.to_csv('../Results/Crosscheck-{}-{}.csv'.format(ens,m), sep='\t')
+df3.to_csv('../Results/Crosschecks/AB/Crosscheck-{}-{}.csv'.format(ens,m), sep='\t')

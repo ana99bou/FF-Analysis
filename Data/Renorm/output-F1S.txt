@@ -1,0 +1,2 @@
+ZAll	amc1	ZAcc	amc2	ZAcc	amc3	ZAcc	ZVbb
+0.7624	0.259	0.78812	0.275	0.79130			3.622

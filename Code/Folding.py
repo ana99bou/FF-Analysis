@@ -6,6 +6,7 @@ def folding3ptVec(dsets,dsetsb,nmom,dt,nconf,ts,pref,nsq):
     
     # Initialize arrays
     av1n0=np.zeros((dt+1,nconf))
+    print(pref[nsq])
     for j in range(dt+1):
         for k in range(nconf):
             tmp=[np.mean((np.imag(dsets[i][k, :, j]) - np.imag(dsetsb[i][k, :, dt-j]))) / 2 for i in range(nmom)]

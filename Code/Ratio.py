@@ -9,6 +9,7 @@ def build_Ratio(jb3pt,jbdx,jbb,pref,dt,nsq,nconf,ed,mb,pre,dsfit,bsfit):
     ratiojack=np.zeros(shape=(dt+1,nconf+1))
     for j in range(dt+1):   
         ratiojack[j][nconf]=pre * (jb3pt[j,nconf]/ ( np.sqrt(jbdx[j,nconf] * jbb[dt-j,nconf]))) * np.sqrt((4 * mb * ed) / (np.exp(-ed * j) * np.exp(-mb * (dt - j))))
+        
         x=0
         for i in range(nconf):
             #x=x+((Basic.sum_with_prefacs(jb3pt[:,j,i], pref[nsq],nsq)/(np.sqrt(1/3*(jbdx[j,i]+jbdy[j,i]+jbdz[j,i])*jbb[dt-j,i])))*np.sqrt((4*dsfit['EffectiveMass'][i]*bsfit['EffectiveMass'][i])/(np.exp(-dsfit['EffectiveMass'][i]*j)*np.exp(-bsfit['EffectiveMass'][i]*(dt-j))))*pre-avn0[j])**2

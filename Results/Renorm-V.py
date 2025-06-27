@@ -64,15 +64,8 @@ c1r=[1.7848**2*(mbc1**2+md0c1**2-2*mbc1*md0c1),1.7848**2*(mbc1**2+md0c1**2-2*mbc
 m2r=[2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md0m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md1m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md2m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md3m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md4m2),2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md5m2)]
 m2r2=[2.3833**2*(mbm2**2+md0m22**2-2*mbm2*md0m22),2.3833**2*(mbm2**2+md0m22**2-2*mbm2*md1m22),2.3833**2*(mbm2**2+md0m22**2-2*mbm2*md2m22),2.3833**2*(mbm2**2+md0m22**2-2*mbm2*md3m22),2.3833**2*(mbm2**2+md0m22**2-2*mbm2*md4m22),2.3833**2*(mbm2**2+md0m22**2-2*mbm2*md5m22)]
 
-print(md0c1*1.7848,md0m2*2.3833,md0f1s*2.785)
+print('F1S ', f1sr)
 
-print((mbc1**2+md0c1**2-2*mbc1*md0c1))
-print((mbm2**2+md0m2**2-2*mbm2*md0m2))
-print((mbf1s**2+md0f1s**2-2*mbf1s*md0f1s))
-
-print(1.7848**2*(mbc1**2+md0c1**2-2*mbc1*md0c1))
-print(2.3833**2*(mbm2**2+md0m2**2-2*mbm2*md0m2))
-print(2.785**2*(mbf1s**2+md0f1s**2-2*mbf1s*md0f1s))
 
 
 c1x_coords = [c1r[1], c1r[2], c1r[3],c1r[4],c1r[5]]

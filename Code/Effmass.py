@@ -64,6 +64,8 @@ elif Ensemble in ['C1', 'C2']:
     reg_low=10
     reg_up=25
 
+reg_up=reg_up+1
+
 cmass=Ens.getCmass(Ensemble)[cmass_index]
 
 #Get Path
