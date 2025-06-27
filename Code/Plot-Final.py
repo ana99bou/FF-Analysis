@@ -209,3 +209,169 @@ plt.ylabel(r"V")
 plt.grid(True)
 plt.tight_layout()
 plt.savefig('V-FPlot.pdf')
+
+# === Neuer Plot für A_0 ===
+plt.figure(figsize=(12, 8))
+
+for ens, masses in ens_masses.items():
+    rho_prefix = get_rho_prefix(ens)
+    rho_val = variables.get(f"rho_Vi_{rho_prefix}", None)
+    if rho_val is None:
+        continue
+
+    prefix = ens[0]
+    n_masses = len(masses)
+
+    if prefix == "F":
+        colors = bright_pinks[:n_masses]
+    else:
+        cmap = base_colors.get(prefix, plt.cm.Greys)
+        colors = [cmap(0.5 + 0.35 * i / max(n_masses - 1, 1)) for i in range(n_masses)]
+
+    marker = marker_styles.get(ens, 'o')
+
+    for i, m in enumerate(masses):
+        m_index = i + 1
+        zacc_key = f"Zacc_{ens}_m{m_index}"
+        zvbb_key = f"Zvbb_{ens}"
+
+        zacc_val = variables.get(zacc_key, None)
+        zvbb_val = variables.get(zvbb_key, None)
+
+        if zacc_val is None or zvbb_val is None:
+            continue
+
+        prefactor = rho_val * np.sqrt(zacc_val * zvbb_val)
+
+        filepath = f"../Results/Crosschecks/AB/Crosscheck-{ens}-{m}.csv"
+        if not os.path.exists(filepath):
+            continue
+
+        try:
+            df = pd.read_csv(filepath, sep="\t")
+
+            if len(df) < 18:
+                print(f"File {filepath} too short for A₀ values")
+                continue
+
+            val0 = df.iloc[0]["Value"]
+            val1 = df.iloc[1]["Value"]
+
+            vals_list = []
+            for x in range(1, 7):
+                valx = df.iloc[x]["Value"]
+                calc = inv_lat_sp[ens]**2 * (val0**2 + val1**2 - 2 * val0 * valx)
+                vals_list.append(calc)
+
+            x_vals = vals_list[1:]
+            y_vals_raw = df.iloc[12:17]["Value"].tolist()
+            y_errs_raw = df.iloc[12:17]["Error"].tolist()
+
+            if len(x_vals) != len(y_vals_raw):
+                print(f"Length mismatch for A₀ {ens} {m}")
+                continue
+
+            y_vals = [prefactor * y for y in y_vals_raw]
+            y_errs = [prefactor * err for err in y_errs_raw]
+
+            plt.errorbar(
+                x_vals, y_vals, yerr=y_errs,
+                fmt=marker,
+                color=colors[i],
+                capsize=3,
+                label=f"{ens} @ {m}"
+            )
+
+        except Exception as e:
+            print(f"Error processing {filepath} for A₀: {e}")
+
+plt.legend()
+plt.xlabel(r"$q^2\ [\mathrm{GeV}^2]$")
+plt.ylabel(r"$A_0$")
+plt.grid(True)
+plt.tight_layout()
+plt.savefig('A0-FPlot.pdf')
+
+
+# === Neuer Plot für A_1 ===
+plt.figure(figsize=(12, 8))
+
+for ens, masses in ens_masses.items():
+    rho_prefix = get_rho_prefix(ens)
+    rho_val = variables.get(f"rho_Vi_{rho_prefix}", None)
+    if rho_val is None:
+        continue
+
+    prefix = ens[0]
+    n_masses = len(masses)
+
+    if prefix == "F":
+        colors = bright_pinks[:n_masses]
+    else:
+        cmap = base_colors.get(prefix, plt.cm.Greys)
+        colors = [cmap(0.5 + 0.35 * i / max(n_masses - 1, 1)) for i in range(n_masses)]
+
+    marker = marker_styles.get(ens, 'o')
+
+    for i, m in enumerate(masses):
+        m_index = i + 1
+        zacc_key = f"Zacc_{ens}_m{m_index}"
+        zvbb_key = f"Zvbb_{ens}"
+
+        zacc_val = variables.get(zacc_key, None)
+        zvbb_val = variables.get(zvbb_key, None)
+
+        if zacc_val is None or zvbb_val is None:
+            continue
+
+        prefactor = rho_val * np.sqrt(zacc_val * zvbb_val)
+
+        filepath = f"../Results/Crosschecks/AB/Crosscheck-{ens}-{m}.csv"
+        if not os.path.exists(filepath):
+            continue
+
+        try:
+            df = pd.read_csv(filepath, sep="\t")
+
+            if len(df) < 22:
+                print(f"File {filepath} too short for A₁ values")
+                continue
+
+            val0 = df.iloc[0]["Value"]
+            val1 = df.iloc[1]["Value"]
+
+            vals_list = []
+            for x in range(1, 7):
+                valx = df.iloc[x]["Value"]
+                calc = inv_lat_sp[ens]**2 * (val0**2 + val1**2 - 2 * val0 * valx)
+                vals_list.append(calc)
+
+            # x-Werte für A1: [0], [1], [2], [4], [5]
+            x_vals = [vals_list[i] for i in [0, 1, 2, 4, 5]]
+            y_vals_raw = df.iloc[17:22]["Value"].tolist()
+            y_errs_raw = df.iloc[17:22]["Error"].tolist()
+
+            if len(x_vals) != len(y_vals_raw):
+                print(f"Length mismatch for A₁ {ens} {m}")
+                continue
+
+            y_vals = [prefactor * y for y in y_vals_raw]
+            y_errs = [prefactor * err for err in y_errs_raw]
+
+            plt.errorbar(
+                x_vals, y_vals, yerr=y_errs,
+                fmt=marker,
+                color=colors[i],
+                capsize=3,
+                label=f"{ens} @ {m}"
+            )
+
+        except Exception as e:
+            print(f"Error processing {filepath} for A₁: {e}")
+
+plt.legend()
+plt.xlabel(r"$q^2\ [\mathrm{GeV}^2]$")
+plt.ylabel(r"$A_1$")
+plt.grid(True)
+plt.tight_layout()
+plt.savefig('A1-FPlot.pdf')
