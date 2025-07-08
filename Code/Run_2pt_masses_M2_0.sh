@@ -16,3 +16,4 @@ for nsq in {0..5}; do
     echo "Running with Ensemble=$Ensemble, particle=$particle, nsq=$nsq, cmass_index=$cmass_index"
     python3 Effmass.py --ensemble "$Ensemble" --particle "$particle" --nsq "$nsq" --cmass_index "$cmass_index"
 done
+python3 Disp-Rel.py --ensemble "$Ensemble" --particle "$particle" --nsq "$nsq" --cmass_index "$cmass_index"

@@ -55,13 +55,13 @@ nsq = args.nsq
 cmass_index = args.cmass_index
 
 if Ensemble == 'F1S':
-    reg_low=18
-    reg_up=25
+    reg_low=19#18
+    reg_up=25#25
 elif Ensemble in ['M1', 'M2', 'M3']:
-    reg_low=12
+    reg_low=19#17#12
     reg_up=25
 elif Ensemble in ['C1', 'C2']:
-    reg_low=10
+    reg_low=14#10
     reg_up=25
 
 reg_up=reg_up+1
@@ -193,8 +193,9 @@ df3['RegUp']=reg_up
 df3['RegLow']=reg_low    
 
 df5 = pd.DataFrame(columns=['pval'])
+chisq=mbar.fun
 pval= pvalue(mbar.fun,reg_up-reg_low)
-df5 = pd.DataFrame({'pval': [pval]})
+df5 = pd.DataFrame({'pval': [pval], 'chisq': [chisq]})
 
 if particle == 'Bs':
     df4.to_csv(path+'Bs-blocks.csv', sep='\t')
@@ -207,11 +208,3 @@ else:
     df3.to_csv(path+'Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
     df5.to_csv(path+'pval-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 
-
-
-
-
-
-
-
-        

@@ -19,13 +19,16 @@ FF = sys.argv[1]
 nsq = int(sys.argv[2])
 cmass_index = int(sys.argv[3])
 ensemble = sys.argv[4]
+use_disp=bool(sys.argv[5])
 
 '''
 FF='V'
 nsq=1
 cmass_index=0
-ensemble='M3'
+ensemble='F1S'
+use_disp=True
 '''
+
 #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 cmass=Ens.getCmass(ensemble)[cmass_index]
 
@@ -48,9 +51,8 @@ smass=Ens.getSmass(ensemble)
 
 
 # Ensemble details
+inv=Ens.getInvSpac(ensemble)
 nconf,dt,ts,L= Ens.getEns(ensemble)
-# Not needed for old F1S
-#if ensemble != 'F1S':
 m,csw,zeta=Ens.getRHQparams(ensemble)
 
 # Read h5 file -> 
@@ -68,15 +70,29 @@ f2ptDs = h5py.File("../Data/{}/BsDsStar_{}_2ptDs.h5".format(ensemble,ensemble), 
 f2ptBs = h5py.File("../Data/{}/BsDsStar_{}_2ptBs.h5".format(ensemble,ensemble), "r")
 
 # Eff. Masses central values
-edlist=[pd.read_csv('../Data/{}/2pt/Ds{}Result-0.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
-        pd.read_csv('../Data/{}/2pt/Ds{}Result-1.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
-        pd.read_csv('../Data/{}/2pt/Ds{}Result-2.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
-        pd.read_csv('../Data/{}/2pt/Ds{}Result-3.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
-        pd.read_csv('../Data/{}/2pt/Ds{}Result-4.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
-        pd.read_csv('../Data/{}/2pt/Ds{}Result-5.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass']]
-ed=edlist[nsq]
+if use_disp:
+    md=pd.read_csv('../Data/{}/2pt/Ds{}Result-0.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass']
+    def calculate_value(a, md, p, L):
+        term1 = np.sinh(md / 2) ** 2
+        term2 = np.sin(p[0] * np.pi / L) ** 2
+        term3 = np.sin(p[1] * np.pi / L) ** 2
+        term4 = np.sin(p[2] * np.pi / L) ** 2
+        result = 2 * np.arcsinh(np.sqrt(term1 + term2 + term3 + term4))
+        return result
+    vecs=[[0,0,0],[1,0,0],[1,1,0],[1,1,1],[2,0,0],[2,1,0]]
+    ed=calculate_value(1/inv,md,vecs[nsq],L)
+
+else:
+    edlist=[pd.read_csv('../Data/{}/2pt/Ds{}Result-0.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
+            pd.read_csv('../Data/{}/2pt/Ds{}Result-1.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
+            pd.read_csv('../Data/{}/2pt/Ds{}Result-2.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
+            pd.read_csv('../Data/{}/2pt/Ds{}Result-3.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
+            pd.read_csv('../Data/{}/2pt/Ds{}Result-4.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass'],
+            pd.read_csv('../Data/{}/2pt/Ds{}Result-5.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass']]
+    ed=edlist[nsq]
+    md = edlist[0]
+
 mb=pd.read_csv('../Data/{}/2pt/BsResult.csv'.format(ensemble), sep='\t',index_col=0).loc[0,'EffectiveMass']
-md = edlist[0]
 
 #Get directions of momenta etc
 if FF == 'V':
@@ -112,9 +128,15 @@ if FF == 'A2':
 
 # Read eff. fit jackknife blocks
 bsfit=pd.read_csv('../Data/{}/2pt/Bs-blocks.csv'.format(ensemble),sep='\s',engine="python")
-dsfit=pd.read_csv('../Data/{}/2pt/Ds{}-nsq{}-blocks.csv'.format(ensemble,cmass,nsq),sep='\s',engine="python")
-#bsfit=0
-#dsfit=0
+
+if use_disp:
+    dsfit_0=pd.read_csv('../Data/{}/2pt/Ds{}-nsq0-blocks.csv'.format(ensemble,cmass),sep='\s',engine="python")
+    md_values = dsfit_0['EffectiveMass']  # entire column as a Series
+    ed_jackknife = [calculate_value(1/inv, md, vecs[nsq], L) for md in md_values]
+    dsfit = pd.DataFrame(ed_jackknife, columns=['EffectiveMass'])
+else:
+    dsfit=pd.read_csv('../Data/{}/2pt/Ds{}-nsq{}-blocks.csv'.format(ensemble,cmass,nsq),sep='\s',engine="python")
+
 
 # Prefactor and folding
 if FF == 'V':
@@ -133,7 +155,6 @@ elif FF == 'A2':
     av1n0=Folding.folding3ptAxA2(dsets, dsetsb, nmom, dt, nconf, ts,pref,nsq)   
     #av1n02=Folding.folding3ptAx(dsets2, dsetsb2, nmom, dt, nconf, ts)   
 
-print(md)
 
 avdx=Folding.folding2pt3(dsxn0, dsyn0, dszn0, nmom, dt, nconf, ts)
 avb=Folding.folding2pt(bsn0, nmom, dt, nconf, ts)
@@ -166,9 +187,14 @@ plt.ylabel(rf'$\widetilde{{{FF}}}$')
 plt.errorbar(list(range(dt)), np.absolute(avn0)[0:dt], yerr=errn0[0:dt],ls='none',fmt='x',label='nsq={}'.format(nsq))
 plt.legend()
 
-plt.savefig('../Results/{}/{}/Ratios/{}/{}-nsq{}.png'.format(ensemble,cmass,FF,FF,nsq))
-np.savetxt('../Results/{}/{}/Ratios/{}/{}-nsq{}.txt'.format(ensemble,cmass,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
-np.save('../Results/{}/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,cmass,FF,nsq), ratiojack)
+if use_disp:
+    plt.savefig('../Results/{}/{}/Ratios/{}/{}-nsq{}-Disp.png'.format(ensemble,cmass,FF,FF,nsq))
+    np.savetxt('../Results/{}/{}/Ratios/{}/{}-nsq{}-Disp.txt'.format(ensemble,cmass,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
+    np.save('../Results/{}/{}/Ratios/{}/Jackknife/nsq{}-Disp.npy'.format(ensemble,cmass,FF,nsq), ratiojack)
+else:
+    plt.savefig('../Results/{}/{}/Ratios/{}/{}-nsq{}.png'.format(ensemble,cmass,FF,FF,nsq))
+    np.savetxt('../Results/{}/{}/Ratios/{}/{}-nsq{}.txt'.format(ensemble,cmass,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
+    np.save('../Results/{}/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,cmass,FF,nsq), ratiojack)
 
 
 ###############################################################################
@@ -228,7 +254,6 @@ ax.errorbar(list(range(dt))[1:dt], avn0[1:dt], yerr=errn0[1:dt],fmt='x', label='
 plt.axhline(y = mbar, color = 'r', linestyle = 'dashed')
 plt.fill_between(list(range(dt))[reg_low:reg_up], mbar+sigma, mbar-sigma, color='r',alpha=0.2)
 
-plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.png'.format(ensemble,cmass,FF,FF,nsq))
 
 df3 = pd.DataFrame([{
     'EffectiveMass': mbar,
@@ -237,12 +262,6 @@ df3 = pd.DataFrame([{
     'RegLow': reg_low
 }])
 
-#df3 = pd.DataFrame(columns=['EffectiveMass','Error','RegUp','RegLow'])
-#df3['EffectiveMass']=mbar
-#df3['Error']=sigma  
-#df3['RegUp']=reg_up
-#df3['RegLow']=reg_low    
-df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
 
 df4 = pd.DataFrame(columns=['pval'])
 if FF == 'A2':
@@ -252,7 +271,13 @@ if FF == 'A2':
 else:
     #df4['pval']=pval
     df4 = pd.DataFrame({'pval': [pval]})
-df4.to_csv('../Results/{}/{}/Fits/{}/pval-{}-nsq{}.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
 
 
-
+if use_disp:
+    plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-Disp.png'.format(ensemble,cmass,FF,FF,nsq))
+    df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-Disp.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
+    df4.to_csv('../Results/{}/{}/Fits/{}/pval-{}-nsq{}-Disp.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
+else:
+    plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.png'.format(ensemble,cmass,FF,FF,nsq))
+    df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
+    df4.to_csv('../Results/{}/{}/Fits/{}/pval-{}-nsq{}.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')

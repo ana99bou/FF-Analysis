@@ -48,3 +48,13 @@ def getRHQparams(s):
     elif s=='F1S':return [2.42,2.68,1.52]
     elif s=='C1':return [7.47,4.92,2.93]
     elif s=='C2':return [7.47,4.92,2.93]
+
+
+def getInvSpac(s):
+    if s=='M2':return 2.3833
+    elif s=='M1':return 2.3833
+    elif s=='M3':return 2.3833
+    elif s=='F1S':return 2.785
+    elif s=='C1':return 1.7848
+    elif s=='C2':return 1.7848
+    
