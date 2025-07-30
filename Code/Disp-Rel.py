@@ -61,9 +61,44 @@ plt.ylabel(r'Effective Eenrgy $D_s^*$ F1S')
 plt.legend()
 #plt.grid(True)
 plt.savefig('../Results/DispRel/Disprel-{}-{}-{}.pdf'.format(Ensemble,cmass,particle), bbox_inches='tight')
-plt.show()
 
+# Compute physical squared momenta (p_k^2 in GeV^2)
+p_squared = []
+pk=[]
+a = 1 / inv
+for vec in vecs:
+    p2 = 0
+    for i in range(3):
+        p2 += (2*np.pi / (a * L))**2 * (vec[i]**2)
+    p_squared.append(p2)
 
+print(p_squared)
+#Faktore vier
 
+# Normalize the dispersion relation values
+normalized_disp = [(inv**2*disprel[i]**2 / (inv**2*disprel[0]**2+p_squared[i])) for i in  range(len(disprel))]
+print(disprel)
+print(disprel[0])
+print(p_squared)
+print(normalized_disp)
 
-        
+# Dashed lines: 1 ± a * p^2 / 4
+pk2 = np.array(p_squared)
+upper_line = 1 + a * pk2 / 4
+lower_line = 1 - a * pk2 / 4
+
+# Plotting the dispersion ratio plot
+plt.figure()
+plt.errorbar(p_squared, normalized_disp, yerr=[2 * val * err / disprel[0] for val, err in zip(disprel, errors)],
+             fmt='s', color='navy', label='lattice disp. relation')
+
+plt.plot(pk2, upper_line, linestyle='--', color='navy', alpha=0.7, label=r'$+ap_k^2/4$')
+plt.plot(pk2, lower_line, linestyle='--', color='navy', alpha=0.7)
+
+plt.axhline(1.0, color='black', linewidth=0.8)
+
+plt.xlabel(r'$p_k^2$ [GeV$^2$]')
+plt.ylabel(r'$E_k^2 / (p_k^2 + M^2)$')
+plt.legend()
+plt.ylim(0.85, 1.15)
+plt.savefig('../Results/DispRel/Ratio-Disprel-{}-{}-{}.pdf'.format(Ensemble, cmass, particle), bbox_inches='tight')

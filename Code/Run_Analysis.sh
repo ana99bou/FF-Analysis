@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Fixed inputs
-ensemble="F1S"
+ensemble="M1"
 cmass_index=0
 use_disp=True
 

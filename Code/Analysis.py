@@ -231,6 +231,11 @@ else:
     #define fit function to be constant
     def fit_function(a):
         return a
+    
+    '''
+    def fit_function(a1, a2, i):
+        return a1 + a2 * i
+    '''
 
     mbar,sigma,pval=Regression.get_fit(reg_up,reg_low,covmat,nconf,ratiojack,fit_function)
 

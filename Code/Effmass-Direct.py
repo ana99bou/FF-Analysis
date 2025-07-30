@@ -11,6 +11,7 @@ import os
 import scipy
 import Ensemble as Ens
 import argparse
+from iminuit import Minuit
 
 
 def pvalue(chi2, dof):
@@ -39,8 +40,13 @@ def var(data):
 def extract(lst,number):
     return [item[number] for item in lst]
 
-# Get Pat
 '''
+Ensemble = 'F1S'  # Example value, replace with actual input
+particle = 'Ds'  # Example value, replace with actual input
+nsq = 0  # Example value, replace with actual input
+cmass_index = 0  # Example value, replace with actual input
+'''
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--ensemble', type=str, required=True)
 parser.add_argument('--particle', type=str, required=True)
@@ -53,16 +59,10 @@ Ensemble = args.ensemble
 particle = args.particle
 nsq = args.nsq
 cmass_index = args.cmass_index
-'''
-
-Ensemble = 'F1S'  # Example value, replace with actual input
-particle = 'Ds'  # Example value, replace with actual input
-nsq = 0  # Example value, replace with actual input
-cmass_index = 0  # Example value, replace with actual input
 
 if Ensemble == 'F1S':
     reg_low=19#18
-    reg_up=25#25
+    reg_up=25
 elif Ensemble in ['M1', 'M2', 'M3']:
     reg_low=19#17#12
     reg_up=25
@@ -96,11 +96,7 @@ else:
     dsx=f["/cl_SM{}_PT_{}/c{}/operator_GammaX/n2_{}/data".format(sm,smass,cmass,nsq)]
     dsy=f["/cl_SM{}_PT_{}/c{}/operator_GammaY/n2_{}/data".format(sm,smass,cmass,nsq)]
     dsz=f["/cl_SM{}_PT_{}/c{}/operator_GammaZ/n2_{}/data".format(sm,smass,cmass,nsq)]
-    #dsx=f["/cl_SM10.36_PT_0.025/c{}/operator_GammaX/n2_{}/data".format(cmass,nsq)]
-    #dsy=f["/cl_SM10.36_PT_0.025/c{}/operator_GammaY/n2_{}/data".format(cmass,nsq)]
-    #dsz=f["/cl_SM10.36_PT_0.025/c{}/operator_GammaZ/n2_{}/data".format(cmass,nsq)]
-
-    #folding:
+    
     mir = np.zeros(shape=(configs, int(ti/2+1)))
     for k in range(configs):
         mir[k][0]=(np.real(np.mean(dsx[k][:][0]))+np.real(np.mean(dsy[k][:][0]))+np.real(np.mean(dsz[k][:][0])))/3
@@ -118,48 +114,23 @@ for j in range(int(ti/2+1)):
         r=r+(jack(extract(mir,j),i)-res[j])**2
     error[j]=np.sqrt((configs-1)/configs*r)
 mirtr=np.transpose(mir)  
-'''
-#Effective Mass
-mirtr=np.transpose(mir)  
-mass=np.zeros(int(ti/2-1))
-errors=np.zeros(int(ti/2-1))
-for i in range(int(ti/2-1)):
-    mass[i]=(cmath.acosh((res[i]+res[i+2])/(2*res[i+1])+0j)).real
-    x=0
-    for j in range(configs):    
-        x=x+(np.arccosh((jack(mirtr[i],j)+jack(mirtr[i+2],j))/(2*jack(mirtr[i+1],j)))-mass[i])**2
-    errors[i]=(np.sqrt((configs-1)/configs*x))
-'''
+
     
 #Save results to csv
 df1 = pd.DataFrame(columns=['Correlator','Error'])
 df1['Correlator']=res
 df1['Error']=error
 
-'''
-df2 = pd.DataFrame(columns=['EffectiveMass','Error'])
-df2['EffectiveMass']=mass
-df2['Error']=errors    
-'''
-
-#if particle == 'Bs':
-    #df1.to_csv(path+'Corr-Bs.csv', sep='\t')
-    #df2.to_csv(path+'Mass-Bs.csv', sep='\t')
-#else:
-    #df1.to_csv(path+'Corr-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
-    #df2.to_csv(path+'Mass-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
 
 
 ###############################################################################
 
 #Covarianze matrix 
-
+masstmp=np.log(res[reg_low]/res[reg_low+1])
 #masstmp=0.7341573429107688
-masstmp=0.7341900000000000
-a0tmp=res[20]/(np.exp(-masstmp*20)+np.exp(-masstmp*(ti/2+1-20)))
-
-print(a0tmp)
-
+print(masstmp)
+a0tmp=res[reg_low]/(np.exp(-masstmp*reg_low)+np.exp(-masstmp*(ti/2+1-reg_low)))
+#a0tmp=res[20]/(np.exp(-masstmp*20)+np.exp(-masstmp*(ti/2+1-20)))#-0.0000562341e-14
 
 covmat=np.zeros(shape=(int(reg_up-reg_low),int(reg_up-reg_low)))
 for t1 in range(int(reg_up-reg_low)):
@@ -173,59 +144,90 @@ for t1 in range(int(reg_up-reg_low)):
 invcovmat=np.linalg.inv(covmat) 
 lst=list(range(reg_low, reg_up))
 
+'''
 def chi(params):
     a1, a2 = params
-    #return np.dot(np.transpose([res[i]-(a1/(2*a2)*(np.exp(-a2*i))) for i in lst]),np.matmul(invcovmat,[res[i]-(a1/(2*a2)*(np.exp(-a2*i))) for i in lst]))
-    #return np.dot(np.transpose([res[i]-(a1/(2*a2)*(np.exp(-a2*i)+np.exp(-a2*(ti/2+1-i)))) for i in lst]),np.matmul(invcovmat,[res[i]-(a1/(2*a2)*(np.exp(-a2*i)+np.exp(-a2*(ti/2+1-i)))) for i in lst]))
     return np.dot(np.transpose([res[i]-(a1*(np.exp(-a2*i)+np.exp(-a2*(ti-i)))) for i in lst]),np.matmul(invcovmat,[res[i]-(a1*(np.exp(-a2*i)+np.exp(-a2*(ti-i)))) for i in lst]))
-    #return np.dot(np.transpose([i-a1*np.exp(-a2*i) for i in mirtr[reg_low:reg_up]]),np.matmul(invcovmat,[i-a for i in mirtr[reg_low:reg_up]]))
 
-#bounds = [(0, None), (0, None)]
-#method='Nelder-Mead'
-#method='L-BFGS-B'
-mbar=minimize(chi,[a0tmp, masstmp], method='L-BFGS-B', tol=1e-8)
-print(mbar)
-print(masstmp)
-print(mbar.x[1])
+mbar=minimize(chi,[a0tmp, masstmp], method='Nelder-Mead', tol=1e-8)    
+'''
+
+def chi(a1, a2):
+    return np.dot(
+        np.transpose([res[i] - (a1 * (np.exp(-a2 * i) + np.exp(-a2 * (ti - i)))) for i in lst]),
+        np.matmul(invcovmat, [res[i] - (a1 * (np.exp(-a2 * i) + np.exp(-a2 * (ti - i)))) for i in lst])
+    )
+mbar = Minuit(chi, a1=1, a2=1)
+mbar.errordef = 1  # For least-squares (χ²), errordef = 1
+mbar.migrad()      # Run the minimization
+
+
+'''
+print('Initial guess: a1 = {}, a2 = {}'.format(a0tmp, masstmp))
+print('Optimized parameters: a1 = {}, a2 = {}'.format(mbar.x[0], mbar.x[1]))
+print('Chi-squared:', mbar.fun)
+'''
+
+print('Initial guess: a1 = {}, a2 = {}'.format(a0tmp, masstmp))
+print("Optimized a1:", mbar.values["a1"])
+print("Optimized a2 (mass):", mbar.values["a2"])
+print("Minimum chi²:", mbar.fval)
+
+best_a1 = mbar.values["a1"]
+best_a2 = mbar.values["a2"]
 
 def jackmass(t1,i):
     return jack(mirtr[t1],i)
 
+'''
 def chijack(params,k):
     a1, a2 = params
-    return np.dot(np.transpose([jackmass(i+reg_low,k)-(a1*np.exp(-a2*i)+a1*np.exp(-a2*(ti-i))) for i in lst]),np.matmul(invcovmat,[jackmass(i+reg_low,k)-(a1*np.exp(-a2*i)+a1*np.exp(-a2*(ti-i))) for i in lst]))
+    return np.dot(np.transpose([jackmass(i,k)-(a1*(np.exp(-a2*(i))+np.exp(-a2*(ti-(i))))) for i in lst]),np.matmul(invcovmat,[jackmass(i,k)-(a1*(np.exp(-a2*(i))+np.exp(-a2*(ti-(i))))) for i in lst]))
+'''
+
+def chijack(a1, a2, k):
+    return np.dot(
+        np.transpose([jackmass(i, k) - (a1 * (np.exp(-a2 * i) + np.exp(-a2 * (ti - i)))) for i in lst]),
+        np.matmul(invcovmat, [jackmass(i, k) - (a1 * (np.exp(-a2 * i) + np.exp(-a2 * (ti - i)))) for i in lst])
+    )
 
 
 #Std Deviation for all jakcknife blocks
 jblocks=np.zeros(configs)
 h=0
+
+'''
 for i in range(configs):
-    tmp=minimize(chijack,[1e-20, 0.1],args=(i),bounds=[(0, None), (1e-4, None)], method='L-BFGS-B').x[1]
+    tmp=minimize(chijack,[a0tmp, masstmp],args=(i), method='Nelder-Mead').x[1]
     jblocks[i]=tmp
     h=h+(tmp-mbar.x[1])**2
 sigma=np.sqrt((configs-1)/configs*h)
-print(sigma)
+'''
+
+for i in range(configs):
+    mj = Minuit(lambda a1, a2: chijack(a1, a2, i), a1=a0tmp, a2=masstmp)
+    mj.errordef = 1
+    mj.migrad()
+    jblocks[i] = mj.values["a2"]
+    h += (mj.values["a2"] - best_a2) ** 2
+sigma = np.sqrt((configs - 1) / configs * h)
+
+print('Fehler:',sigma)
 
 
-# Plot correlator data with fit and error band
-# Plot correlator data with fit (log scale, no error band for now)
 plt.figure(figsize=(8,6))
-plt.errorbar(lst, [res[t] for t in lst], yerr=[error[t] for t in lst], fmt='o', label='Data', capsize=3)
 
-# Fit function values
-print(mbar.x[0], mbar.x[1])
-fit_vals = [mbar.x[0] * (np.exp(-mbar.x[1]*t) + np.exp(-mbar.x[1]*(ti - t))) for t in lst]
-print(fit_vals)
-print([res[t] for t in lst])
+# Full time range
+full_range = list(range(ti // 2 + 1))
 
-plt.plot(lst, fit_vals, label='Fit: $A_1 e^{-A_2 t} + A_1 e^{-A_2 (T - t)}$', color='red')
+# Plot all correlator points with errors
+plt.errorbar(full_range, [res[t] for t in full_range], yerr=[error[t] for t in full_range], fmt='o', label='Correlator', capsize=3)
 
-# Optional: Error band (currently commented out due to large sigma)
-# fit_upper = [val + sigma for val in fit_vals]
-# fit_lower = [val - sigma for val in fit_vals]
-# plt.fill_between(lst, fit_lower, fit_upper, color='red', alpha=0.2, label='1σ Band')
+# Full fit function over the whole range
+full_fit = [best_a1 * (np.exp(-best_a2 * t) + np.exp(-best_a2 * (ti - t))) for t in full_range]
+plt.plot(full_range, full_fit, color='red', label='Fit: $A_1 e^{-A_2 t} + A_1 e^{-A_2 (T - t)}$')
 
-plt.yscale('log')  # Logarithmic scale for y-axis
+plt.yscale('log')  
 plt.xlabel('Time Slice $t$')
 plt.ylabel('Correlator (log scale)')
 plt.title(f'{particle} Correlator Fit')
@@ -233,6 +235,32 @@ plt.legend()
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.tight_layout()
 plt.savefig('Fit.pdf')
+
+df3 = pd.DataFrame([{
+    'Amplitude': best_a1,
+    'Mass': best_a2,
+    'Error': sigma,
+    'RegUp': reg_up,
+    'RegLow': reg_low
+}])
+
+
+df5 = pd.DataFrame(columns=['pval'])
+chisq=mbar.fval
+pval= pvalue(mbar.fval,reg_up-reg_low)
+df5 = pd.DataFrame({'pval': [pval], 'chisq': [chisq]})
+
+if particle == 'Bs':
+    #df4.to_csv(path+'Bs-blocks.csv', sep='\t')
+    plt.savefig(path+'Direct-Zoom-Bs-Reg.pdf')
+    df3.to_csv(path+'Direct-BsResult.csv', sep='\t')
+    df5.to_csv(path+'Direct-pval-Bs.csv', sep='\t')
+else:
+    #df4.to_csv(path+'Ds{}-nsq{}-blocks.csv'.format(cmass,nsq), sep='\t')
+    plt.savefig(path+'Direct-Zoom-Ds{}-Reg-{}.pdf'.format(cmass,nsq))
+    df3.to_csv(path+'Direct-Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
+    df5.to_csv(path+'Direct-pval-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
+
 
 
 
