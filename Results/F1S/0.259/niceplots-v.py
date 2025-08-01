@@ -5,7 +5,85 @@ Created on Mon Jun 10 11:15:26 2024
 
 @author: anastasiaboushmelev
 """
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
+# Parameter
+mb = 1.9257122802734448
+md_vals = {
+    1: 0.7458868408203149,
+    2: 0.7567413330078149,
+    3: 0.767,  # dummy
+    4: 0.77745605,
+    5: 0.787656860351565
+}
+pre = {k: -(mb + v) / (2 * mb) for k, v in md_vals.items()}
+
+# Farben
+base_colors = {
+    1: 'b',
+    2: 'orange',
+    3: 'brown',
+    4: 'red',
+    5: 'magenta'
+}
+disp_colors = {
+    1: 'turquoise',
+    2: 'gold',
+    3: 'peru',
+    4: 'salmon',
+    5: 'violet'
+}
+
+# Messdaten
+nsq = {i: pd.read_csv(f'Ratios/V/V-nsq{i}.txt', sep=' ', header=None) for i in base_colors}
+nsq_disp = {i: pd.read_csv(f'Ratios/V/V-nsq{i}-Disp.txt', sep=' ', header=None) for i in disp_colors}
+
+# Fits
+nsq_fit = {i: pd.read_csv(f'Fits/V/V-Av-nsq{i}-Fit.csv', sep='\s') for i in base_colors}
+nsq_disp_fit = {i: pd.read_csv(f'Fits/V/V-Av-nsq{i}-Fit-Disp.csv', sep='\s') for i in disp_colors}
+
+plt.figure(figsize=(6, 4))
+plt.xlabel('Time', fontsize=15)
+plt.ylabel(r'$\widetilde{V}$', fontsize=15)
+
+# Normale Daten
+for i in nsq:
+    plt.errorbar(range(1, 30), nsq[i][0][1:30], yerr=nsq[i][1][1:30],
+                 ls='none', fmt='x', label=fr'$n^2={i}$', color=base_colors[i])
+    
+    fit = nsq_fit[i]
+    eff, sigma = fit['EffectiveMass'], fit['Error']
+    reg_low, reg_up = int(fit['RegLow']), int(fit['RegUp'])
+
+    plt.plot([-1, 32], [eff, eff], color=base_colors[i], linewidth=0.5)
+    plt.fill_between(range(47)[reg_low:reg_up+1], eff + sigma, eff - sigma,
+                     color=base_colors[i], alpha=0.2)
+
+# Disp-Daten
+for i in nsq_disp:
+    plt.errorbar(range(1, 30), nsq_disp[i][0][1:30], yerr=nsq_disp[i][1][1:30],
+                 ls='none', fmt='x', label=fr'$n^2={i}$ Disp', color=disp_colors[i])
+    
+    fit = nsq_disp_fit[i]
+    eff, sigma = fit['EffectiveMass'], fit['Error']
+    reg_low, reg_up = int(fit['RegLow']), int(fit['RegUp'])
+
+    plt.plot([-1, 32], [eff, eff], color=disp_colors[i], linewidth=0.5)
+    plt.fill_between(range(47)[reg_low:reg_up+1], eff + sigma, eff - sigma,
+                     color=disp_colors[i], alpha=0.2)
+
+plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=15, color='grey', alpha=.7)
+
+plt.tick_params(axis='both', which='major', labelsize=14)
+plt.legend(fontsize=10, ncol=2, markerscale=0.8)
+plt.savefig('Niceplot-V-Disp.pdf', transparent=True, dpi=300, bbox_inches='tight')
+
+
+
+'''
 import numpy as np
 import pandas as pd
 #from bokeh.plotting import figure, show, output_file
@@ -96,3 +174,4 @@ plt.tick_params(axis='both', which='major', labelsize=14)
 #plt.yscale('log')
 plt.legend()
 plt.savefig('Niceplot-V.pdf',transparent=True,dpi=300,bbox_inches='tight')
+'''
