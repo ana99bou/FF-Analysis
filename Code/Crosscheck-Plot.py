@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 ens= 'C2'  
 ens_ow='010'
-m='0.300'
+m='0.400'
 
 # === Load data1 ===
 df1 = pd.read_csv("../Results/Crosschecks/AB/Crosscheck-{}-{}.csv".format(ens,m), sep="\t", header=None, names=["value", "error", "pval"])
@@ -11,7 +11,7 @@ df1 = pd.read_csv("../Results/Crosschecks/AB/Crosscheck-{}-{}.csv".format(ens,m)
 df1["id"] = df1.index
 #print(df1)
 # === Load data2 ===
-df2 = pd.read_csv("../Results/Crosschecks/OW/pdf/{}-amc{}.txt".format(ens_ow,m), sep="\s+", header=None, names=["index", "value", "error", "other1", "other2"])
+df2 = pd.read_csv("../Results/Crosschecks/OW/pdf_new/pdf/{}-amc{}.txt".format(ens_ow,m), sep="\s+", header=None, names=["index", "value", "error", "other1", "other2"])
 
 # Map indices from your list
 #map_indices = [1, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]

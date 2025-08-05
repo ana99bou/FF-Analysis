@@ -19,8 +19,9 @@ FF = sys.argv[1]
 nsq = int(sys.argv[2])
 cmass_index = int(sys.argv[3])
 ensemble = sys.argv[4]
-use_disp=bool(sys.argv[5])
+use_disp=bool(int(sys.argv[5]))
 
+print(use_disp)
 '''
 FF='V'
 nsq=1
@@ -91,7 +92,7 @@ else:
             pd.read_csv('../Data/{}/2pt/Ds{}Result-5.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc[0,'EffectiveMass']]
     ed=edlist[nsq]
     md = edlist[0]
-
+print(ed)
 mb=pd.read_csv('../Data/{}/2pt/BsResult.csv'.format(ensemble), sep='\t',index_col=0).loc[0,'EffectiveMass']
 
 #Get directions of momenta etc

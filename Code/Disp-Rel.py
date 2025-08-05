@@ -69,14 +69,14 @@ a = 1 / inv
 for vec in vecs:
     p2 = 0
     for i in range(3):
-        p2 += (2*np.pi / (a * L))**2 * (vec[i]**2)
+        p2 += (2*np.pi / (a* L))**2 * (vec[i]**2)
     p_squared.append(p2)
 
 print(p_squared)
 #Faktore vier
 
 # Normalize the dispersion relation values
-normalized_disp = [(inv**2*disprel[i]**2 / (inv**2*disprel[0]**2+p_squared[i])) for i in  range(len(disprel))]
+normalized_disp = [(inv**2*effective_mass[i]**2 / (inv**2*disprel[0]**2+p_squared[i])) for i in  range(len(disprel))]
 print(disprel)
 print(disprel[0])
 print(p_squared)
@@ -84,13 +84,23 @@ print(normalized_disp)
 
 # Dashed lines: 1 ± a * p^2 / 4
 pk2 = np.array(p_squared)
-upper_line = 1 + a * pk2 / 4
-lower_line = 1 - a * pk2 / 4
+upper_line = 1 + a * pk2 / 8
+lower_line = 1 - a * pk2 / 8
+
+
+# Normiertes Verhältnis mit der kontinuierlichen Dispersionsrelation im Nenner
+normalized_cont = [(effective_mass[i]**2 / (disprel[i]**2)) for i in range(len(disprel))]
+cont_errors = [2 * effective_mass[i] * errors[i] / disprel[i]**2 for i in range(len(disprel))]
+
+
+
 
 # Plotting the dispersion ratio plot
 plt.figure()
 plt.errorbar(p_squared, normalized_disp, yerr=[2 * val * err / disprel[0] for val, err in zip(disprel, errors)],
-             fmt='s', color='navy', label='lattice disp. relation')
+             fmt='s', color='navy', label='cont. disp. rel.')
+plt.errorbar(p_squared, normalized_cont, yerr=cont_errors,
+             fmt='^', color='crimson', capsize=4, label='lat. disp. rel.')
 
 plt.plot(pk2, upper_line, linestyle='--', color='navy', alpha=0.7, label=r'$+ap_k^2/4$')
 plt.plot(pk2, lower_line, linestyle='--', color='navy', alpha=0.7)

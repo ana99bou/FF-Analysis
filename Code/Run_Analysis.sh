@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Fixed inputs
-ensemble="C2"
-cmass_index=1
-use_disp=True
+ensemble="M3"
+cmass_index=2
+use_disp=0
+#0-False, 1-True
 
 # Define form factors and their corresponding nsq values
 declare -A nsq_values

@@ -163,6 +163,7 @@ plt.legend()
 print(ratiojack.shape)
 ###############################################################################
 
+'''
 #Covarianze matrix (without prefactor, not squarrooted)
 if FF == 'A2':
     covmat=Regression.build_Covarianz_A2(reg_up,reg_low,ts,jb3pt,jbdx,jbb,pref,dt,nsq,nconf,md,mb,ed,pre,dsfit,bsfit,L,A0fit,A1fit,avn0)
@@ -204,7 +205,7 @@ sigma=np.sqrt((nconf-1)/(nconf)*h)
 
 print('Frozen: ',mbar.x[0],sigma)
 print('Frozen p-val: ',pvalue(mbar.fun, reg_up-reg_low))
-
+'''
 
 ########Unfrozen
 
