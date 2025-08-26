@@ -44,7 +44,7 @@ def extract(lst,number):
 Ensemble = 'F1S'  # Example value, replace with actual input
 particle = 'Ds'  # Example value, replace with actual input
 nsq = 0  # Example value, replace with actual input
-cmass_index = 0  # Example value, replace with actual input
+cmass_index = 1  # Example value, replace with actual input
 
 '''
 parser = argparse.ArgumentParser()
@@ -228,9 +228,9 @@ full_fit = [best_a1 * (np.exp(-best_a2 * t) + np.exp(-best_a2 * (ti - t))) for t
 plt.plot(full_range, full_fit, color='red', label='Fit: $A_1 e^{-A_2 t} + A_1 e^{-A_2 (T - t)}$')
 
 plt.yscale('log')  
-plt.xlabel('Time Slice $t$')
-plt.ylabel('Correlator (log scale)')
-plt.title(f'{particle} Correlator Fit')
+plt.xlabel('Time')
+plt.ylabel('2pt Correlator')
+#plt.title(f'{particle} Correlator Fit')
 plt.legend()
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.tight_layout()
