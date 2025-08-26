@@ -20,6 +20,7 @@ nsq = int(sys.argv[2])
 cmass_index = int(sys.argv[3])
 ensemble = sys.argv[4]
 use_disp=bool(int(sys.argv[5]))
+frozen_analysis = bool(int(sys.argv[6]))
 
 print(use_disp)
 '''
@@ -188,6 +189,7 @@ plt.ylabel(rf'$\widetilde{{{FF}}}$')
 plt.errorbar(list(range(dt)), np.absolute(avn0)[0:dt], yerr=errn0[0:dt],ls='none',fmt='x',label='nsq={}'.format(nsq))
 plt.legend()
 
+'''
 if use_disp:
     plt.savefig('../Results/{}/{}/Ratios/{}/{}-nsq{}-Disp.png'.format(ensemble,cmass,FF,FF,nsq))
     np.savetxt('../Results/{}/{}/Ratios/{}/{}-nsq{}-Disp.txt'.format(ensemble,cmass,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
@@ -196,7 +198,7 @@ else:
     plt.savefig('../Results/{}/{}/Ratios/{}/{}-nsq{}.png'.format(ensemble,cmass,FF,FF,nsq))
     np.savetxt('../Results/{}/{}/Ratios/{}/{}-nsq{}.txt'.format(ensemble,cmass,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
     np.save('../Results/{}/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,cmass,FF,nsq), ratiojack)
-
+'''
 
 ###############################################################################
 
@@ -238,7 +240,18 @@ else:
         return a1 + a2 * i
     '''
 
-    mbar,sigma,pval=Regression.get_fit(reg_up,reg_low,covmat,nconf,ratiojack,fit_function)
+    #mbar,sigma,pval=Regression.get_fit(reg_up,reg_low,covmat,nconf,ratiojack,fit_function)
+
+    frozen_analysis = True  # Set True to use frozen cov matrix (default)
+
+    if not frozen_analysis:
+        mbar, sigma, pval = Regression.get_fit(
+            reg_up, reg_low, covmat, nconf, ratiojack, fit_function, unfrozen=True
+        )
+    else:
+        mbar, sigma, pval = Regression.get_fit(
+            reg_up, reg_low, covmat, nconf, ratiojack, fit_function
+        )
 
 
 
@@ -278,7 +291,7 @@ else:
     #df4['pval']=pval
     df4 = pd.DataFrame({'pval': [pval]})
 
-
+'''
 if use_disp:
     plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-Disp.png'.format(ensemble,cmass,FF,FF,nsq))
     df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-Disp.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
@@ -287,3 +300,4 @@ else:
     plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.png'.format(ensemble,cmass,FF,FF,nsq))
     df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
     df4.to_csv('../Results/{}/{}/Fits/{}/pval-{}-nsq{}.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
+'''

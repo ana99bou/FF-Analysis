@@ -20,6 +20,62 @@ def build_Covarianz(reg_up,reg_low,data,nconf):
             covmat[t2][t1]=(nconf-1)/nconf*x  
     return covmat
 
+def get_fit(reg_up, reg_low, covmat, nconf, data, fit_function, unfrozen=False):
+    if not unfrozen:
+        # --- existing frozen code ---
+        invcovmat = np.linalg.inv(covmat)
+        def build_chisquare(a, k):
+            return np.dot(
+                np.transpose([i - fit_function(a) for i in data[reg_low:reg_up, k]]),
+                np.matmul(invcovmat, [i - fit_function(a) for i in data[reg_low:reg_up, k]])
+            )
+        fit_res = minimize(build_chisquare, 0.1, args=(nconf), method='Nelder-Mead', tol=1e-8)
+        mbar = fit_res.x[0]
+        pval = pvalue(fit_res.fun, reg_up - reg_low)
+
+        # Jackknife error
+        jblocks = np.zeros(nconf)
+        h = 0
+        for i in range(nconf):
+            tmp = minimize(build_chisquare, 0.1, args=(i), method='Nelder-Mead', tol=1e-8).x[0]
+            jblocks[i] = tmp
+            h += (tmp - mbar) ** 2
+        sigma = np.sqrt((nconf - 1) / nconf * h)
+        return mbar, sigma, pval
+
+    else:
+        # --- unfrozen analysis ---
+        jblocks = np.zeros(nconf)
+        for i in range(nconf):
+            # Exclude sample i
+            mask = np.array([j for j in range(nconf) if j != i])
+            data_jack = data[reg_low:reg_up, :][:, mask]
+
+            # Build cov matrix from data_jack
+            cov = np.cov(data_jack, ddof=1)  # shape: (reg_up-reg_low, reg_up-reg_low)
+            invcov = np.linalg.inv(cov)
+
+            def chisq(a):
+                residuals = data[reg_low:reg_up, i] - fit_function(a)
+                return np.dot(residuals, invcov @ residuals)
+
+            fit_i = minimize(chisq, 0.1, method='Nelder-Mead', tol=1e-8).x[0]
+            jblocks[i] = fit_i
+
+        mbar = np.mean(jblocks)
+        sigma = np.sqrt((nconf - 1) / nconf * np.sum((jblocks - mbar) ** 2))
+
+        # Estimate p-value from mean fit
+        cov_full = np.cov(data[reg_low:reg_up, :nconf], ddof=1)
+        invcov_full = np.linalg.inv(cov_full)
+        residuals_full = data[reg_low:reg_up, nconf] - fit_function(mbar)
+        chi2 = np.dot(residuals_full, invcov_full @ residuals_full)
+        pval = pvalue(chi2, reg_up - reg_low)
+
+        return mbar, sigma, pval
+
+
+'''
 def get_fit(reg_up,reg_low,covmat,nconf,data,fit_function):
     invcovmat=np.linalg.inv(covmat)
 
@@ -40,7 +96,7 @@ def get_fit(reg_up,reg_low,covmat,nconf,data,fit_function):
     sigma=np.sqrt((nconf-1)/(nconf)*h)
 
     return fit_res.x[0], sigma, pval
-
+'''
 
 
 ########OLD

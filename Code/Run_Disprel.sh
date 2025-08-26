@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set ensemble and cmass
-Ensemble="M3"
+Ensemble="C2"
 cmass_index=2
 
 # Option 1: particle = Bs, nsq = 0

@@ -39,6 +39,53 @@ def var(data):
 def extract(lst,number):
     return [item[number] for item in lst]
 
+'''
+def build_covmat_from_jackblock(mirtr, mass_block, reg_low, reg_up, exclude_idx):
+    N = len(mirtr[0])  # configs
+    T = reg_up - reg_low
+    covmat = np.zeros((T, T))
+    for t1 in range(T):
+        for t2 in range(T):
+            sum_term = 0
+            for i in range(N):
+                if i == exclude_idx:
+                    continue
+                m1 = np.arccosh((jack(mirtr[t1 + reg_low], i) + jack(mirtr[t1 + 2 + reg_low], i)) / (2 * jack(mirtr[t1 + 1 + reg_low], i)))
+                m2 = np.arccosh((jack(mirtr[t2 + reg_low], i) + jack(mirtr[t2 + 2 + reg_low], i)) / (2 * jack(mirtr[t2 + 1 + reg_low], i)))
+                sum_term += (m1 - mass_block[t1]) * (m2 - mass_block[t2])
+            covmat[t1, t2] = (N - 1) / (N - 2) * sum_term / (N - 1)
+    return np.linalg.inv(covmat)
+'''
+def build_covmat_from_jackblock(mirtr, reg_low, reg_up, exclude_idx):
+    N = len(mirtr[0])  # configs
+    T = reg_up - reg_low
+    njack = N - 1
+
+    # 1. Effektive Massen aller Jackknife-Blöcke (ohne exclude_idx)
+    mass_all = np.zeros((njack, T))
+    idx = 0
+    for i in range(N):
+        if i == exclude_idx:
+            continue
+        for t in range(T):
+            t_glob = t + reg_low
+            mass_all[idx, t] = np.arccosh((jack(mirtr[t_glob], i) + jack(mirtr[t_glob + 2], i)) / (2 * jack(mirtr[t_glob + 1], i)))
+        idx += 1
+
+    # 2. Mittelwert über Jackknife-Blöcke
+    mean_mass = np.mean(mass_all, axis=0)
+
+    # 3. Kovarianzmatrix berechnen
+    covmat = np.zeros((T, T))
+    for t1 in range(T):
+        for t2 in range(T):
+            covmat[t1, t2] = np.sum((mass_all[:, t1] - mean_mass[t1]) * (mass_all[:, t2] - mean_mass[t2])) / (njack - 1)
+
+    # 4. Inverse zurückgeben
+    return np.linalg.inv(covmat)
+
+
+
 # Get Pat
 
 parser = argparse.ArgumentParser()
@@ -46,6 +93,7 @@ parser.add_argument('--ensemble', type=str, required=True)
 parser.add_argument('--particle', type=str, required=True)
 parser.add_argument('--nsq', type=int, required=True)
 parser.add_argument('--cmass_index', type=int, required=True)
+parser.add_argument('--unfrozen', action='store_true', help='Use unfrozen fit (jackknife-dependent covariance)')
 args = parser.parse_args()
 
 # Use the parsed arguments
@@ -144,6 +192,7 @@ else:
 ###############################################################################
 
 #Covarianze matrix 
+
 covmat=np.zeros(shape=(int(reg_up-reg_low),int(reg_up-reg_low)))
 for t1 in range(int(reg_up-reg_low)):
     for t2 in range(int(reg_up-reg_low)):
@@ -152,6 +201,7 @@ for t1 in range(int(reg_up-reg_low)):
             x=x+(np.arccosh((jack(mirtr[t1+reg_low],i)+jack(mirtr[t1+2+reg_low],i))/(2*jack(mirtr[t1+1+reg_low],i)))-mass[t1+reg_low])*(np.arccosh((jack(mirtr[t2+reg_low],i)+jack(mirtr[t2+2+reg_low],i))/(2*jack(mirtr[t2+1+reg_low],i)))-mass[t2+reg_low])
         covmat[t1][t2]=(configs-1)/configs*x
         covmat[t2][t1]=(configs-1)/configs*x  
+
 
 invcovmat=np.linalg.inv(covmat)        
 def chi(a):
@@ -174,6 +224,49 @@ for i in range(configs):
     jblocks[i]=tmp
     h=h+(tmp-mbar.x[0])**2
 sigma=np.sqrt((configs-1)/configs*h)
+
+
+
+jblocks = np.zeros(configs)
+
+if args.unfrozen:
+    for i in range(configs):
+        # Neue effektive Massen ohne Block i
+        mass_block = np.zeros(int(ti/2 - 1))
+        for t in range(int(ti/2 - 1)):
+            mass_block[t] = np.arccosh((jack(mirtr[t], i) + jack(mirtr[t+2], i)) / (2 * jack(mirtr[t+1], i)))
+
+       # print(mass_block)
+        # Lokale Kovarianzmatrix
+        try:
+            #inv_cov_block = build_covmat_from_jackblock(mirtr, mass_block, reg_low, reg_up, i)
+            inv_cov_block = build_covmat_from_jackblock(mirtr, reg_low, reg_up, exclude_idx=i)
+        except np.linalg.LinAlgError:
+            print(f"Singular matrix at jackknife block {i}, skipping...")
+            continue
+
+        # Chi^2 Funktion
+        def chijack_unfrozen(a):
+            delta = mass_block[reg_low:reg_up] - a
+            return np.dot(delta, np.matmul(inv_cov_block, delta))
+
+        # Minimieren
+        tmp = minimize(chijack_unfrozen, 0.1, method='Nelder-Mead', tol=1e-8).x[0]
+        jblocks[i] = tmp
+    # NEU: mbar_unfrozen = Jackknife-Mittelwert
+    mbar_unfrozen = np.mean(jblocks)
+    sigma = np.sqrt((configs - 1)/configs * np.sum((jblocks - mbar_unfrozen)**2))
+
+else:
+    h = 0
+    for i in range(configs):
+        tmp = minimize(chijack, 0.1, args=(i), method='Nelder-Mead', tol=1e-8).x[0]
+        jblocks[i] = tmp
+        h += (tmp - mbar.x[0])**2
+    sigma = np.sqrt((configs - 1)/configs * h)
+    mbar_unfrozen = mbar.x[0]  # für einheitliche Schreibweise unten
+
+
 
 df4 = pd.DataFrame(columns=['EffectiveMass'])
 df4['EffectiveMass']=jblocks   
@@ -198,13 +291,13 @@ pval= pvalue(mbar.fun,reg_up-reg_low)
 df5 = pd.DataFrame({'pval': [pval], 'chisq': [chisq]})
 
 if particle == 'Bs':
-    df4.to_csv(path+'Bs-blocks.csv', sep='\t')
-    plt.savefig(path+'Zoom-Bs-Reg.pdf')
-    df3.to_csv(path+'BsResult.csv', sep='\t')
-    df5.to_csv(path+'pval-Bs.csv', sep='\t')
+    df4.to_csv(path+'Bs-blocks-uf.csv', sep='\t')
+    plt.savefig(path+'Zoom-Bs-Reg-uf.pdf')
+    df3.to_csv(path+'BsResult-uf.csv', sep='\t')
+    df5.to_csv(path+'pval-Bs-uf.csv', sep='\t')
 else:
-    df4.to_csv(path+'Ds{}-nsq{}-blocks.csv'.format(cmass,nsq), sep='\t')
-    plt.savefig(path+'Zoom-Ds{}-Reg-{}.pdf'.format(cmass,nsq))
-    df3.to_csv(path+'Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
-    df5.to_csv(path+'pval-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
+    df4.to_csv(path+'Ds{}-nsq{}-blocks-uf.csv'.format(cmass,nsq), sep='\t')
+    plt.savefig(path+'Zoom-Ds{}-Reg-{}-uf.pdf'.format(cmass,nsq))
+    df3.to_csv(path+'Ds{}Result-{}-uf.csv'.format(cmass,nsq), sep='\t')
+    df5.to_csv(path+'pval-Ds{}-{}-uf.csv'.format(cmass,nsq), sep='\t')
 
