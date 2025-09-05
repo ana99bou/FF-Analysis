@@ -1,0 +1,86 @@
+nohup: ignoring input
+Running with Ensemble=C2, particle=Bs, nsq=0, cmass_index=2
+3.007341103106782
+First run: 1.5122544968646433e-08 3.0081802376588884 -4.2896284868605334e-10 0.2263814896264755
+Initial guess: A0 = 1.4965494133603295e-08, m0 = 3.007341103106782
+Initial guess: A1 = 0.00012233353642236987, m2 = 4.511011654660173
+Optimized a0: 1.512254794024667e-08
+Optimized a1: -4.2894998385692417e-10
+Optimized m0: 3.008180232885639
+Optimized m1: 3.2345678437307765
+Minimum chi²: 11.246963414690319
+Fehler m1: 0.38622980310670507
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:153: RuntimeWarning: overflow encountered in exp
+  a1 * (np.exp(-m0 * t) + np.exp(-m0 * (ti - t))) +
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:154: RuntimeWarning: overflow encountered in exp
+  a2 * (np.exp(-m1 * t) + np.exp(-m1 * (ti - t)))
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:158: RuntimeWarning: invalid value encountered in matmul
+  return np.dot(np.transpose(diff), np.matmul(invcovmat, diff))
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:153: RuntimeWarning: invalid value encountered in scalar add
+  a1 * (np.exp(-m0 * t) + np.exp(-m0 * (ti - t))) +
+1.1126298818906744
+First run: 9.377366668389732e-08 1.1083871880696607 1.2905071283084591e-05 1.2521520019150505
+Initial guess: A0 = 9.765305438094672e-08, m0 = 1.1126298818906744
+Initial guess: A1 = 0.0003124948869676858, m2 = 1.6689448228360115
+Optimized a0: 9.377104561245456e-08
+Optimized a1: 1.2906471678177386e-05
+Optimized m0: 1.1083856214316732
+Optimized m1: 2.3605542363193655
+Minimum chi²: 10.872847503305191
+Fehler m1: 0.47069306203952604
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:153: RuntimeWarning: overflow encountered in exp
+  a1 * (np.exp(-m0 * t) + np.exp(-m0 * (ti - t))) +
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:154: RuntimeWarning: overflow encountered in exp
+  a2 * (np.exp(-m1 * t) + np.exp(-m1 * (ti - t)))
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:158: RuntimeWarning: invalid value encountered in matmul
+  return np.dot(np.transpose(diff), np.matmul(invcovmat, diff))
+1.1395780964699
+First run: 8.036431617909659e-08 1.1334680515867366 3.0559468165848528e-06 1.0359196279703504
+Initial guess: A0 = 8.519432807752288e-08, m0 = 1.1395780964699
+Initial guess: A1 = 0.00029188067438171183, m2 = 1.7093671447048502
+Optimized a0: 8.036433135235248e-08
+Optimized a1: 3.055994483295835e-06
+Optimized m0: 1.133468058867175
+Optimized m1: 2.1693862322471276
+Minimum chi²: 10.084451671766704
+Fehler m1: 0.3586898897571074
+1.1657693379692102
+First run: 6.940249850197787e-08 1.157506022157509 1.2075984435796876e-06 0.8893406957637564
+Initial guess: A0 = 7.519248698102999e-08, m0 = 1.1657693379692102
+Initial guess: A1 = 0.0002742124850932758, m2 = 1.7486540069538155
+Optimized a0: 6.94023141068822e-08
+Optimized a1: 1.2075725816414886e-06
+Optimized m0: 1.1575064571004339
+Optimized m1: 2.0468528382427005
+Minimum chi²: 9.723810466990635
+Fehler m1: 0.33533999213908683
+1.1911647203454734
+First run: 6.056474215071726e-08 1.1808618298439315 6.215209817001117e-07 0.7849378008433189
+Initial guess: A0 = 6.704098766926338e-08, m0 = 1.1911647203454734
+Initial guess: A1 = 0.00025892274459626634, m2 = 1.78674708051821
+Optimized a0: 6.056458846863259e-08
+Optimized a1: 6.214884016111665e-07
+Optimized m0: 1.1808620065856417
+Optimized m1: 1.9658078625980386
+Minimum chi²: 9.737072722813553
+Fehler m1: 0.3175328191414588
+1.2158518640168827
+First run: 5.284442049443222e-08 1.2012240566380303 1.692929484451085e-07 0.5672856862803314
+Initial guess: A0 = 6.143850824079034e-08, m0 = 1.2158518640168827
+Initial guess: A1 = 0.0002478679249939176, m2 = 1.823777796025324
+Optimized a0: 5.284462872596611e-08
+Optimized a1: 1.693109074249061e-07
+Optimized m0: 1.2012239687576485
+Optimized m1: 1.7684951888009528
+Minimum chi²: 9.786249701400331
+Fehler m1: 0.3207819988665645
+1.2398965319694737
+First run: 4.691968549257016e-08 1.2231353650318362 1.7676570760587235e-07 0.5699480357228739
+Initial guess: A0 = 5.579209103675163e-08, m0 = 1.2398965319694737
+Initial guess: A1 = 0.00023620349497150043, m2 = 1.8598447979542105
+Optimized a0: 4.692000648487433e-08
+Optimized a1: 1.7679235914876873e-07
+Optimized m0: 1.2231351700893953
+Optimized m1: 1.793062651951871
+Minimum chi²: 11.150694107060925
+Fehler m1: 0.33870083776691867

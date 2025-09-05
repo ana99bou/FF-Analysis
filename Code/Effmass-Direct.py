@@ -41,10 +41,10 @@ def extract(lst,number):
     return [item[number] for item in lst]
 
 
-Ensemble = 'F1S'  # Example value, replace with actual input
+Ensemble = 'M1'  # Example value, replace with actual input
 particle = 'Ds'  # Example value, replace with actual input
 nsq = 0  # Example value, replace with actual input
-cmass_index = 1  # Example value, replace with actual input
+cmass_index = 0  # Example value, replace with actual input
 
 '''
 parser = argparse.ArgumentParser()

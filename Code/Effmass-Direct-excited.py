@@ -40,13 +40,13 @@ def var(data):
 def extract(lst,number):
     return [item[number] for item in lst]
 
-
+'''
 Ensemble = 'F1S'  # Example value, replace with actual input
 particle = 'Ds'  # Example value, replace with actual input
-nsq = 0  # Example value, replace with actual input
-cmass_index = 0  # Example value, replace with actual input
-
+nsq = 4  # Example value, replace with actual input
+cmass_index = 1  # Example value, replace with actual input
 '''
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--ensemble', type=str, required=True)
 parser.add_argument('--particle', type=str, required=True)
@@ -59,16 +59,17 @@ Ensemble = args.ensemble
 particle = args.particle
 nsq = args.nsq
 cmass_index = args.cmass_index
-'''
+
+
 if Ensemble == 'F1S':
-    reg_low=19#18
-    reg_up=25
+    reg_low=10
+    reg_up=22
 elif Ensemble in ['M1', 'M2', 'M3']:
-    reg_low=19#17#12
-    reg_up=25
+    reg_low=10
+    reg_up=22
 elif Ensemble in ['C1', 'C2']:
-    reg_low=14#10
-    reg_up=25
+    reg_low=8
+    reg_up=20
 
 reg_up=reg_up+1
 
@@ -156,10 +157,23 @@ def chi(a1, m0, a2, dm):
     diff = [res[t] - model[k] for k, t in enumerate(lst)]
     return np.dot(np.transpose(diff), np.matmul(invcovmat, diff))
 
-mbar = Minuit(chi, a1=a0tmp, m0=masstmp, a2=np.sqrt(a0tmp), dm=0.2)
+mbar1 = Minuit(chi, a1=a0tmp, m0=masstmp, a2=np.sqrt(a0tmp), dm=0.2)
+mbar1.limits["dm"] = (0, None)  # enforce Δm > 0
+mbar1.errordef = 1
+mbar1.migrad().migrad()
+
+tmp_a1 = mbar1.values["a1"]
+tmp_m0 = mbar1.values["m0"]
+tmp_a2 = mbar1.values["a2"]
+tmp_dm = mbar1.values["dm"]
+
+print('First run:', tmp_a1, tmp_m0, tmp_a2, tmp_dm)
+
+mbar = Minuit(chi, a1=tmp_a1, m0=tmp_m0, a2=tmp_a2, dm=tmp_dm)
 mbar.limits["dm"] = (0, None)  # enforce Δm > 0
 mbar.errordef = 1
 mbar.migrad()
+
 
 best_a1 = mbar.values["a1"]
 best_m0 = mbar.values["m0"]
@@ -188,6 +202,7 @@ def chijack(a1, m0, a2, dm, k):
         for t in lst
     ]
     diff = [jackmass(t, k) - model[idx] for idx, t in enumerate(lst)]
+    #diff = [jackmass(t, k) - model[t] for t in enumerate(lst)]
     return np.dot(np.transpose(diff), np.matmul(invcovmat, diff))
 
 #Std Deviation for all jakcknife blocks
@@ -207,7 +222,9 @@ h = 0
 
 for i in range(configs):
     mj = Minuit(lambda a1, m0, a2, dm: chijack(a1, m0, a2, dm, i),
-                a1=best_a1, m0=best_m0, a2=best_a2, dm=best_dm)
+                a1=tmp_a1, m0=tmp_m0, a2=tmp_a2, dm=tmp_dm)
+    #mj = Minuit(lambda a1, m0, a2, dm: chijack(a1, m0, a2, dm, i),
+                #a1=best_a1, m0=best_m0, a2=best_a2, dm=best_dm)
     mj.limits["dm"] = (0, None)
     mj.errordef = 1
     mj.migrad()
@@ -215,12 +232,16 @@ for i in range(configs):
     m0_j = mj.values["m0"]
     m1_j = m0_j + mj.values["dm"]
 
-    jblocks[i] = m0_j   # or = m1_j if you want the excited state
-    h += (m0_j - best_m0) ** 2   # same: choose m0 or m1
+    #print(m0_j)
+    #print(m1_j)
+    #print(mj.values["dm"])
+
+    jblocks[i] = mj.values["dm"]   # or = m1_j if you want the excited state
+    h += (m1_j - best_m1) ** 2   # same: choose m0 or m1
 
 sigma = np.sqrt((configs - 1) / configs * h)
 
-print('Fehler:',sigma)
+print('Fehler m1:',sigma)
 
 
 plt.figure(figsize=(8,6))
@@ -249,31 +270,39 @@ plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.tight_layout()
 plt.savefig('Fit.pdf')
 
+
 df3 = pd.DataFrame([{
-    'Amplitude': best_a1,
-    'Mass': best_a2,
+    'Amplitude1': best_a1,
+    'Amplitude2': best_a2,
+    'Mass0': best_m0,
+    'Mass1': best_m1,
+    'DeltaM': best_dm,
     'Error': sigma,
     'RegUp': reg_up,
     'RegLow': reg_low
 }])
 
-'''
+
 df5 = pd.DataFrame(columns=['pval'])
 chisq=mbar.fval
 pval= pvalue(mbar.fval,reg_up-reg_low)
 df5 = pd.DataFrame({'pval': [pval], 'chisq': [chisq]})
 
+df4 = pd.DataFrame(columns=['EffectiveMass'])
+df4['EffectiveMass']=jblocks   
+
 if particle == 'Bs':
     #df4.to_csv(path+'Bs-blocks.csv', sep='\t')
-    plt.savefig(path+'Direct-Zoom-Bs-Reg.pdf')
-    df3.to_csv(path+'Direct-BsResult.csv', sep='\t')
-    df5.to_csv(path+'Direct-pval-Bs.csv', sep='\t')
+    plt.savefig(path+'Excited-Zoom-Bs-Reg.pdf')
+    df4.to_csv(path+'Excited-Bs-blocks-uf.csv', sep='\t')
+    df3.to_csv(path+'Excited-BsResult.csv', sep='\t')
+    df5.to_csv(path+'Excited-pval-Bs.csv', sep='\t')
 else:
     #df4.to_csv(path+'Ds{}-nsq{}-blocks.csv'.format(cmass,nsq), sep='\t')
-    plt.savefig(path+'Direct-Zoom-Ds{}-Reg-{}.pdf'.format(cmass,nsq))
-    df3.to_csv(path+'Direct-Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
-    df5.to_csv(path+'Direct-pval-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
+    plt.savefig(path+'Excited-Zoom-Ds{}-Reg-{}.pdf'.format(cmass,nsq))
+    df3.to_csv(path+'Excited-Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
+    df5.to_csv(path+'Excited-pval-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
+    df4.to_csv(path+'Excited-Ds{}-nsq{}-blocks-uf.csv'.format(cmass,nsq), sep='\t')
 
-'''
 
 

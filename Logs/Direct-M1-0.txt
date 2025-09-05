@@ -1,0 +1,92 @@
+nohup: ignoring input
+Running with Ensemble=M1, particle=Bs, nsq=0, cmass_index=0
+2.25218859960375
+First run: 1.2002073778867704e-11 2.2460019122195827 3.757311870568562e-12 0.036795017331928616
+Initial guess: A0 = 1.5569058779730886e-11, m0 = 2.25218859960375
+Initial guess: A1 = 3.945764663500712e-06, m2 = 3.378282899405625
+Optimized a0: 1.2002081769801633e-11
+Optimized a1: 3.757297674950706e-12
+Optimized m0: 2.2460016643396816
+Optimized m1: 2.2827934581794205
+Minimum chi²: 13.317783429460013
+Fehler m1: 0.06314400468979345
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:153: RuntimeWarning: overflow encountered in exp
+  a1 * (np.exp(-m0 * t) + np.exp(-m0 * (ti - t))) +
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:154: RuntimeWarning: overflow encountered in exp
+  a2 * (np.exp(-m1 * t) + np.exp(-m1 * (ti - t)))
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:158: RuntimeWarning: invalid value encountered in matmul
+  return np.dot(np.transpose(diff), np.matmul(invcovmat, diff))
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:153: RuntimeWarning: invalid value encountered in scalar add
+  a1 * (np.exp(-m0 * t) + np.exp(-m0 * (ti - t))) +
+0.8369843166026089
+First run: 4.3524906688350325e-11 0.8274619318118696 1.399285698589232e-11 0.15042210330114517
+Initial guess: A0 = 5.1412390574062385e-11, m0 = 0.8369843166026089
+Initial guess: A1 = 7.170243411074856e-06, m2 = 1.2554764749039133
+Optimized a0: 4.35248632020879e-11
+Optimized a1: 1.3994316162518279e-11
+Optimized m0: 0.8274628042459676
+Optimized m1: 0.9778687967955508
+Minimum chi²: 12.617436450823245
+Fehler m1: 0.08526954640515559
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:153: RuntimeWarning: overflow encountered in exp
+  a1 * (np.exp(-m0 * t) + np.exp(-m0 * (ti - t))) +
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:154: RuntimeWarning: overflow encountered in exp
+  a2 * (np.exp(-m1 * t) + np.exp(-m1 * (ti - t)))
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:158: RuntimeWarning: invalid value encountered in matmul
+  return np.dot(np.transpose(diff), np.matmul(invcovmat, diff))
+0.8594096707460104
+First run: 4.3925833810087774e-11 0.8558998927682692 -0.00047917364021462264 117.31419261682973
+Initial guess: A0 = 4.5546096252510255e-11, m0 = 0.8594096707460104
+Initial guess: A1 = 6.7487847982070265e-06, m2 = 1.2891145061190157
+Optimized a0: 4.3927057094601336e-11
+Optimized a1: -0.00047917364021462264
+Optimized m0: 0.8558985314422137
+Optimized m1: 118.17009114827194
+Minimum chi²: 35.33408538795325
+Fehler m1: 0.0018456536950402953
+0.8813260589853491
+First run: 3.920175956722954e-11 0.8773870801006762 -6.496982122642536e-05 17.91269237755651
+Initial guess: A0 = 4.0818270568257065e-11, m0 = 0.8813260589853491
+Initial guess: A1 = 6.3889177931991785e-06, m2 = 1.3219890884780237
+Optimized a0: 3.920211046530727e-11
+Optimized a1: -6.496982122642536e-05
+Optimized m0: 0.8773865550353583
+Optimized m1: 18.790078932591868
+Minimum chi²: 34.61083093249022
+Fehler m1: 0.0009845967102886787
+0.9027151019174005
+First run: 3.5410119356822e-11 0.8984217910116826 0.00022459152536951873 27.118804247899117
+Initial guess: A0 = 3.6958753641771275e-11, m0 = 0.9027151019174005
+Initial guess: A1 = 6.079371155125444e-06, m2 = 1.3540726528761007
+Optimized a0: 3.541000222890928e-11
+Optimized a1: 0.00022459152536951873
+Optimized m0: 0.8984217492205974
+Optimized m1: 28.017225997119713
+Minimum chi²: 30.20077722899872
+Fehler m1: 0.0012126093788027022
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:153: RuntimeWarning: overflow encountered in exp
+  a1 * (np.exp(-m0 * t) + np.exp(-m0 * (ti - t))) +
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:154: RuntimeWarning: overflow encountered in exp
+  a2 * (np.exp(-m1 * t) + np.exp(-m1 * (ti - t)))
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:158: RuntimeWarning: invalid value encountered in matmul
+  return np.dot(np.transpose(diff), np.matmul(invcovmat, diff))
+0.9232224411626923
+First run: 7.791648588029162e-12 0.8724159023269958 2.9099324304600374e-11 0.08365923003130578
+Initial guess: A0 = 3.393086226716985e-11, m0 = 0.9232224411626923
+Initial guess: A1 = 5.82502036624507e-06, m2 = 1.3848336617440384
+Optimized a0: 7.791629240021145e-12
+Optimized a1: 2.9099307745509593e-11
+Optimized m0: 0.8724159709101641
+Optimized m1: 0.9560753748358539
+Minimum chi²: 3.778356228452822
+Fehler m1: 0.034815120109148265
+0.9435950471207658
+First run: 9.75562365880843e-12 0.8980042598994862 2.5235686016791533e-11 0.092160596112273
+Initial guess: A0 = 3.1245610315965256e-11, m0 = 0.9435950471207658
+Initial guess: A1 = 5.589777304684441e-06, m2 = 1.4153925706811488
+Optimized a0: 9.755580755509385e-12
+Optimized a1: 2.5235676553088074e-11
+Optimized m0: 0.8980044660982904
+Optimized m1: 0.9901654120889377
+Minimum chi²: 2.3803615582736515
+Fehler m1: 0.04662668810273252

@@ -1,0 +1,84 @@
+nohup: ignoring input
+Running with Ensemble=C1, particle=Bs, nsq=0, cmass_index=2
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:153: RuntimeWarning: overflow encountered in exp
+  a1 * (np.exp(-m0 * t) + np.exp(-m0 * (ti - t))) +
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:154: RuntimeWarning: overflow encountered in exp
+  a2 * (np.exp(-m1 * t) + np.exp(-m1 * (ti - t)))
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:158: RuntimeWarning: invalid value encountered in matmul
+  return np.dot(np.transpose(diff), np.matmul(invcovmat, diff))
+3.0034843076547784
+First run: 1.522933448550778e-08 3.006385973291858 -8.224391404929089e-09 0.5510095824219717
+Initial guess: A0 = 1.4781217372283585e-08, m0 = 3.0034843076547784
+Initial guess: A1 = 0.0001215780299736905, m2 = 4.5052264614821675
+Optimized a0: 1.5229302461206343e-08
+Optimized a1: -8.225352848271535e-09
+Optimized m0: 3.0063859730472084
+Optimized m1: 3.5573783906668877
+Minimum chi²: 6.298392499837046
+Fehler m1: 0.23691891718095376
+1.1060320931146563
+First run: 6.924910290088125e-08 1.0938619672637362 2.96394900937799e-08 0.06164130954608443
+Initial guess: A0 = 9.637808507665776e-08, m0 = 1.1060320931146563
+Initial guess: A1 = 0.00031044820031151375, m2 = 1.6590481396719845
+Optimized a0: 6.924827258517118e-08
+Optimized a1: 2.9638969440469952e-08
+Optimized m0: 1.0938630568664767
+Optimized m1: 1.1555113282826388
+Minimum chi²: 8.434590953701756
+Fehler m1: 0.07540409247479991
+1.133062442874467
+First run: 5.644337579553084e-08 1.1166302302442408 3.0974727821178954e-08 0.07416862435404147
+Initial guess: A0 = 8.399424819302163e-08, m0 = 1.133062442874467
+Initial guess: A1 = 0.0002898176119441702, m2 = 1.6995936643117004
+Optimized a0: 5.64432359672518e-08
+Optimized a1: 3.097458090103841e-08
+Optimized m0: 1.116630392672686
+Optimized m1: 1.1908001875162137
+Minimum chi²: 8.156149586500609
+Fehler m1: 0.06926932011897338
+1.1595508457788954
+First run: 4.7838965104411106e-08 1.1397279320652904 3.051179283772634e-08 0.08575051135088119
+Initial guess: A0 = 7.41700774432997e-08, m0 = 1.1595508457788954
+Initial guess: A1 = 0.00027234183931834584, m2 = 1.7393262686683433
+Optimized a0: 4.7838982684640787e-08
+Optimized a1: 3.051179992606492e-08
+Optimized m0: 1.1397278925606886
+Optimized m1: 1.2254781082942048
+Minimum chi²: 7.814681684448187
+Fehler m1: 0.0687270824752235
+1.1854085326186252
+First run: 2.956392234034633e-08 1.1534283831287295 4.053953183131885e-08 0.07846444783563744
+Initial guess: A0 = 6.624439812958529e-08, m0 = 1.1854085326186252
+Initial guess: A1 = 0.00025737987125955535, m2 = 1.7781127989279377
+Optimized a0: 2.956387099774813e-08
+Optimized a1: 4.053945430802407e-08
+Optimized m0: 1.1534284719453902
+Optimized m1: 1.23189324879191
+Minimum chi²: 7.0093317459947695
+Fehler m1: 0.0614895605124696
+1.2098385439471324
+First run: 4.057923844129722e-08 1.1875271657627784 2.6152779180185208e-08 0.1199683101787745
+Initial guess: A0 = 6.05938628212731e-08, m0 = 1.2098385439471324
+Initial guess: A1 = 0.0002461582068940077, m2 = 1.8147578159206987
+Optimized a0: 4.0579104703325115e-08
+Optimized a1: 2.6152537158197194e-08
+Optimized m0: 1.187527429707089
+Optimized m1: 1.3074973695687593
+Minimum chi²: 14.257648186586218
+Fehler m1: 0.07728278074572423
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:153: RuntimeWarning: overflow encountered in exp
+  a1 * (np.exp(-m0 * t) + np.exp(-m0 * (ti - t))) +
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:154: RuntimeWarning: overflow encountered in exp
+  a2 * (np.exp(-m1 * t) + np.exp(-m1 * (ti - t)))
+/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Effmass-Direct-excited.py:158: RuntimeWarning: invalid value encountered in matmul
+  return np.dot(np.transpose(diff), np.matmul(invcovmat, diff))
+1.234774495306205
+First run: 3.083339669102311e-08 1.2050085150317091 2.9932716130195604e-08 0.10758282660022865
+Initial guess: A0 = 5.526585310633049e-08, m0 = 1.234774495306205
+Initial guess: A1 = 0.0002350869054335662, m2 = 1.8521617429593076
+Optimized a0: 3.0833373507998466e-08
+Optimized a1: 2.993267485768958e-08
+Optimized m0: 1.205008572206055
+Optimized m1: 1.3125916243961857
+Minimum chi²: 8.85800188588204
+Fehler m1: 0.07655737198732104

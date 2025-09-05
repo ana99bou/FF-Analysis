@@ -18,20 +18,20 @@ md2=0.7567413345078149
 pre1=md0/(2*md1*mb)
 pre2=md0/(2*md2*mb)
 
-nsq0=pd.read_csv('./Mass-Ds0.248-0.csv',sep='\s')
-nsq1=pd.read_csv('./Mass-Ds0.248-1.csv',sep='\s')
-nsq2=pd.read_csv('./Mass-Ds0.248-2.csv',sep='\s')
-nsq3=pd.read_csv('./Mass-Ds0.248-3.csv',sep='\s')
-nsq4=pd.read_csv('./Mass-Ds0.248-4.csv',sep='\s')
-nsq5=pd.read_csv('./Mass-Ds0.248-5.csv',sep='\s')
+nsq0=pd.read_csv('./Mass-Ds0.259-0.csv',sep='\s')
+nsq1=pd.read_csv('./Mass-Ds0.259-1.csv',sep='\s')
+nsq2=pd.read_csv('./Mass-Ds0.259-2.csv',sep='\s')
+nsq3=pd.read_csv('./Mass-Ds0.259-3.csv',sep='\s')
+nsq4=pd.read_csv('./Mass-Ds0.259-4.csv',sep='\s')
+nsq5=pd.read_csv('./Mass-Ds0.259-5.csv',sep='\s')
 
-nsq0plt=pd.read_csv('./Ds0.248Result-0.csv',sep='\s')
-nsq1plt=pd.read_csv('./Ds0.248Result-1.csv',sep='\s')
-nsq2plt=pd.read_csv('./Ds0.248Result-2.csv',sep='\s')
-nsq3plt=pd.read_csv('./Ds0.248Result-3.csv',sep='\s')
-nsq3plt=pd.read_csv('./Ds0.248Result-3.csv',sep='\s')
-nsq4plt=pd.read_csv('./Ds0.248Result-4.csv',sep='\s')
-nsq5plt=pd.read_csv('./Ds0.248Result-5.csv',sep='\s')
+nsq0plt=pd.read_csv('./Ds0.259Result-0.csv',sep='\s')
+nsq1plt=pd.read_csv('./Ds0.259Result-1.csv',sep='\s')
+nsq2plt=pd.read_csv('./Ds0.259Result-2.csv',sep='\s')
+nsq3plt=pd.read_csv('./Ds0.259Result-3.csv',sep='\s')
+nsq3plt=pd.read_csv('./Ds0.259Result-3.csv',sep='\s')
+nsq4plt=pd.read_csv('./Ds0.259Result-4.csv',sep='\s')
+nsq5plt=pd.read_csv('./Ds0.259Result-5.csv',sep='\s')
 
 x0, y0 = [1, 46], [nsq0plt['EffectiveMass'], nsq0plt['EffectiveMass']]
 x1, y1 = [1, 46], [nsq1plt['EffectiveMass'], nsq1plt['EffectiveMass']]
