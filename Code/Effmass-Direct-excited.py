@@ -43,7 +43,7 @@ def extract(lst,number):
 '''
 Ensemble = 'F1S'  # Example value, replace with actual input
 particle = 'Ds'  # Example value, replace with actual input
-nsq = 4  # Example value, replace with actual input
+nsq = 0  # Example value, replace with actual input
 cmass_index = 1  # Example value, replace with actual input
 '''
 
@@ -62,13 +62,13 @@ cmass_index = args.cmass_index
 
 
 if Ensemble == 'F1S':
-    reg_low=10
+    reg_low=5
     reg_up=22
 elif Ensemble in ['M1', 'M2', 'M3']:
-    reg_low=10
+    reg_low=5
     reg_up=22
 elif Ensemble in ['C1', 'C2']:
-    reg_low=8
+    reg_low=5
     reg_up=20
 
 reg_up=reg_up+1
@@ -218,7 +218,11 @@ sigma=np.sqrt((configs-1)/configs*h)
 '''
 
 jblocks = np.zeros(configs)
-h = 0
+h_a1 = 0
+h_a2 = 0
+h_m0 = 0
+h_m1 = 0
+h_dm=0
 
 for i in range(configs):
     mj = Minuit(lambda a1, m0, a2, dm: chijack(a1, m0, a2, dm, i),
@@ -232,17 +236,32 @@ for i in range(configs):
     m0_j = mj.values["m0"]
     m1_j = m0_j + mj.values["dm"]
 
+    a1_j = mj.values["a1"]
+    a2_j = m0_j + mj.values["a2"]
+    dm_j = mj.values["a2"]
+
     #print(m0_j)
     #print(m1_j)
     #print(mj.values["dm"])
 
     jblocks[i] = mj.values["dm"]   # or = m1_j if you want the excited state
-    h += (m1_j - best_m1) ** 2   # same: choose m0 or m1
+    h_a1 += (a1_j - best_a1) ** 2 
+    h_a2 += (a2_j - best_a2) ** 2
+    h_m0 += (m0_j - best_m0) ** 2 
+    h_m1 += (m1_j - best_m1) ** 2   # same: choose m0 or m1
+    h_dm += (dm_j - best_dm) ** 2
 
-sigma = np.sqrt((configs - 1) / configs * h)
+sigma_a1 = np.sqrt((configs - 1) / configs * h_a1)
+sigma_a2 = np.sqrt((configs - 1) / configs * h_a2)
+sigma_m0 = np.sqrt((configs - 1) / configs * h_m0)
+sigma_m1 = np.sqrt((configs - 1) / configs * h_m1)
+sigma_dm = np.sqrt((configs - 1) / configs * h_dm)
 
-print('Fehler m1:',sigma)
-
+print('Fehler m1:',sigma_m1)
+print('Fehler m0:',sigma_m0)
+print('Fehler a1:',sigma_a1)
+print('Fehler a2:',sigma_a2)
+print('Fehler dm:',sigma_dm)
 
 plt.figure(figsize=(8,6))
 
@@ -273,11 +292,15 @@ plt.savefig('Fit.pdf')
 
 df3 = pd.DataFrame([{
     'Amplitude1': best_a1,
+    'DeltaA1': sigma_a1,
     'Amplitude2': best_a2,
+    'DeltaA2': sigma_a2,
     'Mass0': best_m0,
+    'DeltaM0': sigma_m0,
     'Mass1': best_m1,
+    'DeltaM1': sigma_m1,
     'DeltaM': best_dm,
-    'Error': sigma,
+    'DeltaDm': sigma_dm,
     'RegUp': reg_up,
     'RegLow': reg_low
 }])

@@ -28,8 +28,8 @@ frozen_analysis = bool(int(sys.argv[6]))
 
 FF='V'
 #nsq=1
-cmass_index=1
-ensemble='F1S'
+cmass_index=0
+ensemble='C1'
 use_disp=True
 frozen=True
 
@@ -39,14 +39,14 @@ cmass=Ens.getCmass(ensemble)[cmass_index]
 
 #Fit range
 if ensemble == 'F1S':
-    reg_up=20
-    reg_low=15
+    reg_up=15
+    reg_low=5
 elif ensemble in ['M1', 'M2', 'M3']:
     reg_up=22
     reg_low=18
 elif ensemble in ['C1', 'C2']:
-    reg_up=16
-    reg_low=12
+    reg_up=15
+    reg_low=5
 
 reg_up=reg_up+1
 
@@ -307,7 +307,15 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf, lam_blocks, frozen=True):
     # --- central fit ---
     chi2_fun = make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv, lam_central)
     m = Minuit(chi2_fun, *p0)  # only fit parameters go here
+    m.tol = 1e-16/0.002 
     m.migrad()
+
+    ndof = (reg_up - reg_low + 1) - m.nfit
+    chi2 = m.fval
+    chi2_dof = chi2 / ndof
+
+    print(chi2, ndof, chi2_dof)
+
     central = np.array(list(m.values))
     p0_central = central.tolist()
 
@@ -343,7 +351,7 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf, lam_blocks, frozen=True):
 
 
     jk_params = np.array(jk_params)
-    errs = np.sqrt((nconf - 1) * np.mean((jk_params - central) ** 2, axis=0))
+    errs = np.sqrt(((nconf - 1) / nconf) * np.mean((jk_params - central) ** 2, axis=0))
     return central, errs, nsq_order, jk_params, lam_central
 
 def plot_all_t(all_ratios, nconf, nsq_order, central):
