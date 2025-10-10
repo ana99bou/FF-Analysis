@@ -183,6 +183,8 @@ for ens, masses in ens_masses.items():
             y_vals_raw = df.iloc[7:12]["Value"].tolist()
             y_errs_raw = df.iloc[7:12]["Error"].tolist()
             
+            print(x_vals)
+
             if len(x_vals) != len(y_vals_raw):
                 print(f"Length mismatch for {ens} {m}")
                 continue

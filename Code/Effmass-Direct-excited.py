@@ -40,13 +40,13 @@ def var(data):
 def extract(lst,number):
     return [item[number] for item in lst]
 
-'''
-Ensemble = 'F1S'  # Example value, replace with actual input
+
+Ensemble = 'C1'  # Example value, replace with actual input
 particle = 'Ds'  # Example value, replace with actual input
 nsq = 0  # Example value, replace with actual input
 cmass_index = 1  # Example value, replace with actual input
-'''
 
+'''
 parser = argparse.ArgumentParser()
 parser.add_argument('--ensemble', type=str, required=True)
 parser.add_argument('--particle', type=str, required=True)
@@ -59,7 +59,7 @@ Ensemble = args.ensemble
 particle = args.particle
 nsq = args.nsq
 cmass_index = args.cmass_index
-
+'''
 
 if Ensemble == 'F1S':
     reg_low=5

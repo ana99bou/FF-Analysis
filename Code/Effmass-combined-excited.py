@@ -40,22 +40,40 @@ def var(data):
 def extract(lst,number):
     return [item[number] for item in lst]
 
-
+'''
 Ensemble = 'F1S'  # Example value, replace with actual input
-particle = 'Ds'  # Example value, replace with actual input
+particle = 'Bs'  # Example value, replace with actual input
 nsq = 0  # Example value, replace with actual input
 cmass_index = 0  # Example value, replace with actual input
+'''
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--ensemble', type=str, required=True)
+parser.add_argument('--particle', type=str, required=True)
+parser.add_argument('--nsq', type=int, required=True)
+parser.add_argument('--cmass_index', type=int, required=True)
+args = parser.parse_args()
+
+# Use the parsed arguments
+Ensemble = args.ensemble
+particle = args.particle
+nsq = args.nsq
+cmass_index = args.cmass_index
 
 
 
 if Ensemble == 'F1S':
-    reg_low=19#18
-    reg_up=25
+    if particle == 'Bs':
+        reg_low=7#11
+        reg_up=35
+    elif particle == 'Ds':
+        reg_low=5#11
+        reg_up=25
 elif Ensemble in ['M1', 'M2', 'M3']:
-    reg_low=19#17#12
+    reg_low=4#9For M1 nsq1 change from 5 to 6
     reg_up=25
 elif Ensemble in ['C1', 'C2']:
-    reg_low=14#10
+    reg_low=5
     reg_up=25
 
 reg_up=reg_up+1
@@ -63,7 +81,11 @@ reg_up=reg_up+1
 cmass=Ens.getCmass(Ensemble)[cmass_index]
 
 #Get Path
-fpath='../Data/{}/BsDsStar_{}_2pt{}.h5'.format(Ensemble,Ensemble,particle)
+if particle == 'Ds':
+    fpath='../Data/{}/BsDsStar_{}_2pt{}.h5'.format(Ensemble,Ensemble,particle)
+elif particle == 'Bs':
+    fpath='../Data/{}/BsDsStar_{}_2pt{}_new.h5'.format(Ensemble,Ensemble,particle)
+#fpath='../Data/{}/BsDsStar_{}_2pt{}.h5'.format(Ensemble,Ensemble,particle)
 f=h5py.File(fpath, "r")
 path='../Data/{}/2pt/'.format(Ensemble,Ensemble,particle)
 configs,dt,ti,L= Ens.getEns(Ensemble)
@@ -82,7 +104,7 @@ def get_dataset(f, particle, style, sm, smass, cmass, nsq, m, csw, zeta):
         if style == "old":
             path = f"/hl_SM{sm}_PT_{smass}_m{m}_csw{csw}_zeta{zeta}/operator_Gamma5/n2_0/data"
         elif style == "new":
-            path = f"/hl_SM{sm}_SM{sm}_{smass}_m{m}_csw{csw}_zeta{zeta}/operator_Gamma5/n2_0/data"
+            path = f"/hl_PT_PT_{smass}_m{m}_csw{csw}_zeta{zeta}/operator_Gamma5/n2_0/data"
         else:
             raise ValueError("Unknown style")
         return f[path]
@@ -197,26 +219,6 @@ def build_correlator_and_error(mir, configs, ti):
 res_old, err_old, mirtr_old = build_correlator_and_error(mir_old, configs, ti)
 res_new, err_new, mirtr_new = build_correlator_and_error(mir_new, configs, ti)
 
-# --- Overlay plot of old vs new
-plt.figure(figsize=(8,6))
-
-t_range = range(len(res_old))  # same length for old and new
-
-plt.errorbar(t_range, res_old, yerr=err_old,
-             fmt='x', capsize=3, label='Old dataset', color='blue')
-plt.errorbar(t_range, res_new, yerr=err_new,
-             fmt='x', capsize=3, label='New dataset', color='orange')
-
-plt.yscale('log')
-plt.xlabel('Time slice $t$')
-plt.ylabel('Correlator (log scale)')
-plt.title(f'{particle} Correlator Comparison')
-plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-plt.legend()
-plt.tight_layout()
-
-plt.savefig('Temp.pdf')
-
 
 ###############################################################################
 
@@ -283,178 +285,393 @@ def chi2_two_state(params):
 
 
 # Initial guesses
-m0_init = np.log(res_old[reg_low]/res_old[reg_low+1])  # rough log-ratio
+m0_init = np.log(res_old[reg_low+5]/res_old[reg_low+6])  # rough log-ratio
 A0_old_init=res_old[reg_low]*np.exp(m0_init*reg_low)
 A0_new_init=res_new[reg_low]*np.exp(m0_init*reg_low)
-p0 = [A0_old_init, 0.1, A0_new_init, 0.1, m0_init, 1.0]  # initial guesses: amplitudes, m0, m1
-res_fit = minimize(chi2_two_state, p0, method='BFGS')
-A0_old, A1_old, A0_new, A1_new, m0_best, m1_best = res_fit.x
+p0 = [A0_old_init, A0_old_init, A0_new_init, A0_new_init, m0_init, m0_init+0.2]  # initial guesses: amplitudes, m0, m1
+#res_fit = minimize(chi2_two_state, p0, method='BFGS')
+#A0_old, A1_old, A0_new, A1_new, m0_best, m1_best = res_fit.x
 
+print(p0)
 
+# ------------------------ Remaining code: Minuit + jackknife ------------------------
 
-print("Best fit parameters:")
-print("A_old =", A0_old)
-print("A_old_ex =", A1_old)
-print("A_new =", A0_new)
-print("A_new_ex =", A1_new)
-print("m0     =", m0_best)
-print("m1     =", m1_best)
-#print("chi²  =", chi2_min)
+tvec = np.arange(reg_low, reg_up)
 
-############################Minuit
-'''
-# chi2-Funktion für iminuit: benannte Argumente
-def chi2_two_state_minuit(A0_old, A1_old, A0_new, A1_new, m0, m1):
-    model_old = np.array([fitfunc(t, A0_old, A1_old, m0, m1) for t in t_range])
-    model_new = np.array([fitfunc(t, A0_new, A1_new, m0, m1) for t in t_range])
-    
+# chi2 with constraint m1 > m0 implemented via reparametrization
+def chi2_minuit(A0_old, A1_old, A0_new, A1_new, m0, dm):
+    m1 = m0 + dm  # enforce m1 > m0
+    model_old = fitfunc(tvec, A0_old, A1_old, m0, m1)
+    model_new = fitfunc(tvec, A0_new, A1_new, m0, m1)
+
     resid = np.concatenate([
-        res_old[reg_low:reg_up] - model_old[reg_low:reg_up],
-        res_new[reg_low:reg_up] - model_new[reg_low:reg_up]
+        res_old[reg_low:reg_up] - model_old,
+        res_new[reg_low:reg_up] - model_new
     ])
-    
-    return resid @ cov_inv @ resid
 
-# Initialwerte
-m0_init = np.log(res_old[reg_low]/res_old[reg_low+1])
-A0_old_init = res_old[reg_low]*np.exp(m0_init*reg_low)
-A0_new_init = res_new[reg_low]*np.exp(m0_init*reg_low)
+    return float(resid @ cov_inv @ resid)
 
-# Minuit aufsetzen
-m = Minuit(
-    chi2_two_state_minuit,
-    A0_old=A0_old_init,
-    A1_old=0.1,
-    A0_new=A0_new_init,
-    A1_new=0.1,
-    m0=m0_init,
-    m1=1.0
+
+def run_minuit(initial_params, limits=None, fixed=None):
+    m = Minuit(chi2_minuit, **initial_params)
+    for name in initial_params.keys():
+        m.errors[name] = abs(initial_params[name]) * 0.01 if initial_params[name] != 0 else 0.01
+    if limits:
+        for name, lim in limits.items():
+            m.limits[name] = lim
+    if fixed:
+        for name in fixed:
+            m.fixed[name] = True
+    try:
+        m.migrad()
+        m.hesse()
+    except Exception as e:
+        print("Minuit failed with:", e)
+    return m
+
+
+# Initial parameter guesses
+try:
+    p0
+except NameError:
+    m0_init = max(0.05, np.log(res_old[reg_low+5]/res_old[reg_low+6]))
+    A0_old_init = res_old[reg_low]*np.exp(m0_init*reg_low)
+    A0_new_init = res_new[reg_low]*np.exp(m0_init*reg_low)
+    p0 = [A0_old_init, A0_old_init, A0_new_init, A0_new_init, m0_init, 0.2]
+
+initial_params = {
+    'A0_old': p0[0],
+    'A1_old': p0[1],
+    'A0_new': p0[2],
+    'A1_new': p0[3],
+    'm0':     p0[4],
+    'dm':     0.2 #abs(p0[5] - p0[4])  # positive gap
+}
+
+limits = {
+    'm0': (1e-6, None),
+    'dm': (1e-6, None)
+}
+
+# Central fit
+m_central = run_minuit(initial_params, limits=limits)
+central_vals = m_central.values.to_dict()
+hesse_errors = m_central.errors.to_dict()
+
+# translate back to (m0, m1)
+m0_best = central_vals['m0']
+m1_best = m0_best + central_vals['dm']
+chi2_central = float(m_central.fval)
+ndof = 2*(reg_up-reg_low) - len(central_vals)
+
+print("\n=== Central fit (Minuit, with m1>m0) ===")
+for k in ['A0_old','A1_old','A0_new','A1_new']:
+    print(f"{k:8s} = {central_vals[k]:12.6e} (err: {hesse_errors.get(k, np.nan):.3e})")
+print(f"m0       = {m0_best:12.6e} (err: {hesse_errors.get('m0', np.nan):.3e})")
+print(f"m1       = {m1_best:12.6e} (err: {hesse_errors.get('dm', np.nan):.3e})")
+print(f"chi2 = {chi2_central:.6f}, dof = {ndof}, p-value = {pvalue(chi2_central, ndof):.4f}")
+
+# ------------------------ Jackknife errors only ------------------------
+def jack_mean_timeseries(mirtr, omit_index):
+    nt = mirtr.shape[0]
+    out = np.empty(nt)
+    for t in range(nt):
+        out[t] = (np.sum(mirtr[t]) - mirtr[t, omit_index]) / (configs - 1)
+    return out
+
+param_names = list(initial_params.keys())
+
+jack_params = np.zeros((configs, len(param_names)))
+
+for k in range(configs):
+    ro = jack_mean_timeseries(mirtr_old, k)
+    rn = jack_mean_timeseries(mirtr_new, k)
+
+    def chi2_jk(A0_old, A1_old, A0_new, A1_new, m0, dm):
+        m1 = m0 + dm
+        model_old = fitfunc(tvec, A0_old, A1_old, m0, m1)
+        model_new = fitfunc(tvec, A0_new, A1_new, m0, m1)
+        resid = np.concatenate([ro[reg_low:reg_up] - model_old,
+                                rn[reg_low:reg_up] - model_new])
+        return float(resid @ cov_inv @ resid)
+
+    m_jk = Minuit(chi2_jk, **central_vals)  # start from central values
+    for name in central_vals:
+        m_jk.errors[name] = max(abs(central_vals[name])*0.01, 1e-6)
+    for name, lim in limits.items():
+        m_jk.limits[name] = lim
+
+    try:
+        m_jk.migrad()
+        vals = [m_jk.values[name] for name in param_names]
+    except Exception as e:
+        print(f"Minuit failed on jackknife sample {k}: {e}")
+        vals = [central_vals[name] for name in param_names]
+
+    jack_params[k, :] = vals
+
+# --- Jackknife errors relative to central fit ---
+fac = (configs - 1) / configs
+jack_var = fac * np.sum((jack_params - np.array([central_vals[n] for n in param_names]))**2, axis=0)
+jack_err = np.sqrt(jack_var)
+
+print("\n=== Final results (central from full fit, errors from jackknife) ===")
+for i, name in enumerate(param_names):
+    if name == 'dm':
+        print(f"m1-m0 (dm) = {central_vals['dm']:12.6e} ± {jack_err[i]:.3e}")
+    else:
+        print(f"{name:8s} = {central_vals[name]:12.6e} ± {jack_err[i]:.3e}")
+
+# compute jackknife m1 values directly
+m0_jack = jack_params[:, param_names.index("m0")]
+dm_jack = jack_params[:, param_names.index("dm")]
+m1_jack = m0_jack + dm_jack
+
+# central values
+m0_central = central_vals['m0']
+m1_central = central_vals['m0'] + central_vals['dm']
+
+# jackknife error for m1
+fac = (configs - 1) / configs
+m1_var = fac * np.sum((m1_jack - m1_central)**2)
+m1_err = np.sqrt(m1_var)
+
+# print results
+print(f"\nm0 = {m0_central:.6e} ± {jack_err[param_names.index('m0')]:.3e}")
+print(f"m1 = {m1_central:.6e} ± {m1_err:.3e}")
+
+# --- prepare fit curves ---
+t_fit = np.arange(reg_low, reg_up+1)
+
+fit_old = fitfunc(
+    t_fit,
+    central_vals['A0_old'], central_vals['A1_old'],
+    central_vals['m0'], central_vals['m0']+central_vals['dm']
 )
 
-# Optional: Grenzen, fixe Parameter, Fehler etc. setzen
-#m.limits['A0_old'] = (0, None)
-#m.fixed['m1'] = True
-
-# Fit starten
-m.migrad()  # minimiert Chi²
-m.hesse()   # berechnet Fehler
-
-# Ergebnisse
-print("Best fit parameters:")
-for par in m.parameters:
-    print(f"{par} =", m.values[par], "+/-", m.errors[par])
-print("chi² =", m.fval)
-############################
-'''
-
-
-# Time range (full or just half)
-t_range = np.arange(len(res_old))
-
-fit_old = [fitfunc(t, A0_old, A1_old, m0_best, m1_best) for t in t_range]
-fit_new = [fitfunc(t, A0_new, A1_new, m0_best, m1_best) for t in t_range]
-
-plt.figure(figsize=(8,6))
-plt.errorbar(t_range, res_old, yerr=err_old, fmt='o', capsize=3,
-             label='Old dataset', color='blue')
-plt.errorbar(t_range, res_new, yerr=err_new, fmt='s', capsize=3,
-             label='New dataset', color='orange')
-plt.plot(t_range, fit_old, '-', color='blue', label='Two-state fit (old)')
-plt.plot(t_range, fit_new, '-', color='orange', label='Two-state fit (new)')
-
-plt.yscale('log')
-plt.xlabel('Time slice $t$')
-plt.ylabel('Correlator (log scale)')
-plt.title(f'{particle} Two-State Fit')
-plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-plt.legend()
-plt.tight_layout()
-plt.savefig("CorrelatorTwoStateFit.pdf")
-
-
+fit_new = fitfunc(
+    t_fit,
+    central_vals['A0_new'], central_vals['A1_new'],
+    central_vals['m0'], central_vals['m0']+central_vals['dm']
+)
 
 '''
-#Covarianze matrix 
-masstmp=np.log(res[reg_low]/res[reg_low+1])
-#masstmp=0.7341573429107688
-print(masstmp)
-a0tmp=res[reg_low]/(np.exp(-masstmp*reg_low)+np.exp(-masstmp*(ti/2+1-reg_low)))
-#a0tmp=res[20]/(np.exp(-masstmp*20)+np.exp(-masstmp*(ti/2+1-20)))#-0.0000562341e-14
-
-covmat=np.zeros(shape=(int(reg_up-reg_low),int(reg_up-reg_low)))
-for t1 in range(int(reg_up-reg_low)):
-    for t2 in range(int(reg_up-reg_low)):
-        x=0
-        for i in range(configs):  
-            x=x+(jack(mirtr[t1+reg_low],i)-res[t1+reg_low])*(jack(mirtr[t2+reg_low],i)-res[t2+reg_low])
-        covmat[t1][t2]=(configs-1)/configs*x
-        covmat[t2][t1]=(configs-1)/configs*x  
-
-invcovmat=np.linalg.inv(covmat) 
-lst=list(range(reg_low, reg_up))
-
-
-
-def chi(a1, a2):
-    return np.dot(
-        np.transpose([res[i] - (a1 * (np.exp(-a2 * i) + np.exp(-a2 * (ti - i)))) for i in lst]),
-        np.matmul(invcovmat, [res[i] - (a1 * (np.exp(-a2 * i) + np.exp(-a2 * (ti - i)))) for i in lst])
-    )
-mbar = Minuit(chi, a1=1, a2=1)
-mbar.errordef = 1  # For least-squares (χ²), errordef = 1
-mbar.migrad()      # Run the minimization
-
-
-print('Initial guess: a1 = {}, a2 = {}'.format(a0tmp, masstmp))
-print("Optimized a1:", mbar.values["a1"])
-print("Optimized a2 (mass):", mbar.values["a2"])
-print("Minimum chi²:", mbar.fval)
-
-best_a1 = mbar.values["a1"]
-best_a2 = mbar.values["a2"]
-
-def jackmass(t1,i):
-    return jack(mirtr[t1],i)
-
-def chijack(a1, a2, k):
-    return np.dot(
-        np.transpose([jackmass(i, k) - (a1 * (np.exp(-a2 * i) + np.exp(-a2 * (ti - i)))) for i in lst]),
-        np.matmul(invcovmat, [jackmass(i, k) - (a1 * (np.exp(-a2 * i) + np.exp(-a2 * (ti - i)))) for i in lst])
-    )
-
-
-#Std Deviation for all jakcknife blocks
-jblocks=np.zeros(configs)
-h=0
-
-for i in range(configs):
-    mj = Minuit(lambda a1, a2: chijack(a1, a2, i), a1=a0tmp, a2=masstmp)
-    mj.errordef = 1
-    mj.migrad()
-    jblocks[i] = mj.values["a2"]
-    h += (mj.values["a2"] - best_a2) ** 2
-sigma = np.sqrt((configs - 1) / configs * h)
-
-print('Fehler:',sigma)
-
 plt.figure(figsize=(8,6))
 
-# Full time range
-full_range = list(range(ti // 2 + 1))
+# full time range for data
+t_all = np.arange(len(res_old))
 
-# Plot all correlator points with errors
-plt.errorbar(full_range, [res[t] for t in full_range], yerr=[error[t] for t in full_range], fmt='o', label='Correlator', capsize=3)
+# plot data
+plt.errorbar(t_all, res_old, yerr=err_old, fmt='o', color='red', label="Old data")
+plt.errorbar(t_all, res_new, yerr=err_new, fmt='o', color='blue', label="New data")
 
-# Full fit function over the whole range
-full_fit = [best_a1 * (np.exp(-best_a2 * t) + np.exp(-best_a2 * (ti - t))) for t in full_range]
-plt.plot(full_range, full_fit, color='red', label='Fit: $A_1 e^{-A_2 t} + A_1 e^{-A_2 (T - t)}$')
+# fit only within [reg_low, reg_up)
+t_fit = np.arange(reg_low, reg_up)
 
-plt.yscale('log')  
-plt.xlabel('Time Slice $t$')
-plt.ylabel('Correlator (log scale)')
-plt.title(f'{particle} Correlator Fit')
+fit_old = fitfunc(t_fit, central_vals["A0_old"], central_vals["A1_old"],
+                  central_vals["m0"], central_vals["m0"] + central_vals["dm"])
+fit_new = fitfunc(t_fit, central_vals["A0_new"], central_vals["A1_new"],
+                  central_vals["m0"], central_vals["m0"] + central_vals["dm"])
+
+plt.plot(t_fit, fit_old, '-', color='darkred', label="Fit (old)")
+plt.plot(t_fit, fit_new, '-', color='darkblue', label="Fit (new)")
+
+plt.yscale("log")
+plt.xlabel("Time slice $t$")
+plt.ylabel("Correlator")
+plt.title(f"{particle} two-state fit, ensemble {Ensemble}")
+plt.grid(True, which="both", linestyle="--", linewidth=0.5)
 plt.legend()
-plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.tight_layout()
-plt.savefig('Test-Fig.pdf')
+plt.savefig("fit_result.pdf")
+plt.show()
 '''
+
+print(jack_err)
+
+df1 = pd.DataFrame([{
+    'A0_old': central_vals['A0_old'],
+    'DeltaA0_old': jack_err[0],
+    'A1_old': central_vals['A1_old'],
+    'DeltaA1_old': jack_err[1],
+    'A0_new': central_vals['A0_new'],
+    'DeltaA0_new': jack_err[2],
+    'A1_new': central_vals['A1_new'],
+    'DeltaA1_new': jack_err[3],
+    'Mass0': central_vals['m0'],
+    'DeltaM0': jack_err[4],
+    'Mass1': central_vals['m0']+central_vals['dm'],
+    'DeltaM1': m1_err,
+    'DeltaM': central_vals['dm'],
+    'DeltaDm': jack_err[5],
+    'RegUp': reg_up,
+    'RegLow': reg_low
+}])
+
+df2 = pd.DataFrame([{
+    'chi2': chi2_central,
+    'dof': ndof,
+    'p-val': pvalue(chi2_central, ndof)
+}])
+
+#df1.to_csv(path+'Excited-comb-Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
+#df2.to_csv(path+'Excited-comb-pval-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
+
+if particle == "Ds":    
+    df1.to_csv(path+'Excited-comb-Ds{}Result-{}.csv'.format(cmass,nsq), sep='\t')
+    df2.to_csv(path+'Excited-comb-pval-Ds{}-{}.csv'.format(cmass,nsq), sep='\t')
+else:
+    df1.to_csv(path+'Excited-comb-BsResult.csv', sep='\t')
+    df2.to_csv(path+'Excited-comb-pval-Bs.csv', sep='\t')
+
+
+# --- build DataFrame of jackknife blocks ---
+idx_m0 = param_names.index("m0")
+idx_dm = param_names.index("dm")
+
+# compute m1 for each jackknife sample
+m1_jack = jack_params[:, idx_m0] + jack_params[:, idx_dm]
+
+# combine into DataFrame
+df = pd.DataFrame({
+    "A0_old": jack_params[:, param_names.index("A0_old")],
+    "A1_old": jack_params[:, param_names.index("A1_old")],
+    "A0_new": jack_params[:, param_names.index("A0_new")],
+    "A1_new": jack_params[:, param_names.index("A1_new")],
+    "m0":     jack_params[:, idx_m0],
+    "m1":     m1_jack,
+    "dm":     jack_params[:, idx_dm],
+})
+
+# --- save path ---
+outdir = '../Data/{}/2pt/'.format(Ensemble)
+os.makedirs(outdir, exist_ok=True)
+
+#outfile = outdir + 'Excited-comb-Blocks-Ds{}-{}.csv'.format(cmass, nsq)
+if particle == "Ds":
+    outfile = outdir + 'Excited-comb-Blocks-Ds{}-{}.csv'.format(cmass, nsq)
+else:
+    outfile = outdir + 'Excited-comb-Blocks-Bs.csv'
+df.to_csv(outfile, index=False)
+
+print(f"Jackknife block values saved to: {outfile}")
+
+
+def effmass(corr):
+    """Compute effective mass from correlator array corr[t]."""
+    Nt = len(corr)
+    out = np.zeros(Nt-2)  # defined for t=0..Nt-3
+    for t in range(Nt-2):
+        ratio = (corr[t] + corr[t+2]) / (2.0 * corr[t+1])
+        out[t] = np.arccosh(ratio)
+    return out
+
+def jackknife_effmass(mirtr, configs):
+    """
+    Compute jackknife errors for effective mass.
+    mirtr: shape (time, configs) (transposed jackknife correlator samples)
+    Returns central values and errors.
+    """
+    Nt = mirtr.shape[0]
+    # central correlator = mean over configs
+    res = np.mean(mirtr, axis=1)
+    eff_central = effmass(res)
+
+    # jackknife samples
+    nblocks = configs
+    eff_jack = np.zeros((nblocks, Nt-2))
+    for k in range(nblocks):
+        corr_jk = (np.sum(mirtr, axis=1) - mirtr[:,k]) / (configs-1)
+        eff_jack[k,:] = effmass(corr_jk)
+
+    # jackknife variance
+    fac = (configs-1)/configs
+    diffs = eff_jack - eff_central[None,:]
+    err = np.sqrt(fac * np.sum(diffs**2, axis=0))
+    return eff_central, err
+
+# --- effective mass for old and new datasets ---
+eff_old, err_eff_old = jackknife_effmass(mirtr_old, configs)
+eff_new, err_eff_new = jackknife_effmass(mirtr_new, configs)
+
+
+def effmass_from_params(A0, A1, m0, m1, Nt):
+    corr = np.array([A0*np.exp(-m0*t) + A1*np.exp(-m1*t) for t in range(Nt)])
+    return effmass(corr)
+
+Nt = len(res_old)
+t_eff = np.arange(Nt-2)
+
+# --- central fit curves ---
+eff_fit_old = effmass_from_params(
+    central_vals['A0_old'], central_vals['A1_old'],
+    central_vals['m0'], central_vals['m0']+central_vals['dm'], Nt
+)
+eff_fit_new = effmass_from_params(
+    central_vals['A0_new'], central_vals['A1_new'],
+    central_vals['m0'], central_vals['m0']+central_vals['dm'], Nt
+)
+
+# --- jackknife error bands ---
+idx_m0 = param_names.index("m0")
+idx_dm = param_names.index("dm")
+
+eff_fit_old_jack = np.zeros((configs, Nt-2))
+eff_fit_new_jack = np.zeros((configs, Nt-2))
+
+for k in range(configs):
+    vals = {name: jack_params[k,i] for i,name in enumerate(param_names)}
+    m0_k = vals['m0']
+    m1_k = vals['m0'] + vals['dm']
+
+    eff_fit_old_jack[k,:] = effmass_from_params(
+        vals['A0_old'], vals['A1_old'], m0_k, m1_k, Nt
+    )
+    eff_fit_new_jack[k,:] = effmass_from_params(
+        vals['A0_new'], vals['A1_new'], m0_k, m1_k, Nt
+    )
+
+fac = (configs-1)/configs
+err_fit_old = np.sqrt(fac * np.sum((eff_fit_old_jack - eff_fit_old[None,:])**2, axis=0))
+err_fit_new = np.sqrt(fac * np.sum((eff_fit_new_jack - eff_fit_new[None,:])**2, axis=0))
+
+# --- plotting ---
+plt.figure(figsize=(8,6))
+
+# full effective mass data
+plt.errorbar(t_eff, eff_old, yerr=err_eff_old, fmt='o', color='red',
+             capsize=3, label="PT_SM")
+plt.errorbar(t_eff, eff_new, yerr=err_eff_new, fmt='o', color='blue',
+             capsize=3, label="SM_SM")
+
+# restrict fits to [reg_low, reg_up)
+t_fit_eff = np.arange(reg_low, reg_up)
+
+plt.plot(t_fit_eff, eff_fit_old[reg_low:reg_up], '-', color='darkred', lw=2)
+plt.plot(t_fit_eff, eff_fit_new[reg_low:reg_up], '-', color='darkblue', lw=2)
+
+plt.fill_between(t_fit_eff,
+                 (eff_fit_old - err_fit_old)[reg_low:reg_up],
+                 (eff_fit_old + err_fit_old)[reg_low:reg_up],
+                 color='red', alpha=0.3)
+
+plt.fill_between(t_fit_eff,
+                 (eff_fit_new - err_fit_new)[reg_low:reg_up],
+                 (eff_fit_new + err_fit_new)[reg_low:reg_up],
+                 color='blue', alpha=0.3)
+
+# mark fit window
+plt.axvline(reg_low, color='gray', ls='--', lw=1, alpha=0.5)
+plt.axvline(reg_up-1, color='gray', ls='--', lw=1, alpha=0.5)
+
+plt.xlabel("t")
+plt.ylabel(r"$E_{\rm eff}(t)$")
+plt.title("Effective mass with two-state fit curves (fit window only)")
+plt.grid(True, which="both", ls="--", lw=0.5)
+plt.legend()
+#plt.ylim(0.92, 1.05)
+plt.tight_layout()
+if particle == 'Ds':
+    plt.savefig(outdir+'Effective_mass_with_fit_band-Ds{}-nsq{}.pdf'.format(cmass,nsq))
+else:
+    plt.savefig(outdir+'Effective_mass_with_fit_band-Bs-nsq.pdf')

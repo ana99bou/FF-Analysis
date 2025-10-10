@@ -27,9 +27,9 @@ frozen_analysis = bool(int(sys.argv[6]))
 
 
 FF='V'
-#nsq=1
-cmass_index=0
-ensemble='C1'
+nsq=1
+cmass_index=1
+ensemble="F1S"
 use_disp=True
 frozen=True
 
@@ -39,13 +39,13 @@ cmass=Ens.getCmass(ensemble)[cmass_index]
 
 #Fit range
 if ensemble == 'F1S':
-    reg_up=15
-    reg_low=5
+    reg_up=25
+    reg_low=7
 elif ensemble in ['M1', 'M2', 'M3']:
-    reg_up=22
-    reg_low=18
-elif ensemble in ['C1', 'C2']:
     reg_up=15
+    reg_low=7
+elif ensemble in ['C1', 'C2']:
+    reg_up=24
     reg_low=5
 
 reg_up=reg_up+1
@@ -91,7 +91,8 @@ for nsq in nsq_values:
 
     # --- This is basically your original code from 'if use_disp' onwards ---
     if use_disp:
-        md = pd.read_csv(f'../Data/{ensemble}/2pt/Ds{cmass}Result-0.csv', sep='\t', index_col=0).loc[0, 'EffectiveMass']
+        #md = pd.read_csv(f'../Data/{ensemble}/2pt/Ds{cmass}Result-0.csv', sep='\t', index_col=0).loc[0, 'EffectiveMass']
+        md = pd.read_csv(f'../Data/{ensemble}/2pt/Excited-comb-Ds{cmass}Result-0.csv', sep='\t', index_col=0).loc[0, 'Mass0']
 
         vecs = [[0,0,0],[1,0,0],[1,1,0],[1,1,1],[2,0,0],[2,1,0]]
         def calculate_value(a, md, p, L):
@@ -104,13 +105,15 @@ for nsq in nsq_values:
         ed = calculate_value(1/inv, md, vecs[nsq], L)
 
     else:
+        #not updated path to excited comb fit
         edlist = [
             pd.read_csv(f'../Data/{ensemble}/2pt/Ds{cmass}Result-{i}.csv', sep='\t', index_col=0).loc[0,'EffectiveMass']
             for i in range(6)
         ]
         ed = edlist[nsq]
         md = edlist[0]
-    mb=pd.read_csv('../Data/{}/2pt/BsResult.csv'.format(ensemble), sep='\t',index_col=0).loc[0,'EffectiveMass']
+    #mb=pd.read_csv('../Data/{}/2pt/BsResult.csv'.format(ensemble), sep='\t',index_col=0).loc[0,'EffectiveMass']
+    mb=pd.read_csv('../Data/{}/2pt/Excited-comb-BsResult.csv'.format(ensemble), sep='\t',index_col=0).loc[0,'Mass0']
 
     # --- momentum combinations for this nsq ---
     if FF == 'V':
@@ -134,16 +137,25 @@ for nsq in nsq_values:
     bsn0  = f2ptBs[f"/hl_SM{sm}_SM{sm}_{smass}_m{m}_csw{csw}_zeta{zeta}/operator_Gamma5/n2_0/data"]
 
     # read jackknife blocks for 2pt fits
-    bsfit = pd.read_csv(f'../Data/{ensemble}/2pt/Bs-blocks.csv', sep='\s', engine="python")
+    #bsfit = pd.read_csv(f'../Data/{ensemble}/2pt/Bs-blocks.csv', sep='\s', engine="python")
+    #bsfit = pd.read_csv('../Data/{}/2pt/Excited-comb-Bs-blocks.csv'.format(ensemble), sep='\t',index_col=0).loc['m0']
+    path = f'../Data/{ensemble}/2pt/Excited-comb-Blocks-Bs.csv'
+    df = pd.read_csv(path)   # no sep/index_col needed now
+    df.rename(columns={'m0': 'EffectiveMass'}, inplace=True)
+    #bsfit = df["EffectiveMass"].to_numpy().flatten()
+    bsfit=df
 
     if use_disp:
-        dsfit_0 = pd.read_csv(f'../Data/{ensemble}/2pt/Ds{cmass}-nsq0-blocks.csv', sep='\s', engine="python")
-        md_values = dsfit_0['EffectiveMass']
+        #dsfit_0 = pd.read_csv(f'../Data/{ensemble}/2pt/Ds{cmass}-nsq0-blocks.csv', sep='\s', engine="python")
+        #dsfit_0 = pd.read_csv('../Data/{}/2pt/Excited-comb-Blocks-Ds{}-0.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc['m0']
+        #md_values = dsfit_0['m0']
+        path = f'../Data/{ensemble}/2pt/Excited-comb-Blocks-Ds{cmass}-0.csv'
+        df = pd.read_csv(path)   # no sep/index_col needed now
+        md_values = df["m0"].to_numpy().flatten()
         ed_jackknife = [calculate_value(1/inv, mdv, vecs[nsq], L) for mdv in md_values]
         dsfit = pd.DataFrame(ed_jackknife, columns=['EffectiveMass'])
     else:
         dsfit = pd.read_csv(f'../Data/{ensemble}/2pt/Ds{cmass}-nsq{nsq}-blocks.csv', sep='\s', engine="python")
-
     # --- folding ---
     if FF == 'V':
         pre = -(mb + md) / (2 * mb) * L / (2 * np.pi)
@@ -221,23 +233,379 @@ covmat_all, nsq_order = build_Covarianz_allnsq(all_ratios, reg_up, reg_low, ncon
 print("Combined covariance matrix shape:", covmat_all.shape)
 print("nsq order in combined fit:", nsq_order)
 
-# Optional: invert it for later fitting
-invcovmat_all = np.linalg.inv(covmat_all)
+
 
 decay_const_by_nsq = {}
 for nsq in nsq_values:
-    path = f'../Data/{ensemble}/2pt/Excited-Ds{cmass}Result-{int(nsq)}.csv'
+    path = f'../Data/{ensemble}/2pt/Excited-comb-Ds{cmass}Result-{int(nsq)}.csv'
     val = float(pd.read_csv(path, sep='\t', index_col=0).loc[0, 'DeltaM'])
     decay_const_by_nsq[int(nsq)] = val
 
 lam_blocks = {}
 for nsq in nsq_values:
-    path = f'../Data/{ensemble}/2pt/Excited-Ds{cmass}-nsq{int(nsq)}-blocks-uf.csv'
-    arr = pd.read_csv(path, sep='\t', index_col=0).to_numpy().flatten()
-    lam_blocks[int(nsq)] = arr  # length = nconf
+    path = f'../Data/{ensemble}/2pt/Excited-comb-Blocks-Ds{cmass}-{int(nsq)}.csv'
+    df = pd.read_csv(path)   # no sep/index_col needed now
+    arr = df["dm"].to_numpy().flatten()
+    lam_blocks[int(nsq)] = arr  # store per nsq
+
+#print(lam_blocks)
+
+
+# ---------- Central masses and amplitudes (ground/excited) ----------
+
+mDs_GS_by_nsq = {}
+mDs_ES_by_nsq = {}
+A0_old_by_nsq = {}
+A1_old_by_nsq = {}
+A0_new_by_nsq = {}
+A1_new_by_nsq = {}
+
+for nsq in nsq_values:
+    path = f'../Data/{ensemble}/2pt/Excited-comb-Ds{cmass}Result-{int(nsq)}.csv'
+    df = pd.read_csv(path, sep='\t', index_col=0)
+
+    mDs_GS_by_nsq[int(nsq)] = float(df.loc[0, 'Mass0'])
+    mDs_ES_by_nsq[int(nsq)] = float(df.loc[0, 'Mass1'])
+
+    # new amplitude parameters
+    A0_old_by_nsq[int(nsq)] = float(df.loc[0, 'A0_old'])
+    A1_old_by_nsq[int(nsq)] = float(df.loc[0, 'A1_old'])
+    A0_new_by_nsq[int(nsq)] = float(df.loc[0, 'A0_new'])
+    A1_new_by_nsq[int(nsq)] = float(df.loc[0, 'A1_new'])
+
+# Bs: nsq = 0 only (same file for all nsq in the fit)
+dfb = pd.read_csv(f'../Data/{ensemble}/2pt/Excited-comb-BsResult.csv',
+                  sep='\t', index_col=0)
+mBs_GS_central = float(dfb.loc[0, 'Mass0'])
+mBs_ES_central = float(dfb.loc[0, 'Mass1'])
+
+# ---------- Compute central Z-factors ----------
+
+Z0_Ds_by_nsq = {}
+Z1_Ds_by_nsq = {}
+
+for nsq in nsq_values:
+    m0 = mDs_GS_by_nsq[int(nsq)]
+    m1 = mDs_ES_by_nsq[int(nsq)]
+    A0_new = A0_new_by_nsq[int(nsq)]
+    A1_new = A1_new_by_nsq[int(nsq)]
+    Z0_Ds_by_nsq[int(nsq)] = np.sqrt(2 * m0 * A0_new)
+    Z1_Ds_by_nsq[int(nsq)] = np.sqrt(2 * m1 * A1_new)
+
+# Bs (no nsq dependence)
+m0_Bs = mBs_GS_central
+m1_Bs = mBs_ES_central
+A0_new_Bs = float(dfb.loc[0, 'A0_new'])
+A1_new_Bs = float(dfb.loc[0, 'A1_new'])
+
+Z0_Bs_central = np.sqrt(2 * m0_Bs * A0_new_Bs)
+Z1_Bs_central = np.sqrt(2 * m1_Bs * A1_new_Bs)
+
+print("Central Z-factors computed:")
+print("Ds:", {n: (Z0_Ds_by_nsq[n], Z1_Ds_by_nsq[n]) for n in nsq_values})
+print("Bs:", Z0_Bs_central, Z1_Bs_central)
 
 
 
+# ---------- Jackknife blocks for masses and amplitudes ----------
+
+# Ds: per nsq, columns "m0" (GS), "m1" (ES), plus amplitude columns
+ds_blocks_gs = {}
+ds_blocks_es = {}
+A0_old_blocks = {}
+A1_old_blocks = {}
+A0_new_blocks = {}
+A1_new_blocks = {}
+
+for nsq in nsq_values:
+    df = pd.read_csv(f'../Data/{ensemble}/2pt/Excited-comb-Blocks-Ds{cmass}-{int(nsq)}.csv')
+
+    ds_blocks_gs[int(nsq)] = df['m0'].to_numpy().astype(float)
+    ds_blocks_es[int(nsq)] = df['m1'].to_numpy().astype(float)
+
+    # new amplitude jackknife arrays
+    A0_old_blocks[int(nsq)] = df['A0_old'].to_numpy().astype(float)
+    A1_old_blocks[int(nsq)] = df['A1_old'].to_numpy().astype(float)
+    A0_new_blocks[int(nsq)] = df['A0_new'].to_numpy().astype(float)
+    A1_new_blocks[int(nsq)] = df['A1_new'].to_numpy().astype(float)
+
+# Bs: single set (nsq=0), columns "m0" (GS), "m1" (ES)
+dfb_blocks = pd.read_csv(f'../Data/{ensemble}/2pt/Excited-comb-Blocks-Bs.csv')
+bs_blocks_gs = dfb_blocks['m0'].to_numpy().astype(float)
+bs_blocks_es = dfb_blocks['m1'].to_numpy().astype(float)
+
+# ---------- Jackknife Z-factors ----------
+
+Z0_Ds_blocks = {}
+Z1_Ds_blocks = {}
+
+for nsq in nsq_values:
+    m0_blocks = ds_blocks_gs[int(nsq)]
+    m1_blocks = ds_blocks_es[int(nsq)]
+    A0_blocks = A0_new_blocks[int(nsq)]
+    A1_blocks = A1_new_blocks[int(nsq)]
+
+    Z0_Ds_blocks[int(nsq)] = np.sqrt(2 * m0_blocks * A0_blocks)
+    Z1_Ds_blocks[int(nsq)] = np.sqrt(2 * m1_blocks * A1_blocks)
+
+# Bs (no nsq dependence)
+m0_blocks_Bs = bs_blocks_gs
+m1_blocks_Bs = bs_blocks_es
+A0_blocks_Bs = dfb_blocks['A0_new'].to_numpy().astype(float)
+A1_blocks_Bs = dfb_blocks['A1_new'].to_numpy().astype(float)
+
+Z0_Bs_blocks = np.sqrt(2 * m0_blocks_Bs * A0_blocks_Bs)
+Z1_Bs_blocks = np.sqrt(2 * m1_blocks_Bs * A1_blocks_Bs)
+
+print("Z-blocks shapes:")
+print("Ds Z0:", {n: Z0_Ds_blocks[n].shape for n in nsq_values})
+print("Bs Z0:", Z0_Bs_blocks.shape)
+
+
+
+def model(params, tvals, nsq_order, mDs_gs, mDs_es, mBs_gs, mBs_es, T):
+    """
+    params: [R0_i (i=0..n-1), R1_i (i=0..n-1), R2_i (i=0..n-1)]
+    mDs_gs/es: dict nsq -> float masses
+    mBs_gs/es: float masses (same for all nsq)
+    T: temporal extent (use 'ts' from Ens.getEns)
+    """
+    n = len(nsq_order)
+    R0 = params[:n]
+    R1 = params[n:2*n]
+    R2 = params[2*n:3*n]
+
+    out = []
+    for i, nsq in enumerate(nsq_order):
+        mD_es = float(mDs_es[int(nsq)])
+        mD_gs = float(mDs_gs[int(nsq)])
+        # If your physics requires decaying exponentials, change the four '+' to '-' below.
+        term = (
+            R0[i]
+            + R1[i] * np.exp(-mD_es * tvals) * np.exp(-mBs_gs * (dt - tvals))
+            + R2[i] * np.exp(-mD_gs * tvals) * np.exp(-mBs_es * (dt - tvals))
+        )
+        out.append(term)
+    return np.concatenate(out)
+
+
+def make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv,
+              mDs_gs, mDs_es, mBs_gs, mBs_es, T):
+    def chi2_minuit(*params):
+        t_fit = np.arange(reg_low, reg_up)
+        data = np.concatenate([
+            np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)
+            for nsq in nsq_order
+        ])
+        diff = data - model(params, t_fit, nsq_order, mDs_gs, mDs_es, mBs_gs, mBs_es, T)
+        return float(diff @ cov_inv @ diff)
+    return chi2_minuit
+
+
+def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
+                  ds_blocks_gs, ds_blocks_es, bs_blocks_gs, bs_blocks_es,
+                  frozen=True, T=None):
+    assert T is not None, "Pass the temporal extent T (=ts)."
+    nsq_order = [int(x) for x in sorted(all_ratios.keys())]
+    n = len(nsq_order)
+
+    # ---- central masses (use directly from previous fits, do NOT average blocks) ----
+    # these were already read from the Excited-comb-*.csv results before calling jackknife_fit
+    global mDs_GS_by_nsq, mDs_ES_by_nsq, mBs_GS_central, mBs_ES_central
+
+    mDs_gs_central = {nsq: mDs_GS_by_nsq[int(nsq)] for nsq in nsq_order}
+    mDs_es_central = {nsq: mDs_ES_by_nsq[int(nsq)] for nsq in nsq_order}
+    mBs_gs_central = mBs_GS_central
+    mBs_es_central = mBs_ES_central
+
+
+    # ---- jackknife masses (leave-one-out means) ----
+    mDs_gs_jk = []
+    mDs_es_jk = []
+    mBs_gs_jk = []
+    mBs_es_jk = []
+    for i in range(nconf):
+        mDs_gs_jk.append({nsq: float(np.mean(np.delete(ds_blocks_gs[nsq], i))) for nsq in nsq_order})
+        mDs_es_jk.append({nsq: float(np.mean(np.delete(ds_blocks_es[nsq], i))) for nsq in nsq_order})
+        mBs_gs_jk.append(float(np.mean(np.delete(bs_blocks_gs, i))))
+        mBs_es_jk.append(float(np.mean(np.delete(bs_blocks_es, i))))
+
+    # ---- data stacking for covariance (central/frozen) ----
+    jk_samples = np.array([
+        np.concatenate([
+            all_ratios[int(nsq)][reg_low:reg_up, i]
+            for nsq in nsq_order
+        ])
+        for i in range(nconf)
+    ])
+    if frozen:
+        cov = np.cov(jk_samples, rowvar=False, ddof=1)
+        cov_inv = np.linalg.inv(cov)
+    else:
+        cov_inv = None  # will rebuild inside loop
+
+    # ---- initial guess: R0 ~ time-avg, R1,R2 ~ 0 ----
+    # ---- initial guesses based on 2pt function values and exponentials ----
+    R0_0 = []
+    R1_0 = []
+    R2_0 = []
+
+    for nsq in nsq_order:
+        ratio_central = all_ratios[int(nsq)][:, -1]  # central ratio (mean over configs)
+        R0_guess = float(np.mean(ratio_central))     # mean over all time slices
+        R0_0.append(R0_guess)
+
+    # get masses for this nsq
+        mD_gs = float(mDs_gs_central[int(nsq)])
+        mD_es = float(mDs_es_central[int(nsq)])
+        mB_gs = float(mBs_gs_central)
+        mB_es = float(mBs_es_central)
+
+    # 2pt correlation functions for Ds and Bs (use averaged/folded central values)
+    # here we can reuse your avdx and avb arrays if accessible, but since we are
+    # in jackknife_fit, we reconstruct a reasonable proxy from all_ratios.
+    # If you have the real 2pt central correlators stored externally, substitute them here.
+    #
+    # For now we assume C_2pt ~ R0_guess scale, adjust if you have proper 2pt values.
+        C_reg_low = float(all_avn0[int(nsq)][reg_low])
+        C_reg_up  = float(all_avn0[int(nsq)][reg_up]) - 1  # -1 because reg_up is exclusive in Python slicing
+
+    # exponential factors
+        exp1 = np.exp(mD_es * reg_low) * np.exp(mB_gs * (dt - reg_low))
+        exp2 = np.exp(mD_gs * reg_up)  * np.exp(mB_es * (dt - reg_up))
+
+    # initial guesses for R1 and R2
+        R1_guess = (C_reg_low-R0_guess) * exp1
+        R2_guess = (C_reg_up-R0_guess)  * exp2
+
+        #R1_guess=0.1
+        #R2_guess=0.1
+
+        R1_0.append(R1_guess)
+        R2_0.append(R2_guess)
+
+        # flatten all parameters into one vector
+    p0 = R0_0 + R1_0 + R2_0
+
+    print("Initial guesses:")
+    for i, nsq in enumerate(nsq_order):
+        print(f"nsq={nsq}: R0={R0_0[i]:.4e}, R1={R1_0[i]:.4e}, R2={R2_0[i]:.4e}")
+
+
+    # ---- central fit ----
+    chi2_fun = make_chi2(
+        all_ratios, reg_low, reg_up, nsq_order,
+        cov_inv,
+        mDs_gs_central, mDs_es_central,
+        mBs_gs_central, mBs_es_central,
+        T
+    )
+    m = Minuit(chi2_fun, *p0)
+    m.migrad()
+
+    ndata = len(np.arange(reg_low, reg_up)) * len(nsq_order)
+    ndof  = ndata - m.nfit
+    chi2  = m.fval
+    p_val = 1 - chi2_dist.cdf(chi2, df=ndof)
+    print('chi^2', chi2, 'ndof', ndof, 'chi^2/dof', chi2/ndof, 'p', p_val)
+
+    central = np.array(list(m.values))
+
+    # ---- jackknife fits ----
+    jk_params = []
+    for i in range(nconf):
+        if not frozen:
+            sub = np.delete(jk_samples, i, axis=0)
+            cov_i = np.cov(sub, rowvar=False, ddof=1)
+            cov_inv_i = np.linalg.inv(cov_i)
+        else:
+            cov_inv_i = cov_inv
+
+        chi2_fun_i = make_chi2(
+            {int(nsq): np.delete(all_ratios[int(nsq)], i, axis=1) for nsq in nsq_order},
+            reg_low, reg_up, nsq_order,
+            cov_inv_i,
+            mDs_gs_jk[i], mDs_es_jk[i],
+            mBs_gs_jk[i], mBs_es_jk[i],
+            T
+        )
+        mi = Minuit(chi2_fun_i, *p0)
+        mi.migrad()
+        jk_params.append(np.array(list(mi.values)))
+
+    jk_params = np.array(jk_params)
+    errs = np.sqrt((nconf - 1) * np.mean((jk_params - central) ** 2, axis=0))
+    return central, errs, nsq_order, jk_params, (mDs_gs_central, mDs_es_central, mBs_gs_central, mBs_es_central)
+
+central, errs, nsq_order, jk_params, masses_central = jackknife_fit(
+    all_ratios, reg_low, reg_up, nconf,
+    ds_blocks_gs, ds_blocks_es, bs_blocks_gs, bs_blocks_es,
+    frozen=True, T=ts   # <- 'ts' you already have from Ens.getEns(...)
+)
+
+print(central)
+print(errs)
+
+def plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params,
+                          mDs_gs, mDs_es, mBs_gs, mBs_es, T):
+    plt.figure(figsize=(8,6))
+    colors = plt.cm.tab10.colors
+    nsq_order = [int(x) for x in nsq_order]
+    n = len(nsq_order)
+
+    R0_c = central[:n]
+    R1_c = central[n:2*n]
+    R2_c = central[2*n:3*n]
+
+    jk_params = np.array(jk_params)
+    R0_jk = jk_params[:, :n]
+    R1_jk = jk_params[:, n:2*n]
+    R2_jk = jk_params[:, 2*n:3*n]
+
+    for i, nsq in enumerate(nsq_order):
+        nt = all_ratios[int(nsq)].shape[0]
+        t_all = np.arange(nt)
+        data_mean = all_ratios[int(nsq)][:, -1]
+        data_err  = np.std(all_ratios[int(nsq)][:, :nconf], axis=1, ddof=1)/np.sqrt(nconf)
+
+        plt.errorbar(t_all, data_mean, yerr=data_err, fmt='x',
+                     color=colors[i % len(colors)], label=f'nsq={nsq}')
+
+        # central curve
+        mD_es = float(mDs_es[int(nsq)])
+        mD_gs = float(mDs_gs[int(nsq)])
+        fit_c = (R0_c[i]
+                 + R1_c[i]*np.exp(-mD_es*t_all)*np.exp(-mBs_gs*(dt - t_all))
+                 + R2_c[i]*np.exp(-mD_gs*t_all)*np.exp(-mBs_es*(dt - t_all)))
+        plt.plot(t_all, fit_c, '-', color=colors[i % len(colors)])
+
+        # jackknife band
+        band = []
+        for k in range(nconf):
+            R0k, R1k, R2k = R0_jk[k, i], R1_jk[k, i], R2_jk[k, i]
+            band.append(R0k + R1k*np.exp(-mD_es*t_all)*np.exp(-mBs_gs*(dt - t_all))
+                            + R2k*np.exp(-mD_gs*t_all)*np.exp(-mBs_es*(dt - t_all)))
+        band = np.array(band)
+        mean = np.mean(band, axis=0)
+        err  = np.sqrt((nconf - 1) * np.mean((band - mean)**2, axis=0))
+        plt.fill_between(t_all, mean - err, mean + err,
+                         color=colors[i % len(colors)], alpha=0.3)
+
+    plt.xlabel("t"); plt.ylabel("Ratio")
+    plt.xlim(0, 24)
+    plt.ylim(0, 1.5)
+    plt.title("Global fit with GS/ES(Ds,Bs) terms")
+    plt.legend(); plt.tight_layout()
+    plt.savefig('Fit-GSES-model.png')
+
+mDs_gs_c, mDs_es_c, mBs_gs_c, mBs_es_c = masses_central
+#plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params,
+                      #mDs_gs_c, mDs_es_c, mBs_gs_c, mBs_es_c, ts)
+
+
+
+
+'''
 def model(params, tvals, nsq_order, lam_by_nsq):
     nsq_order = [int(x) for x in nsq_order]
     n = len(nsq_order)
@@ -253,9 +621,13 @@ def model(params, tvals, nsq_order, lam_by_nsq):
 def chi2(params, all_ratios, reg_low, reg_up, nsq_order, cov_inv, lam_by_nsq):
     t_fit = np.arange(reg_low, reg_up)
     # stack data in the same order as model’s concatenation
+    #data = np.concatenate([
+    #    np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)
+    #    for nsq in nsq_order
+    #])
     data = np.concatenate([
-        np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)
-        for nsq in nsq_order
+    all_ratios[int(nsq)][reg_low:reg_up, -1]   # last column = central value
+    for nsq in nsq_order
     ])
     diff = data - model(params, t_fit, nsq_order, lam_by_nsq)
     return diff @ cov_inv @ diff
@@ -288,36 +660,60 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf, lam_blocks, frozen=True):
         lam_jk_dicts.append({nsq: np.mean(np.delete(lam_blocks[nsq], i)) for nsq in nsq_order})
 
     # --- build jackknife samples of ratios (like before) ---
-    jk_samples = []
-    for i in range(nconf):
-        jk_samples.append(np.concatenate([
-            np.mean(np.delete(all_ratios[int(nsq)], i, axis=1)[reg_low:reg_up, :], axis=1)
-            for nsq in nsq_order
-        ]))
+    jk_samples = np.array([
+    np.concatenate([
+        all_ratios[int(nsq)][reg_low:reg_up, i]    # <-- TAKE COLUMN i, don't average
+        for nsq in nsq_order
+    ])
+    for i in range(nconf)
+    ])
+
+    #jk_samples = []
+    #for i in range(nconf):
+    #    jk_samples.append(np.concatenate([
+    #        np.mean(np.delete(all_ratios[int(nsq)], i, axis=1)[reg_low:reg_up, :], axis=1)
+    #        for nsq in nsq_order
+    #    ]))
     jk_samples = np.array(jk_samples)
 
-    cov = np.cov(jk_samples, rowvar=False, ddof=1)
-    cov_inv = np.linalg.inv(cov)
+
+    cov_inv=covmat_all
+
 
     # initial guess
     A0 = [np.mean(np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)) for nsq in nsq_order]
-    B0 = [0.1] * n
+    print(lam_central[int(nsq)])
+    print(all_ratios[int(nsq)][reg_low])
+    B0 = [(np.mean(all_ratios[int(nsq)][reg_low])-np.mean(np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)))*np.exp(float(lam_central[int(nsq)])*reg_low) for nsq in nsq_order]
     p0 = A0 + B0
+
+    print("Initial guess:", p0)
 
     # --- central fit ---
     chi2_fun = make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv, lam_central)
     m = Minuit(chi2_fun, *p0)  # only fit parameters go here
     m.tol = 1e-16/0.002 
+    
+    for i in range(5, 10):
+        m.limits[i] = (None, 0.0) 
+    
     m.migrad()
 
-    ndof = (reg_up - reg_low + 1) - m.nfit
+    #ndof = (reg_up - reg_low + 1) - m.nfit
+    ndata = len(np.arange(reg_low, reg_up)) * len(nsq_order)
+    ndof  = ndata - m.nfit
+
     chi2 = m.fval
     chi2_dof = chi2 / ndof
+    p_value = 1 - chi2_dist.cdf(chi2, df=ndof)
+    print('chi^2',chi2,"p-value", p_value)       
 
     print(chi2, ndof, chi2_dof)
 
     central = np.array(list(m.values))
     p0_central = central.tolist()
+
+    print("Central fit params:", central)
 
 
 
@@ -343,15 +739,20 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf, lam_blocks, frozen=True):
             {int(nsq): np.delete(all_ratios[int(nsq)], i, axis=1) for nsq in nsq_order},
             reg_low, reg_up, nsq_order, cov_inv_i, lam_jk_dicts[i]
         )
-        #m = Minuit(chi2_fun_i, *p0)
-        m = Minuit(chi2_fun_i, *p0_central)
+        m = Minuit(chi2_fun_i, *p0)
+        #m = Minuit(chi2_fun_i, *p0_central)
         m.migrad()
         jk_params.append(np.array(list(m.values)))
 
 
 
-    jk_params = np.array(jk_params)
-    errs = np.sqrt(((nconf - 1) / nconf) * np.mean((jk_params - central) ** 2, axis=0))
+    #jk_params = np.array(jk_params)
+    jk_params = np.array(jk_params)          # convert list -> array
+    jk_mean   = jk_params.mean(axis=0)
+    #errs = np.sqrt((nconf - 1) * np.mean((jk_params - jk_mean) ** 2, axis=0))   
+    errs = np.sqrt((nconf - 1) * np.mean((jk_params - central) ** 2, axis=0))   
+
+    #errs = np.sqrt(((nconf - 1) / nconf) * np.mean((jk_params - central) ** 2, axis=0))
     return central, errs, nsq_order, jk_params, lam_central
 
 def plot_all_t(all_ratios, nconf, nsq_order, central):
@@ -452,58 +853,6 @@ jk_samples = np.array(jk_samples)
 cov = np.cov(jk_samples, rowvar=False, ddof=1)
 cov_inv = np.linalg.inv(cov)
 
-chi2_fun = make_chi2(all_ratios, reg_low, reg_up, nsq_order_sorted, cov_inv, lam_central)
-chi2_central = chi2_fun(*central)
-ndof = len(np.arange(reg_low, reg_up)) * len(nsq_order_sorted) - len(central)
-print("Chi^2 / dof:", chi2_central, "/", ndof)
-p_value = 1 - chi2_dist.cdf(chi2_central, df=ndof)
-print("p-value of the fit:", p_value)
 
 
-
-##############################################
-
-
-
-
-'''
-def save_fit_results(central, errs, nsq_order, reg_low, reg_up, ensemble, cmass, FF, chi2_val=None, ndf=None, pval=None):
-    n = len(nsq_order)
-    A0_vals = central[:n]
-    B0_vals = central[n:2*n]
-    A0_errs = errs[:n]
-    B0_errs = errs[n:2*n]
-
-    # --- Save fit parameters ---
-    df_params = pd.DataFrame({
-        'nsq': nsq_order,
-        'A0': A0_vals,
-        'A0error': A0_errs,
-        'B0': B0_vals,
-        'B0error': B0_errs,
-        'RegUp': [reg_up]*n,
-        'RegLow': [reg_low]*n
-    })
-
-    for i, nsq in enumerate(nsq_order):
-        path_params = '../Results/{}/{}/Fits/{}/Excited-{}-Av-nsq{}-Fit.csv'.format(ensemble, cmass, FF, FF, nsq)
-        df_params.iloc[[i]].to_csv(path_params, sep='\t', index=False)
-
-    # --- Save chi² and p-value ---
-    if chi2_val is not None and ndf is not None and pval is None:
-        pval = 1 - chi2_dist.cdf(chi2_val, ndf)
-
-    if chi2_val is not None and ndf is not None:
-        df_pval = pd.DataFrame({
-            'nsq': nsq_order,
-            'chi2': [chi2_val]*n,
-            'ndf': [ndf]*n,
-            'pval': [pval]*n
-        })
-        for i, nsq in enumerate(nsq_order):
-            path_pval = '../Results/{}/{}/Fits/{}/Excited-pval-{}-Av-nsq{}-Fit.csv'.format(ensemble, cmass, FF, FF, nsq)
-            df_pval.iloc[[i]].to_csv(path_pval, sep='\t', index=False)
-
-
-save_fit_results(central, errs, nsq_order, reg_low, reg_up, ensemble, cmass, FF, chi2_val=chi2_val, ndf=ndf)
 '''
