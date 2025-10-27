@@ -28,8 +28,8 @@ frozen_analysis = bool(int(sys.argv[6]))
 
 FF='V'
 nsq=1
-cmass_index=1
-ensemble="F1S"
+cmass_index=0
+ensemble="M1"
 use_disp=True
 frozen=True
 
@@ -40,13 +40,13 @@ cmass=Ens.getCmass(ensemble)[cmass_index]
 #Fit range
 if ensemble == 'F1S':
     reg_up=25
-    reg_low=7
+    reg_low=6
 elif ensemble in ['M1', 'M2', 'M3']:
-    reg_up=15
-    reg_low=7
+    reg_up=18
+    reg_low=6
 elif ensemble in ['C1', 'C2']:
-    reg_up=24
-    reg_low=5
+    reg_up=18
+    reg_low=4
 
 reg_up=reg_up+1
 
@@ -60,17 +60,7 @@ inv=Ens.getInvSpac(ensemble)
 nconf,dt,ts,L= Ens.getEns(ensemble)
 m,csw,zeta=Ens.getRHQparams(ensemble)
 
-# Read h5 file -> 
-##################TODO three h5files for each 3pt and 2pt and get the naming consistent
-
-'''
-if ensemble == 'F1S':
-    f3pt = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble,ensemble), "r")
-    f2ptDs = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble,ensemble), "r")
-    f2ptBs = h5py.File("../Data/{}/BsDsStar.h5".format(ensemble,ensemble), "r")
-else:
-'''
-
+# Read in 3pt and 2pt data
 
 f3pt = h5py.File("../Data/{}/BsDsStar_{}_3pt.h5".format(ensemble,ensemble), "r")
 f2ptDs = h5py.File("../Data/{}/BsDsStar_{}_2ptDs.h5".format(ensemble,ensemble), "r")
@@ -91,7 +81,6 @@ for nsq in nsq_values:
 
     # --- This is basically your original code from 'if use_disp' onwards ---
     if use_disp:
-        #md = pd.read_csv(f'../Data/{ensemble}/2pt/Ds{cmass}Result-0.csv', sep='\t', index_col=0).loc[0, 'EffectiveMass']
         md = pd.read_csv(f'../Data/{ensemble}/2pt/Excited-comb-Ds{cmass}Result-0.csv', sep='\t', index_col=0).loc[0, 'Mass0']
 
         vecs = [[0,0,0],[1,0,0],[1,1,0],[1,1,1],[2,0,0],[2,1,0]]
@@ -105,14 +94,12 @@ for nsq in nsq_values:
         ed = calculate_value(1/inv, md, vecs[nsq], L)
 
     else:
-        #not updated path to excited comb fit
         edlist = [
             pd.read_csv(f'../Data/{ensemble}/2pt/Ds{cmass}Result-{i}.csv', sep='\t', index_col=0).loc[0,'EffectiveMass']
             for i in range(6)
         ]
         ed = edlist[nsq]
         md = edlist[0]
-    #mb=pd.read_csv('../Data/{}/2pt/BsResult.csv'.format(ensemble), sep='\t',index_col=0).loc[0,'EffectiveMass']
     mb=pd.read_csv('../Data/{}/2pt/Excited-comb-BsResult.csv'.format(ensemble), sep='\t',index_col=0).loc[0,'Mass0']
 
     # --- momentum combinations for this nsq ---
@@ -137,18 +124,12 @@ for nsq in nsq_values:
     bsn0  = f2ptBs[f"/hl_SM{sm}_SM{sm}_{smass}_m{m}_csw{csw}_zeta{zeta}/operator_Gamma5/n2_0/data"]
 
     # read jackknife blocks for 2pt fits
-    #bsfit = pd.read_csv(f'../Data/{ensemble}/2pt/Bs-blocks.csv', sep='\s', engine="python")
-    #bsfit = pd.read_csv('../Data/{}/2pt/Excited-comb-Bs-blocks.csv'.format(ensemble), sep='\t',index_col=0).loc['m0']
     path = f'../Data/{ensemble}/2pt/Excited-comb-Blocks-Bs.csv'
     df = pd.read_csv(path)   # no sep/index_col needed now
     df.rename(columns={'m0': 'EffectiveMass'}, inplace=True)
-    #bsfit = df["EffectiveMass"].to_numpy().flatten()
     bsfit=df
 
     if use_disp:
-        #dsfit_0 = pd.read_csv(f'../Data/{ensemble}/2pt/Ds{cmass}-nsq0-blocks.csv', sep='\s', engine="python")
-        #dsfit_0 = pd.read_csv('../Data/{}/2pt/Excited-comb-Blocks-Ds{}-0.csv'.format(ensemble,cmass), sep='\t',index_col=0).loc['m0']
-        #md_values = dsfit_0['m0']
         path = f'../Data/{ensemble}/2pt/Excited-comb-Blocks-Ds{cmass}-0.csv'
         df = pd.read_csv(path)   # no sep/index_col needed now
         md_values = df["m0"].to_numpy().flatten()
@@ -196,13 +177,8 @@ print("Finished reading and building ratios for all nsq.")
 
 ###############################################################################
 
+'''
 def build_Covarianz_allnsq(all_ratios, reg_up, reg_low, nconf):
-    """
-    Build a single covariance matrix for all nsq values combined.
-    all_ratios: dict {nsq: ratiojack array of shape (tmax, nconf+1)}
-    reg_up/reg_low: fit range for time slices
-    nconf: number of jackknife samples
-    """
     # Make sure nsq order is consistent
     nsq_list = sorted(all_ratios.keys())
 
@@ -227,12 +203,41 @@ def build_Covarianz_allnsq(all_ratios, reg_up, reg_low, nconf):
     )
 
     return covmat, nsq_list
+'''
 
-covmat_all, nsq_order = build_Covarianz_allnsq(all_ratios, reg_up, reg_low, nconf)
+'''
+def build_covariance_allnsq(all_ratios, reg_low, reg_up, nconf):
+    """
+    Build covariance matrix of all ratio data points used in the combined fit.
+    Shape: (ndata, ndata) where ndata = (reg_up - reg_low) * n_nsq
+    """
+    nsq_list = sorted(all_ratios.keys())
+
+    # collect jackknife samples for all nsq, stacked in time order
+    jk_samples = []
+    for i in range(nconf):  # jackknife index
+        vec = np.concatenate([
+            all_ratios[int(nsq)][reg_low:reg_up, i] for nsq in nsq_list
+        ])
+        jk_samples.append(vec)
+
+    jk_samples = np.array(jk_samples)  # shape (nconf, ndata)
+
+    # covariance of jackknife samples
+    # ddof=1 gives unbiased estimate for leave-one-out samples
+    cov = np.cov(jk_samples, rowvar=False, ddof=1)
+
+    # (no (nconf-1)/nconf factor! np.cov already handles normalization)
+    return cov, nsq_list
+
+
+
+covmat_all, nsq_order = build_covariance_allnsq(all_ratios, reg_up, reg_low, nconf)
+
 
 print("Combined covariance matrix shape:", covmat_all.shape)
 print("nsq order in combined fit:", nsq_order)
-
+'''
 
 
 decay_const_by_nsq = {}
@@ -247,9 +252,6 @@ for nsq in nsq_values:
     df = pd.read_csv(path)   # no sep/index_col needed now
     arr = df["dm"].to_numpy().flatten()
     lam_blocks[int(nsq)] = arr  # store per nsq
-
-#print(lam_blocks)
-
 
 # ---------- Central masses and amplitudes (ground/excited) ----------
 
@@ -283,6 +285,12 @@ mBs_ES_central = float(dfb.loc[0, 'Mass1'])
 
 Z0_Ds_by_nsq = {}
 Z1_Ds_by_nsq = {}
+
+print(mDs_GS_by_nsq)
+print(A0_new_by_nsq)
+
+print(mDs_ES_by_nsq)
+print(A1_new_by_nsq)
 
 for nsq in nsq_values:
     m0 = mDs_GS_by_nsq[int(nsq)]
@@ -361,45 +369,107 @@ print("Z-blocks shapes:")
 print("Ds Z0:", {n: Z0_Ds_blocks[n].shape for n in nsq_values})
 print("Bs Z0:", Z0_Bs_blocks.shape)
 
-
-
-def model(params, tvals, nsq_order, mDs_gs, mDs_es, mBs_gs, mBs_es, T):
-    """
-    params: [R0_i (i=0..n-1), R1_i (i=0..n-1), R2_i (i=0..n-1)]
-    mDs_gs/es: dict nsq -> float masses
-    mBs_gs/es: float masses (same for all nsq)
-    T: temporal extent (use 'ts' from Ens.getEns)
-    """
+def model_eq30(params, tvals, nsq_order,
+               mDs_gs, mDs_es,         # E_Ds^(0/1)(p)
+               mBs_gs, mBs_es,         # M_Bs^(0/1)
+               Z0_Ds, Z1_Ds,
+               Z0_Bs, Z1_Bs,
+               T):
+    tvals = np.asarray(tvals, dtype=float)
+    nsq_order = [int(x) for x in nsq_order]
     n = len(nsq_order)
-    R0 = params[:n]
-    R1 = params[n:2*n]
-    R2 = params[2*n:3*n]
+
+    O00 = params[0*n:1*n]
+    O01 = params[1*n:2*n]
+    O10 = params[2*n:3*n]
 
     out = []
+
+    # Rest masses (momentum = 0)
+    # Use the lowest available momentum as reference (proxy for rest)
+    first_nsq = sorted(mDs_gs.keys())[0]
+    M_D0 = float(mDs_gs[first_nsq])
+    M_D1 = float(mDs_es[first_nsq])
+
+
     for i, nsq in enumerate(nsq_order):
-        mD_es = float(mDs_es[int(nsq)])
-        mD_gs = float(mDs_gs[int(nsq)])
-        # If your physics requires decaying exponentials, change the four '+' to '-' below.
-        term = (
-            R0[i]
-            + R1[i] * np.exp(-mD_es * tvals) * np.exp(-mBs_gs * (dt - tvals))
-            + R2[i] * np.exp(-mD_gs * tvals) * np.exp(-mBs_es * (dt - tvals))
-        )
-        out.append(term)
+        E_D0 = float(mDs_gs[int(nsq)])   # E_Ds^(0)(p)
+        E_D1 = float(mDs_es[int(nsq)])   # E_Ds^(1)(p)
+        M_B0 = float(mBs_gs)
+        M_B1 = float(mBs_es)
+
+        ZD0 = float(Z0_Ds[int(nsq)])
+        ZD1 = float(Z1_Ds[int(nsq)])
+        ZB0 = float(Z0_Bs)
+        ZB1 = float(Z1_Bs)
+
+        t = tvals
+
+        # numerator
+        term00 = ZB0 * O00[i] * ZD0 * np.exp(-E_D0*t - M_B0*(T - t)) / (4.0 * E_D0 * M_B0)
+        term10 = ZB1 * O10[i] * ZD0 * np.exp(-E_D0*t - M_B1*(T - t)) / (4.0 * E_D0 * M_B1)
+        term01 = ZB0 * O01[i] * ZD1 * np.exp(-E_D1*t - M_B0*(T - t)) / (4.0 * E_D1 * M_B0)
+
+        # denominators
+        denom_Bs = ((ZB0**2)/(2.0*M_B0)) * np.exp(-M_B0*(T - t)) + ((ZB1**2)/(2.0*M_B1)) * np.exp(-M_B1*(T - t))
+        denom_Ds = ((ZD0**2)/(2.0*M_D0)) * np.exp(-E_D0*t)       + ((ZD1**2)/(2.0*M_D1)) * np.exp(-E_D1*t)
+
+        # prefactor
+        pref = 4.0*E_D0*M_B0 / np.exp(-E_D0*t - M_B0*(T - t))
+
+        R = np.sqrt(pref) * (term00 + term10 + term01) / np.sqrt(denom_Bs * denom_Ds)
+        out.append(R)
+
     return np.concatenate(out)
 
 
-def make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv,
-              mDs_gs, mDs_es, mBs_gs, mBs_es, T):
+def make_chi2_eq30(all_ratios, reg_low, reg_up, nsq_order, cov_inv,
+                   E0_Ds_by_nsq, E1_Ds_by_nsq,
+                   M0_Bs, M1_Bs,
+                   Z0_Ds_by_nsq, Z1_Ds_by_nsq,
+                   Z0_Bs, Z1_Bs,
+                   T):
     def chi2_minuit(*params):
         t_fit = np.arange(reg_low, reg_up)
         data = np.concatenate([
             np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)
+            #all_ratios[int(nsq)][reg_low:reg_up, nconf]
             for nsq in nsq_order
         ])
-        diff = data - model(params, t_fit, nsq_order, mDs_gs, mDs_es, mBs_gs, mBs_es, T)
+        model_vals = model_eq30(params, t_fit, nsq_order,
+                                E0_Ds_by_nsq, E1_Ds_by_nsq, M0_Bs, M1_Bs,
+                                Z0_Ds_by_nsq, Z1_Ds_by_nsq, Z0_Bs, Z1_Bs, T)
+        diff = data - model_vals
         return float(diff @ cov_inv @ diff)
     return chi2_minuit
+
+def model_eq30_with_errors(central, jk_params, tvals, nsq_order,
+                           mDs_gs, mDs_es, mBs_gs, mBs_es,
+                           Z0_Ds, Z1_Ds, Z0_Bs, Z1_Bs, T):
+    """
+    Evaluate Eq.(30) model and its jackknife uncertainty band at each t.
+    Returns:
+        mean_curve (array), err_curve (array)
+    """
+    nconf = len(jk_params)
+    # Evaluate central curve
+    mean_curve = model_eq30(central, tvals, nsq_order,
+                            mDs_gs, mDs_es, mBs_gs, mBs_es,
+                            Z0_Ds, Z1_Ds, Z0_Bs, Z1_Bs, T)
+
+    # Evaluate each jackknife curve
+    jk_curves = []
+    for i in range(nconf):
+        curve_i = model_eq30(jk_params[i], tvals, nsq_order,
+                             mDs_gs, mDs_es, mBs_gs, mBs_es,
+                             Z0_Ds, Z1_Ds, Z0_Bs, Z1_Bs, T)
+        jk_curves.append(curve_i)
+    jk_curves = np.array(jk_curves)
+
+    # Jackknife mean and error
+    jk_mean = np.mean(jk_curves, axis=0)
+    jk_err  = np.sqrt((nconf - 1) * np.mean((jk_curves - jk_mean)**2, axis=0))
+    return jk_mean, jk_err
 
 
 def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
@@ -408,6 +478,22 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
     assert T is not None, "Pass the temporal extent T (=ts)."
     nsq_order = [int(x) for x in sorted(all_ratios.keys())]
     n = len(nsq_order)
+
+    # build these once
+    Z0_Ds_jk = []
+    Z1_Ds_jk = []
+    Z0_Bs_jk = []
+    Z1_Bs_jk = []
+    for i in range(nconf):
+        #Z0_Ds_jk.append({nsq: float(np.mean(np.delete(Z0_Ds_blocks[nsq], i))) for nsq in nsq_order})
+        #Z1_Ds_jk.append({nsq: float(np.mean(np.delete(Z1_Ds_blocks[nsq], i))) for nsq in nsq_order})
+        Z0_Ds_jk.append({nsq: float(Z0_Ds_blocks[nsq][i]) for nsq in nsq_order})
+        Z1_Ds_jk.append({nsq: float(Z1_Ds_blocks[nsq][i]) for nsq in nsq_order})
+    #Z0_Bs_jk = [float(np.mean(np.delete(Z0_Bs_blocks, i))) for i in range(nconf)]
+    #Z1_Bs_jk = [float(np.mean(np.delete(Z1_Bs_blocks, i))) for i in range(nconf)]
+        Z0_Bs_jk.append(float(Z0_Bs_blocks[i]))
+        Z1_Bs_jk.append(float(Z1_Bs_blocks[i]))
+
 
     # ---- central masses (use directly from previous fits, do NOT average blocks) ----
     # these were already read from the Excited-comb-*.csv results before calling jackknife_fit
@@ -425,11 +511,16 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
     mBs_gs_jk = []
     mBs_es_jk = []
     for i in range(nconf):
-        mDs_gs_jk.append({nsq: float(np.mean(np.delete(ds_blocks_gs[nsq], i))) for nsq in nsq_order})
-        mDs_es_jk.append({nsq: float(np.mean(np.delete(ds_blocks_es[nsq], i))) for nsq in nsq_order})
-        mBs_gs_jk.append(float(np.mean(np.delete(bs_blocks_gs, i))))
-        mBs_es_jk.append(float(np.mean(np.delete(bs_blocks_es, i))))
+        #mDs_gs_jk.append({nsq: float(np.mean(np.delete(ds_blocks_gs[nsq], i))) for nsq in nsq_order})
+        #mDs_es_jk.append({nsq: float(np.mean(np.delete(ds_blocks_es[nsq], i))) for nsq in nsq_order})
+        #mBs_gs_jk.append(float(np.mean(np.delete(bs_blocks_gs, i))))
+        #mBs_es_jk.append(float(np.mean(np.delete(bs_blocks_es, i))))
+        mDs_gs_jk.append({nsq: float(ds_blocks_gs[nsq][i]) for nsq in nsq_order})
+        mDs_es_jk.append({nsq: float(ds_blocks_es[nsq][i]) for nsq in nsq_order})
+        mBs_gs_jk.append(float(bs_blocks_gs[i]))
+        mBs_es_jk.append(float(bs_blocks_es[i]))        
 
+    '''
     # ---- data stacking for covariance (central/frozen) ----
     jk_samples = np.array([
         np.concatenate([
@@ -443,64 +534,48 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
         cov_inv = np.linalg.inv(cov)
     else:
         cov_inv = None  # will rebuild inside loop
+    '''
 
-    # ---- initial guess: R0 ~ time-avg, R1,R2 ~ 0 ----
-    # ---- initial guesses based on 2pt function values and exponentials ----
-    R0_0 = []
-    R1_0 = []
-    R2_0 = []
+    jk_samples = np.array([
+        np.concatenate([all_ratios[int(nsq)][reg_low:reg_up, i] for nsq in nsq_order])
+        for i in range(nconf)
+    ])      # shape (N, ndata)
 
-    for nsq in nsq_order:
-        ratio_central = all_ratios[int(nsq)][:, -1]  # central ratio (mean over configs)
-        R0_guess = float(np.mean(ratio_central))     # mean over all time slices
-        R0_0.append(R0_guess)
+    if frozen:
+        #(nconf - 1)
+        cov =  (nconf - 1)*np.cov(jk_samples, rowvar=False, ddof=0)
+        cov_inv = np.linalg.inv(cov)
+    else:
+        cov_inv = None
 
-    # get masses for this nsq
-        mD_gs = float(mDs_gs_central[int(nsq)])
-        mD_es = float(mDs_es_central[int(nsq)])
-        mB_gs = float(mBs_gs_central)
-        mB_es = float(mBs_es_central)
+    print("cov shape:", cov.shape)
+    print("cond(cov):", np.linalg.cond(cov))
+    print("mean(diag)^0.5:", np.sqrt(np.mean(np.diag(cov))))
 
-    # 2pt correlation functions for Ds and Bs (use averaged/folded central values)
-    # here we can reuse your avdx and avb arrays if accessible, but since we are
-    # in jackknife_fit, we reconstruct a reasonable proxy from all_ratios.
-    # If you have the real 2pt central correlators stored externally, substitute them here.
-    #
-    # For now we assume C_2pt ~ R0_guess scale, adjust if you have proper 2pt values.
-        C_reg_low = float(all_avn0[int(nsq)][reg_low])
-        C_reg_up  = float(all_avn0[int(nsq)][reg_up]) - 1  # -1 because reg_up is exclusive in Python slicing
+    # ---- initial guesses for Eq. (30) ----
+    # Parameters per-nsq: [O00_i for all i] + [O01_i for all i] + [O10_i for all i]
+    O00_0 = [float(np.mean(all_ratios[int(nsq)][reg_low:reg_up, -1])) for nsq in nsq_order]
+    O01_0 = [0.5 for _ in nsq_order]
+    O10_0 = [0.5 for _ in nsq_order]
+    p0 = O00_0 + O01_0 + O10_0
 
-    # exponential factors
-        exp1 = np.exp(mD_es * reg_low) * np.exp(mB_gs * (dt - reg_low))
-        exp2 = np.exp(mD_gs * reg_up)  * np.exp(mB_es * (dt - reg_up))
-
-    # initial guesses for R1 and R2
-        R1_guess = (C_reg_low-R0_guess) * exp1
-        R2_guess = (C_reg_up-R0_guess)  * exp2
-
-        #R1_guess=0.1
-        #R2_guess=0.1
-
-        R1_0.append(R1_guess)
-        R2_0.append(R2_guess)
-
-        # flatten all parameters into one vector
-    p0 = R0_0 + R1_0 + R2_0
-
-    print("Initial guesses:")
+    print("Initial guesses (Eq.30):")
     for i, nsq in enumerate(nsq_order):
-        print(f"nsq={nsq}: R0={R0_0[i]:.4e}, R1={R1_0[i]:.4e}, R2={R2_0[i]:.4e}")
+        print(f"nsq={nsq}: O00={O00_0[i]:.4e}, O01={O01_0[i]:.4e}, O10={O10_0[i]:.4e}")
 
 
     # ---- central fit ----
-    chi2_fun = make_chi2(
+    chi2_fun = make_chi2_eq30(
         all_ratios, reg_low, reg_up, nsq_order,
         cov_inv,
         mDs_gs_central, mDs_es_central,
         mBs_gs_central, mBs_es_central,
+        Z0_Ds_by_nsq, Z1_Ds_by_nsq,
+        Z0_Bs_central, Z1_Bs_central,
         T
     )
     m = Minuit(chi2_fun, *p0)
+
     m.migrad()
 
     ndata = len(np.arange(reg_low, reg_up)) * len(nsq_order)
@@ -516,343 +591,254 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
     for i in range(nconf):
         if not frozen:
             sub = np.delete(jk_samples, i, axis=0)
-            cov_i = np.cov(sub, rowvar=False, ddof=1)
+            cov_i = (nconf - 1)*np.cov(sub, rowvar=False, ddof=1)
             cov_inv_i = np.linalg.inv(cov_i)
         else:
             cov_inv_i = cov_inv
 
-        chi2_fun_i = make_chi2(
+        chi2_fun_i = make_chi2_eq30(
             {int(nsq): np.delete(all_ratios[int(nsq)], i, axis=1) for nsq in nsq_order},
             reg_low, reg_up, nsq_order,
             cov_inv_i,
             mDs_gs_jk[i], mDs_es_jk[i],
             mBs_gs_jk[i], mBs_es_jk[i],
+            #{nsq: np.mean(np.delete(Z0_Ds_blocks[nsq], i)) for nsq in nsq_order},  # ✅ scalar per nsq
+            #{nsq: np.mean(np.delete(Z1_Ds_blocks[nsq], i)) for nsq in nsq_order},
+            #np.mean(np.delete(Z0_Bs_blocks, i)),  # ✅ single float
+            #np.mean(np.delete(Z1_Bs_blocks, i)),
+            Z0_Ds_jk[i], Z1_Ds_jk[i],
+            Z0_Bs_jk[i], Z1_Bs_jk[i],
             T
         )
+
         mi = Minuit(chi2_fun_i, *p0)
         mi.migrad()
         jk_params.append(np.array(list(mi.values)))
 
     jk_params = np.array(jk_params)
     errs = np.sqrt((nconf - 1) * np.mean((jk_params - central) ** 2, axis=0))
-    return central, errs, nsq_order, jk_params, (mDs_gs_central, mDs_es_central, mBs_gs_central, mBs_es_central)
+    #return central, errs, nsq_order, jk_params, (mDs_gs_central, mDs_es_central, mBs_gs_central, mBs_es_central)
+    return (central, errs, nsq_order, jk_params,
+            (mDs_gs_central, mDs_es_central, mBs_gs_central, mBs_es_central),
+            mDs_gs_jk, mDs_es_jk, mBs_gs_jk, mBs_es_jk,
+            Z0_Ds_jk, Z1_Ds_jk, Z0_Bs_jk, Z1_Bs_jk)
 
+'''
 central, errs, nsq_order, jk_params, masses_central = jackknife_fit(
     all_ratios, reg_low, reg_up, nconf,
     ds_blocks_gs, ds_blocks_es, bs_blocks_gs, bs_blocks_es,
-    frozen=True, T=ts   # <- 'ts' you already have from Ens.getEns(...)
+    frozen=True, T=dt   # <- 'ts' you already have from Ens.getEns(...)
 )
+'''
+
+(
+    central, errs, nsq_order, jk_params,
+    masses_central,
+    mDs_gs_jk, mDs_es_jk, mBs_gs_jk, mBs_es_jk,
+    Z0_Ds_jk, Z1_Ds_jk, Z0_Bs_jk, Z1_Bs_jk
+) = jackknife_fit(
+    all_ratios, reg_low, reg_up, nconf,
+    ds_blocks_gs, ds_blocks_es, bs_blocks_gs, bs_blocks_es,
+    frozen=True, T=dt
+)
+
 
 print(central)
 print(errs)
 
-def plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params,
-                          mDs_gs, mDs_es, mBs_gs, mBs_es, T):
+def plot_all_t_eq30(all_ratios, all_errs, nconf, nsq_order, central, jk_params,
+                    mDs_gs, mDs_es, mBs_gs, mBs_es,
+                    Z0_Ds, Z1_Ds, Z0_Bs, Z1_Bs, T, mDs_gs_jk, mDs_es_jk, mBs_gs_jk, mBs_es_jk,
+    Z0_Ds_jk, Z1_Ds_jk, Z0_Bs_jk, Z1_Bs_jk):
+    """
+    Plot Eq.(30) global fit and jackknife error bands.
+    Plots t = 1..23 only.
+    """
+    import matplotlib.pyplot as plt
+
     plt.figure(figsize=(8,6))
     colors = plt.cm.tab10.colors
     nsq_order = [int(x) for x in nsq_order]
     n = len(nsq_order)
 
-    R0_c = central[:n]
-    R1_c = central[n:2*n]
-    R2_c = central[2*n:3*n]
+    # split parameters
+    O00_c = central[0*n:1*n]
+    O01_c = central[1*n:2*n]
+    O10_c = central[2*n:3*n]
 
     jk_params = np.array(jk_params)
-    R0_jk = jk_params[:, :n]
-    R1_jk = jk_params[:, n:2*n]
-    R2_jk = jk_params[:, 2*n:3*n]
+    O00_jk = jk_params[:, 0*n:1*n]
+    O01_jk = jk_params[:, 1*n:2*n]
+    O10_jk = jk_params[:, 2*n:3*n]
+
+    # define t range to plot
+    t_all = np.arange(1, 24)
 
     for i, nsq in enumerate(nsq_order):
-        nt = all_ratios[int(nsq)].shape[0]
-        t_all = np.arange(nt)
+        color = colors[i % len(colors)]
         data_mean = all_ratios[int(nsq)][:, -1]
-        data_err  = np.std(all_ratios[int(nsq)][:, :nconf], axis=1, ddof=1)/np.sqrt(nconf)
+        data_err  = all_errs[int(nsq)]
 
-        plt.errorbar(t_all, data_mean, yerr=data_err, fmt='x',
-                     color=colors[i % len(colors)], label=f'nsq={nsq}')
+        # trim to 1..23
+        t_data = np.arange(len(data_mean))
+        mask = (t_data >= 1) & (t_data <= 23)
+        t_plot = t_data[mask]
+        y_data = data_mean[mask]
+        y_err  = data_err[mask]
 
-        # central curve
-        mD_es = float(mDs_es[int(nsq)])
-        mD_gs = float(mDs_gs[int(nsq)])
-        fit_c = (R0_c[i]
-                 + R1_c[i]*np.exp(-mD_es*t_all)*np.exp(-mBs_gs*(dt - t_all))
-                 + R2_c[i]*np.exp(-mD_gs*t_all)*np.exp(-mBs_es*(dt - t_all)))
-        plt.plot(t_all, fit_c, '-', color=colors[i % len(colors)])
+         # define full and fit ranges
+        t_all = np.arange(1, 24)
+        t_fit = np.arange(reg_low, reg_up)  # <-- you can pass reg_low, reg_up as function args
 
-        # jackknife band
+        # plot data for all t
+        plt.errorbar(t_plot, y_data, yerr=y_err, fmt='x', color=color, label=f'n²={nsq}')
+
+        #plt.errorbar(t_plot, y_data, yerr=y_err, fmt='x', color=color, label=f'n²={nsq}')
+
+        # --- central model ---
+        mD0 = float(mDs_gs[int(nsq)])
+        mD1 = float(mDs_es[int(nsq)])
+        M_B0 = float(mBs_gs)
+        M_B1 = float(mBs_es)
+        ZD0 = float(Z0_Ds[int(nsq)])
+        ZD1 = float(Z1_Ds[int(nsq)])
+        ZB0 = float(Z0_Bs)
+        ZB1 = float(Z1_Bs)
+        #M_D0 = float(mDs_gs[int(0)])
+        #M_D1 = float(mDs_es[int(0)])
+        # Use the lowest available nsq as proxy for rest state
+        first_nsq = nsq_order[0]
+        M_D0 = float(mDs_gs[int(first_nsq)])
+        M_D1 = float(mDs_es[int(first_nsq)])
+
+
+        # compute curve
+        term00 = ZB0 * O00_c[i] * ZD0 * np.exp(-mD0*t_all - M_B0*(T - t_all)) / (4*mD0*M_B0)
+        term10 = ZB1 * O10_c[i] * ZD0 * np.exp(-mD0*t_all - M_B1*(T - t_all)) / (4*mD0*M_B1)
+        term01 = ZB0 * O01_c[i] * ZD1 * np.exp(-mD1*t_all - M_B0*(T - t_all)) / (4*mD1*M_B0)
+        denom_Bs = (ZB0**2/(2*M_B0))*np.exp(-M_B0*(T-t_all)) + (ZB1**2/(2*M_B1))*np.exp(-M_B1*(T-t_all))
+        denom_Ds = (ZD0**2/(2*M_D0))*np.exp(-mD0*t_all) + (ZD1**2/(2*M_D1))*np.exp(-mD1*t_all)
+        pref = 4*mD0*M_B0 / np.exp(-mD0*t_all - M_B0*(T - t_all))
+        fit_central = np.sqrt(pref) * (term00 + term10 + term01) / np.sqrt(denom_Bs * denom_Ds)
+
+        #plt.plot(t_all, fit_central, '-', color=color)
+         # plot fit curve only in fit range
+        fit_mask = (t_all >= reg_low) & (t_all < reg_up)
+        plt.plot(t_all[fit_mask], fit_central[fit_mask], '-', color=color)
+
+
+        '''
+        # --- jackknife band ---
         band = []
         for k in range(nconf):
-            R0k, R1k, R2k = R0_jk[k, i], R1_jk[k, i], R2_jk[k, i]
-            band.append(R0k + R1k*np.exp(-mD_es*t_all)*np.exp(-mBs_gs*(dt - t_all))
-                            + R2k*np.exp(-mD_gs*t_all)*np.exp(-mBs_es*(dt - t_all)))
+            O00k, O01k, O10k = O00_jk[k, i], O01_jk[k, i], O10_jk[k, i]
+            term00 = ZB0 * O00k * ZD0 * np.exp(-mD0*t_all - M_B0*(T - t_all)) / (4*mD0*M_B0)
+            term10 = ZB1 * O10k * ZD0 * np.exp(-mD0*t_all - M_B1*(T - t_all)) / (4*mD0*M_B1)
+            term01 = ZB0 * O01k * ZD1 * np.exp(-mD1*t_all - M_B0*(T - t_all)) / (4*mD1*M_B0)
+            denom_Bs = (ZB0**2/(2*M_B0))*np.exp(-M_B0*(T-t_all)) + (ZB1**2/(2*M_B1))*np.exp(-M_B1*(T-t_all))
+            denom_Ds = (ZD0**2/(2*M_D0))*np.exp(-mD0*t_all) + (ZD1**2/(2*M_D1))*np.exp(-mD1*t_all)
+            pref = 4*mD0*M_B0 / np.exp(-mD0*t_all - M_B0*(T - t_all))
+            Rk = np.sqrt(pref)* (term00 + term10 + term01) / np.sqrt(denom_Bs * denom_Ds)
+            band.append(Rk)
+
+    
         band = np.array(band)
         mean = np.mean(band, axis=0)
         err  = np.sqrt((nconf - 1) * np.mean((band - mean)**2, axis=0))
-        plt.fill_between(t_all, mean - err, mean + err,
-                         color=colors[i % len(colors)], alpha=0.3)
+        print(mean)
+        print(err)
+        plt.fill_between(t_all, mean - err, mean + err, color=color, alpha=0.3)
 
-    plt.xlabel("t"); plt.ylabel("Ratio")
-    plt.xlim(0, 24)
-    plt.ylim(0, 1.5)
-    plt.title("Global fit with GS/ES(Ds,Bs) terms")
-    plt.legend(); plt.tight_layout()
-    plt.savefig('Fit-GSES-model.png')
-
-mDs_gs_c, mDs_es_c, mBs_gs_c, mBs_es_c = masses_central
-#plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params,
-                      #mDs_gs_c, mDs_es_c, mBs_gs_c, mBs_es_c, ts)
-
-
-
-
-'''
-def model(params, tvals, nsq_order, lam_by_nsq):
-    nsq_order = [int(x) for x in nsq_order]
-    n = len(nsq_order)
-    A = params[:n]
-    B = params[n:2*n]
-
-    out = []
-    for i, nsq in enumerate(nsq_order):
-        lam = float(lam_by_nsq[int(nsq)])  # ensure pure float
-        out.append(A[i] + B[i] * np.exp(-lam * tvals))
-    return np.concatenate(out)
-
-def chi2(params, all_ratios, reg_low, reg_up, nsq_order, cov_inv, lam_by_nsq):
-    t_fit = np.arange(reg_low, reg_up)
-    # stack data in the same order as model’s concatenation
-    #data = np.concatenate([
-    #    np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)
-    #    for nsq in nsq_order
-    #])
-    data = np.concatenate([
-    all_ratios[int(nsq)][reg_low:reg_up, -1]   # last column = central value
-    for nsq in nsq_order
-    ])
-    diff = data - model(params, t_fit, nsq_order, lam_by_nsq)
-    return diff @ cov_inv @ diff
-
-def make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv, lam_by_nsq):
-    def chi2_minuit(*params):
-        t_fit = np.arange(reg_low, reg_up)
-        data = np.concatenate([
-            np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)
-            for nsq in nsq_order
-        ])
-        diff = data - model(params, t_fit, nsq_order, lam_by_nsq)
-        return float(diff @ cov_inv @ diff)
-    return chi2_minuit
-
-
-
-
-def jackknife_fit(all_ratios, reg_low, reg_up, nconf, lam_blocks, frozen=True):
-    nsq_order = sorted(all_ratios.keys())
-    nsq_order = [int(x) for x in nsq_order]
-    n = len(nsq_order)
-
-    # --- central λ dict from all configs ---
-    lam_central = {nsq: np.mean(lam_blocks[nsq]) for nsq in nsq_order}
-
-    # --- jackknife λ dicts ---
-    lam_jk_dicts = []
-    for i in range(nconf):
-        lam_jk_dicts.append({nsq: np.mean(np.delete(lam_blocks[nsq], i)) for nsq in nsq_order})
-
-    # --- build jackknife samples of ratios (like before) ---
-    jk_samples = np.array([
-    np.concatenate([
-        all_ratios[int(nsq)][reg_low:reg_up, i]    # <-- TAKE COLUMN i, don't average
-        for nsq in nsq_order
-    ])
-    for i in range(nconf)
-    ])
-
-    #jk_samples = []
-    #for i in range(nconf):
-    #    jk_samples.append(np.concatenate([
-    #        np.mean(np.delete(all_ratios[int(nsq)], i, axis=1)[reg_low:reg_up, :], axis=1)
-    #        for nsq in nsq_order
-    #    ]))
-    jk_samples = np.array(jk_samples)
-
-
-    cov_inv=covmat_all
-
-
-    # initial guess
-    A0 = [np.mean(np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)) for nsq in nsq_order]
-    print(lam_central[int(nsq)])
-    print(all_ratios[int(nsq)][reg_low])
-    B0 = [(np.mean(all_ratios[int(nsq)][reg_low])-np.mean(np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)))*np.exp(float(lam_central[int(nsq)])*reg_low) for nsq in nsq_order]
-    p0 = A0 + B0
-
-    print("Initial guess:", p0)
-
-    # --- central fit ---
-    chi2_fun = make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv, lam_central)
-    m = Minuit(chi2_fun, *p0)  # only fit parameters go here
-    m.tol = 1e-16/0.002 
-    
-    for i in range(5, 10):
-        m.limits[i] = (None, 0.0) 
-    
-    m.migrad()
-
-    #ndof = (reg_up - reg_low + 1) - m.nfit
-    ndata = len(np.arange(reg_low, reg_up)) * len(nsq_order)
-    ndof  = ndata - m.nfit
-
-    chi2 = m.fval
-    chi2_dof = chi2 / ndof
-    p_value = 1 - chi2_dist.cdf(chi2, df=ndof)
-    print('chi^2',chi2,"p-value", p_value)       
-
-    print(chi2, ndof, chi2_dof)
-
-    central = np.array(list(m.values))
-    p0_central = central.tolist()
-
-    print("Central fit params:", central)
-
-
-
-
-    # --- jackknife fits ---
-    jk_params = []
-    for i in range(nconf):
-        if not frozen:
-            sub_jk = []
-            for j in range(nconf):
-                if j == i:
-                    continue
-                sub_jk.append(np.concatenate([
-                    np.mean(np.delete(np.delete(all_ratios[int(nsq)], i, axis=1), j, axis=1)[reg_low:reg_up, :], axis=1)
-                    for nsq in nsq_order
-                ]))
-            cov_i = np.cov(np.array(sub_jk), rowvar=False, ddof=1)
-            cov_inv_i = np.linalg.inv(cov_i)
-        else:
-            cov_inv_i = cov_inv
-
-        chi2_fun_i = make_chi2(
-            {int(nsq): np.delete(all_ratios[int(nsq)], i, axis=1) for nsq in nsq_order},
-            reg_low, reg_up, nsq_order, cov_inv_i, lam_jk_dicts[i]
+        
+        mean, err = model_eq30_with_errors(
+        central, jk_params, t_all, [nsq],
+        mDs_gs, mDs_es, mBs_gs, mBs_es,
+        Z0_Ds, Z1_Ds, Z0_Bs, Z1_Bs, T
         )
-        m = Minuit(chi2_fun_i, *p0)
-        #m = Minuit(chi2_fun_i, *p0_central)
-        m.migrad()
-        jk_params.append(np.array(list(m.values)))
+        plt.plot(t_all, mean, '-', color=color)
+        plt.fill_between(t_all, mean - err, mean + err, color=color, alpha=0.3)
+        '''
 
-
-
-    #jk_params = np.array(jk_params)
-    jk_params = np.array(jk_params)          # convert list -> array
-    jk_mean   = jk_params.mean(axis=0)
-    #errs = np.sqrt((nconf - 1) * np.mean((jk_params - jk_mean) ** 2, axis=0))   
-    errs = np.sqrt((nconf - 1) * np.mean((jk_params - central) ** 2, axis=0))   
-
-    #errs = np.sqrt(((nconf - 1) / nconf) * np.mean((jk_params - central) ** 2, axis=0))
-    return central, errs, nsq_order, jk_params, lam_central
-
-def plot_all_t(all_ratios, nconf, nsq_order, central):
-    plt.figure(figsize=(8,6))
-    colors = plt.cm.tab10.colors
-    n_nsq = len(nsq_order)
-    A_vals = central[:n_nsq]
-    B_vals = central[n_nsq:2*n_nsq]
-
-    for i, nsq in enumerate(nsq_order):
-        nt = all_ratios[nsq].shape[0]
-        t_all = np.arange(nt)
-        data_mean = np.mean(all_ratios[nsq][:, :nconf], axis=1)
-        data_err = np.std(all_ratios[nsq][:, :nconf], axis=1, ddof=1) / np.sqrt(nconf)
-
-        # data points
-        plt.errorbar(t_all, data_mean, yerr=data_err, fmt='o',
-                     color=colors[i % len(colors)], label=f'nsq={nsq}')
-
-        # fit curve
-        fit_curve = A_vals[i] + B_vals[i] * np.exp(-decay_consts[nsq] * t_all)
-        plt.plot(t_all, fit_curve, '-', color=colors[i % len(colors)])
-
-    plt.xlabel("t")
-    plt.ylabel("Ratio")
-    plt.title(f"Global fit: A_i + B_i * exp(-{decay_consts} * t)")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('Test-Combined-new.png')
-
-def plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params, lam_by_nsq):
-    plt.figure(figsize=(8,6))
-    colors = plt.cm.tab10.colors
-    nsq_order = [int(x) for x in nsq_order]
-    n = len(nsq_order)
-
-    A_c = central[:n]
-    B_c = central[n:2*n]
-
-    jk_params = np.array(jk_params)
-    A_jk = jk_params[:, :n]
-    B_jk = jk_params[:, n:2*n]
-
-    for i, nsq in enumerate(nsq_order):
-        nt = all_ratios[int(nsq)].shape[0]
-        t_all = np.arange(nt)
-        data_mean = all_avn0[int(nsq)]
-        data_err = all_errs[int(nsq)]
-
-        plt.errorbar(t_all, data_mean, yerr=data_err, fmt='x',
-                     color=colors[i % len(colors)], label=f'nsq={nsq}')
-
-        lam = float(lam_by_nsq[int(nsq)])
-        fit_central = A_c[i] + B_c[i] * np.exp(-lam * t_all)
-
-        fit_jk_vals = []
+        # jackknife band: propagate O's *and* (m, Z)
+        band = []
         for k in range(nconf):
-            A_k = A_jk[k, i]
-            B_k = B_jk[k, i]
-            fit_jk_vals.append(A_k + B_k * np.exp(-lam * t_all))
-        fit_jk_vals = np.array(fit_jk_vals)
+            mD0_k = float(mDs_gs_jk[k][int(nsq)])
+            mD1_k = float(mDs_es_jk[k][int(nsq)])
+            MB0_k = float(mBs_gs_jk[k])
+            MB1_k = float(mBs_es_jk[k])
 
-        fit_mean = np.mean(fit_jk_vals, axis=0)
-        fit_err = np.sqrt((nconf - 1) * np.mean((fit_jk_vals - fit_mean)**2, axis=0))
+            ZD0_k = float(Z0_Ds_jk[k][int(nsq)])
+            ZD1_k = float(Z1_Ds_jk[k][int(nsq)])
+            ZB0_k = float(Z0_Bs_jk[k])
+            ZB1_k = float(Z1_Bs_jk[k])
 
-        plt.plot(t_all, fit_central, '-', color=colors[i % len(colors)])
-        plt.fill_between(t_all, fit_mean - fit_err, fit_mean + fit_err,
-                         color=colors[i % len(colors)], alpha=0.3)
+            O00k = O00_jk[k, i]; O01k = O01_jk[k, i]; O10k = O10_jk[k, i]
+
+            term00 = ZB0_k * O00k * ZD0_k * np.exp(-mD0_k*t_all - MB0_k*(T - t_all)) / (4*mD0_k*MB0_k)
+            term10 = ZB1_k * O10k * ZD0_k * np.exp(-mD0_k*t_all - MB1_k*(T - t_all)) / (4*mD0_k*MB1_k)
+            term01 = ZB0_k * O01k * ZD1_k * np.exp(-mD1_k*t_all - MB0_k*(T - t_all)) / (4*mD1_k*MB0_k)
+
+            # rest masses for denominators: use lowest-nsq as in your central code
+            first_nsq = nsq_order[0]
+            MD0_k = float(mDs_gs_jk[k][int(first_nsq)])
+            MD1_k = float(mDs_es_jk[k][int(first_nsq)])
+
+            denom_Bs = (ZB0_k**2/(2*MB0_k))*np.exp(-MB0_k*(T-t_all)) + (ZB1_k**2/(2*MB1_k))*np.exp(-MB1_k*(T-t_all))
+            denom_Ds = (ZD0_k**2/(2*MD0_k))*np.exp(-mD0_k*t_all)      + (ZD1_k**2/(2*MD1_k))*np.exp(-mD1_k*t_all)
+            pref     = 4*mD0_k*MB0_k / np.exp(-mD0_k*t_all - MB0_k*(T - t_all))
+
+            Rk = np.sqrt(pref) * (term00 + term10 + term01) / np.sqrt(denom_Bs * denom_Ds)
+            band.append(Rk)
+
+        band = np.array(band)
+        mean = band.mean(axis=0)
+
+        diffs = band - mean
+        print(f"JK spread (std over nconf) for nsq={nsq}:",
+            np.sqrt(np.mean(diffs**2, axis=0)).mean())
+
+        err  = np.sqrt((nconf - 1) * np.mean((band - mean)**2, axis=0))
+        print(mean)
+        print(err)
+        #plt.fill_between(t_all, mean - err, mean + err, color=color, alpha=0.3)
+
+       
+        # plot jackknife error band only in fit range
+        plt.fill_between(
+            t_all[fit_mask],
+            mean[fit_mask] - err[fit_mask],
+            mean[fit_mask] + err[fit_mask],
+            color=color,
+            alpha=0.3
+        )
+
+
+        # >>> ADD THIS PRINT SECTION <<<
+        print(f"\n--- nsq={nsq} ---")
+        print(f"mD0={mD0:.5f}, mD1={mD1:.5f}, MB0={M_B0:.5f}, MB1={M_B1:.5f}")
+        print(f"Z_D0={ZD0:.5f}, Z_D1={ZD1:.5f}, Z_B0={ZB0:.5f}, Z_B1={ZB1:.5f}")
+        print(f"O00={O00_c[i]:.5e}, O01={O01_c[i]:.5e}, O10={O10_c[i]:.5e}")
+        print("t | model(t)")
+        for t_idx, val in zip(t_all.astype(int), fit_central):
+            print(f"{t_idx:2d} | {val:.6e}")
+        print("-------------------------------")
 
     plt.xlabel("t")
-    plt.ylabel("Ratio")
-    plt.title("Global fit with per-nsq decay constants")
-    plt.legend()
+    plt.ylabel("R³ᵖᵗ(t)")
+    plt.ylim(0.1, 0.9)
+    plt.legend(frameon=False)
     plt.tight_layout()
-    plt.savefig('Test-Combined-with-per-nsq-decays.png')
+    plt.savefig("Ex-Fit-M1-0.280-V.png", dpi=200)
+    plt.show()
 
-
-
-
-central, errs, nsq_order, jk_params, lam_central = jackknife_fit(
-    all_ratios, reg_low, reg_up, nconf, lam_blocks=lam_blocks, frozen=True
+plot_all_t_eq30(all_ratios, all_errs, nconf, nsq_order, central, jk_params,
+                mDs_gs=mDs_GS_by_nsq, mDs_es=mDs_ES_by_nsq,
+                mBs_gs=mBs_GS_central, mBs_es=mBs_ES_central,
+                Z0_Ds=Z0_Ds_by_nsq, Z1_Ds=Z1_Ds_by_nsq,
+                Z0_Bs=Z0_Bs_central, Z1_Bs=Z1_Bs_central,
+                T=dt,
+    mDs_gs_jk=mDs_gs_jk, mDs_es_jk=mDs_es_jk,
+    mBs_gs_jk=mBs_gs_jk, mBs_es_jk=mBs_es_jk,
+    Z0_Ds_jk=Z0_Ds_jk, Z1_Ds_jk=Z1_Ds_jk,
+    Z0_Bs_jk=Z0_Bs_jk, Z1_Bs_jk=Z1_Bs_jk
 )
-print(central)
-print(errs)
-#plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params, lam_by_nsq=decay_const_by_nsq)
-plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params, lam_by_nsq=lam_central)
-
-# Evaluate chi^2 at the central fit
-# Rebuild cov_inv exactly as in jackknife_fit for central chi2
-nsq_order_sorted = sorted(all_ratios.keys())
-jk_samples = []
-for i in range(nconf):
-    jk_samples.append(np.concatenate([
-        np.mean(np.delete(all_ratios[int(nsq)], i, axis=1)[reg_low:reg_up, :], axis=1)
-        for nsq in nsq_order_sorted
-    ]))
-jk_samples = np.array(jk_samples)
-cov = np.cov(jk_samples, rowvar=False, ddof=1)
-cov_inv = np.linalg.inv(cov)
-
-
-
-'''
