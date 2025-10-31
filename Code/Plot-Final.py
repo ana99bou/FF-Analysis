@@ -206,11 +206,16 @@ for ens, masses in ens_masses.items():
             print(f"Error processing {filepath}: {e}")
 
 plt.legend()
-plt.xlabel(r"$q^2 [GeV]$")  # z. B. "Energy [GeV²]"
-plt.ylabel(r"V")
+plt.xlabel(r"$q^2 [GeV]$",fontsize=20)  # z. B. "Energy [GeV²]"
+plt.ylabel(r"V",fontsize=20)
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=20, color='grey', alpha=.7)
+plt.legend(fontsize=16)
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('V-FPlot.pdf')
+plt.savefig('V-FPlot.png',transparent=True,dpi=200,bbox_inches='tight')
 
 # === Neuer Plot für A_0 ===
 plt.figure(figsize=(12, 8))
