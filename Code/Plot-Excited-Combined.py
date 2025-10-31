@@ -12,7 +12,7 @@ from FitModel import model_eq30  # importiere deine Modellfunktion
 # --- Configuration ---
 ensemble = "C1"
 cmass = '0.400'
-FF = "A0"
+FF = "V"
 
 fit_file = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}.csv"
 out_plot = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}-Plot.pdf"
@@ -180,9 +180,9 @@ def plot_all_t_eq30(
                          mean[fit_mask]+err[fit_mask], color=color, alpha=0.3)
 
     plt.xlabel("t", fontsize=16)
-    plt.ylabel(r"$\tilde{A}_0(t)$", fontsize=16)
-    plt.ylim(0.09, 0.25)
-    #plt.ylim(0.2,0.6)
+    plt.ylabel(r"$\tilde{V}(t)$", fontsize=16)
+    #plt.ylim(0.09, 0.25)
+    plt.ylim(0.2,0.6)
     plt.legend(frameon=False)
     plt.tight_layout()
     plt.xticks(fontsize=14)
