@@ -62,7 +62,7 @@ sigma5=nsq5plt['Error']
 
 figure_size = (6, 4)
 plt.xlabel('Time',fontsize=15)
-plt.ylabel(r'$\widetilde{A}_1$',fontsize=15)
+plt.ylabel(r'$\widetilde{A}_2$',fontsize=15)
 #plt.plot(range(96),nsq1[0])
 #plt.plot(range(20),avn0y[0:20])
 #plt.plot(range(20),avn0z[0:20])
@@ -91,10 +91,10 @@ plt.plot(x5,y5, color='magenta',linewidth=0.5)
 plt.fill_between(list(range(47))[int(reg_low5):int(reg_up5+1)], nsq5plt['EffectiveMass']+sigma5, nsq5plt['EffectiveMass']-sigma5, color='magenta',alpha=0.2)
 
 plt.annotate(r'$\bf{preliminary}$',xy=(0.17,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=.7)
-plt.axis((0,20,0,1))
+plt.axis((0,20,-0.4,1.4))
 plt.tick_params(axis='both', which='major', labelsize=14)  # For ma
 
 
 #plt.yscale('log')
 plt.legend()
-plt.savefig('Niceplot-A2.pdf',transparent=True,dpi=200,bbox_inches='tight')
+plt.savefig('Niceplot-A2.png',transparent=True,dpi=200,bbox_inches='tight')
