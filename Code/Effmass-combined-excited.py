@@ -664,15 +664,21 @@ plt.fill_between(t_fit_eff,
 plt.axvline(reg_low, color='gray', ls='--', lw=1, alpha=0.5)
 plt.axvline(reg_up-1, color='gray', ls='--', lw=1, alpha=0.5)
 
-plt.xlabel("t")
-plt.ylabel(r"$E_{\rm eff}(t)$")
+plt.xlabel("t", fontsize=16)
+plt.ylabel(r"$E_{\rm eff}(t)$", fontsize=16)
 #plt.title("Effective mass with two-state fit curves (fit window only)")
 plt.ylim(1.05, 1.2)
 plt.grid(True, which="both", ls="--", lw=0.5)
 plt.legend()
 #plt.ylim(0.92, 1.05)
 plt.tight_layout()
+plt.tight_layout()
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=15, color='grey', alpha=.7)
+plt.legend(fontsize=14)
 if particle == 'Ds':
-    plt.savefig(outdir+'Effective_mass_with_fit_band-Ds{}-nsq{}.pdf'.format(cmass,nsq))
+    plt.savefig(outdir+'Effective_mass_with_fit_band-Ds{}-nsq{}.pdf'.format(cmass,nsq), transparent=True)
 else:
-    plt.savefig(outdir+'Effective_mass_with_fit_band-Bs-nsq.pdf')
+    plt.savefig(outdir+'Effective_mass_with_fit_band-Bs-nsq.pdf',transparent=True)

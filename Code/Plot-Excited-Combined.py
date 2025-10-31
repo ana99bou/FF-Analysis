@@ -179,12 +179,19 @@ def plot_all_t_eq30(
         plt.fill_between(t_all[fit_mask], mean[fit_mask]-err[fit_mask],
                          mean[fit_mask]+err[fit_mask], color=color, alpha=0.3)
 
-    plt.xlabel("t")
-    plt.ylabel(r"$\tilde{A}_0(t)$")
+    plt.xlabel("t", fontsize=16)
+    plt.ylabel(r"$\tilde{A}_0(t)$", fontsize=16)
     plt.ylim(0.09, 0.25)
+    #plt.ylim(0.2,0.6)
     plt.legend(frameon=False)
     plt.tight_layout()
-    plt.savefig(f'../Results/{ensemble}/{cmass}/Fit/'+outname, dpi=200)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=15, color='grey', alpha=.7)
+    plt.legend(fontsize=14)
+
+    plt.savefig(f'../Results/{ensemble}/{cmass}/Fit/'+outname, dpi=200, transparent=True)
     plt.show()
 
 

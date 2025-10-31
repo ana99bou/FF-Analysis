@@ -4,6 +4,7 @@ import pandas as pd
 import Ensemble as Ens
 import argparse
 
+'''
 parser = argparse.ArgumentParser()
 parser.add_argument('--ensemble', type=str, required=True)
 parser.add_argument('--particle', type=str, required=True)
@@ -16,6 +17,13 @@ Ensemble = args.ensemble
 particle = args.particle
 nsq = args.nsq
 cmass_index = args.cmass_index
+'''
+
+Ensemble = "C1"
+particle = "Ds"
+nsq=0
+cmass_index = 2
+
 
 cmass=Ens.getCmass(Ensemble)[cmass_index]
 inv=Ens.getInvSpac(Ensemble)
@@ -52,15 +60,20 @@ vecs=[[0,0,0],[1,0,0],[1,1,0],[1,1,1],[2,0,0],[2,1,0]]
 for i in range(num_files):
     disprel.append(calculate_value(1/inv,effective_mass[0],vecs[i],L))
 print(disprel)
-
-plt.errorbar(x_values, effective_mass, yerr=errors, fmt='o', capsize=5, label='Effective Mass')
-plt.scatter(x_values, disprel, label='Dispersion Relation', color='red')
-plt.xlabel(r'$n^2$')
-plt.ylabel(r'Effective Eenrgy $D_s^*$ F1S')
+disperr=[errors[0] for _ in range(num_files)]
+plt.errorbar(x_values, effective_mass, yerr=errors, fmt='o', capsize=5,color='green', label='Fit')
+plt.errorbar(x_values, disprel,yerr=disperr, label='Disp. Relation', color='crimson',fmt='^')
+plt.xlabel(r'$n^2$', fontsize=16)
+plt.ylabel(r'$E_{eff}$',fontsize=16)
 #plt.title('Effective Mass vs File Index')
 plt.legend()
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=15, color='grey', alpha=.7)
+plt.legend(fontsize=14)
 #plt.grid(True)
-plt.savefig('../Results/DispRel/Disprel-{}-{}-{}.pdf'.format(Ensemble,cmass,particle), bbox_inches='tight')
+plt.savefig('../Results/DispRel/Disprel-{}-{}-{}.pdf'.format(Ensemble,cmass,particle), bbox_inches='tight', transparent=True)
 
 # Compute physical squared momenta (p_k^2 in GeV^2)
 p_squared = []
@@ -107,8 +120,14 @@ plt.plot(pk2, lower_line, linestyle='--', color='navy', alpha=0.7)
 
 plt.axhline(1.0, color='black', linewidth=0.8)
 
-plt.xlabel(r'$p_k^2$ [GeV$^2$]')
-plt.ylabel(r'$E_k^2 / (p_k^2 + M^2)$')
+plt.xlabel(r'$p_k^2$ [GeV$^2$]',fontsize=16)
+plt.ylabel(r'$E_k^2 / (p_k^2 + M^2)$',fontsize=16)
 plt.legend()
+plt.tight_layout()
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=15, color='grey', alpha=.7)
+plt.legend(fontsize=14)
 plt.ylim(0.85, 1.15)
-plt.savefig('../Results/DispRel/Ratio-Disprel-{}-{}-{}.pdf'.format(Ensemble, cmass, particle), bbox_inches='tight')
+plt.savefig('../Results/DispRel/Ratio-Disprel-{}-{}-{}.pdf'.format(Ensemble, cmass, particle), bbox_inches='tight',transparent=True)
