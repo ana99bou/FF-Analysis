@@ -640,7 +640,7 @@ plt.figure(figsize=(8,6))
 
 # full effective mass data
 plt.errorbar(t_eff, eff_old, yerr=err_eff_old, fmt='o', color='red',
-             capsize=3, label="PT_SM")
+             capsize=3, label="SM_PT")
 plt.errorbar(t_eff, eff_new, yerr=err_eff_new, fmt='o', color='blue',
              capsize=3, label="SM_SM")
 

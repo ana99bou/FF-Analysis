@@ -27,7 +27,7 @@ frozen_analysis = bool(int(sys.argv[6]))
 '''
 
 
-FF='A1'
+FF='V'
 nsq=1
 cmass_index=2
 ensemble="C1"
@@ -46,8 +46,8 @@ elif ensemble in ['M1', 'M2', 'M3']:
     reg_up=20
     reg_low=5
 elif ensemble in ['C1', 'C2']:
-    reg_up=15
-    reg_low=13
+    reg_up=18
+    reg_low=7
 
 reg_up=reg_up+1
 
@@ -191,70 +191,6 @@ print(f"✅ Saved ratio data to {outdir}Excited-combined-{FF}-data.npz")
 
 
 ###############################################################################
-
-'''
-def build_Covarianz_allnsq(all_ratios, reg_up, reg_low, nconf):
-    # Make sure nsq order is consistent
-    nsq_list = sorted(all_ratios.keys())
-
-    # Extract and stack the fit windows for each nsq
-    data_blocks = []
-    for nsq in nsq_list:
-        # For each jackknife block, take the fit range time slices
-        # Shape (nconf, ntime_fit)
-        block = all_ratios[nsq][reg_low:reg_up, :nconf].T  # transpose so shape is (nconf, ntime)
-        data_blocks.append(block)
-
-    # Stack along time dimension → shape (nconf, total_points)
-    data_all = np.hstack(data_blocks)
-
-    # Compute mean over jackknife samples
-    mean_all = np.mean(data_all, axis=0)
-
-    # Covariance (jackknife normalization factor)
-    covmat = (nconf - 1) / nconf * np.dot(
-        (data_all - mean_all).T,
-        (data_all - mean_all)
-    )
-
-    return covmat, nsq_list
-'''
-
-'''
-def build_covariance_allnsq(all_ratios, reg_low, reg_up, nconf):
-    """
-    Build covariance matrix of all ratio data points used in the combined fit.
-    Shape: (ndata, ndata) where ndata = (reg_up - reg_low) * n_nsq
-    """
-    nsq_list = sorted(all_ratios.keys())
-
-    # collect jackknife samples for all nsq, stacked in time order
-    jk_samples = []
-    for i in range(nconf):  # jackknife index
-        vec = np.concatenate([
-            all_ratios[int(nsq)][reg_low:reg_up, i] for nsq in nsq_list
-        ])
-        jk_samples.append(vec)
-
-    jk_samples = np.array(jk_samples)  # shape (nconf, ndata)
-
-    # covariance of jackknife samples
-    # ddof=1 gives unbiased estimate for leave-one-out samples
-    cov = np.cov(jk_samples, rowvar=False, ddof=1)
-
-    # (no (nconf-1)/nconf factor! np.cov already handles normalization)
-    return cov, nsq_list
-
-
-
-covmat_all, nsq_order = build_covariance_allnsq(all_ratios, reg_up, reg_low, nconf)
-
-
-print("Combined covariance matrix shape:", covmat_all.shape)
-print("nsq order in combined fit:", nsq_order)
-'''
-
-
 decay_const_by_nsq = {}
 for nsq in nsq_values:
     path = f'../Data/{ensemble}/2pt/Excited-comb-Ds{cmass}Result-{int(nsq)}.csv'
@@ -461,11 +397,7 @@ def make_chi2_eq30(all_ratios, reg_low, reg_up, nsq_order, cov_inv,
 def model_eq30_with_errors(central, jk_params, tvals, nsq_order,
                            mDs_gs, mDs_es, mBs_gs, mBs_es,
                            Z0_Ds, Z1_Ds, Z0_Bs, Z1_Bs, T):
-    """
-    Evaluate Eq.(30) model and its jackknife uncertainty band at each t.
-    Returns:
-        mean_curve (array), err_curve (array)
-    """
+    
     nconf = len(jk_params)
     # Evaluate central curve
     mean_curve = model_eq30(central, tvals, nsq_order,
@@ -535,22 +467,7 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
         mBs_gs_jk.append(float(bs_blocks_gs[i]))
         mBs_es_jk.append(float(bs_blocks_es[i]))        
 
-    '''
-    # ---- data stacking for covariance (central/frozen) ----
-    jk_samples = np.array([
-        np.concatenate([
-            all_ratios[int(nsq)][reg_low:reg_up, i]
-            for nsq in nsq_order
-        ])
-        for i in range(nconf)
-    ])
-    if frozen:
-        cov = np.cov(jk_samples, rowvar=False, ddof=1)
-        cov_inv = np.linalg.inv(cov)
-    else:
-        cov_inv = None  # will rebuild inside loop
-    '''
-
+    
     jk_samples = np.array([
         np.concatenate([all_ratios[int(nsq)][reg_low:reg_up, i] for nsq in nsq_order])
         for i in range(nconf)
@@ -611,6 +528,7 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
         else:
             cov_inv_i = cov_inv
 
+        '''
         chi2_fun_i = make_chi2_eq30(
             {int(nsq): np.delete(all_ratios[int(nsq)], i, axis=1) for nsq in nsq_order},
             reg_low, reg_up, nsq_order,
@@ -625,6 +543,25 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
             Z0_Bs_jk[i], Z1_Bs_jk[i],
             T
         )
+        '''
+
+        chi2_fun_i = make_chi2_eq30(
+            {int(nsq): all_ratios[int(nsq)][:, i][:, None] for nsq in nsq_order},
+            reg_low, reg_up, nsq_order,
+            cov_inv_i,
+            mDs_gs_jk[i], mDs_es_jk[i],
+            mBs_gs_jk[i], mBs_es_jk[i],
+            #{nsq: np.mean(np.delete(Z0_Ds_blocks[nsq], i)) for nsq in nsq_order},  # ✅ scalar per nsq
+            #{nsq: np.mean(np.delete(Z1_Ds_blocks[nsq], i)) for nsq in nsq_order},
+            #np.mean(np.delete(Z0_Bs_blocks, i)),  # ✅ single float
+            #np.mean(np.delete(Z1_Bs_blocks, i)),
+            Z0_Ds_jk[i], Z1_Ds_jk[i],
+            Z0_Bs_jk[i], Z1_Bs_jk[i],
+            T
+        )
+
+        print(f"Jackknife {i}: np.mean(all_ratios[{nsq}]) = {np.mean(all_ratios[int(nsq)][:, i]):.5e}")
+
 
         mi = Minuit(chi2_fun_i, *p0)
         mi.migrad()
@@ -718,14 +655,6 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
             (mDs_gs_central, mDs_es_central, mBs_gs_central, mBs_es_central),
             mDs_gs_jk, mDs_es_jk, mBs_gs_jk, mBs_es_jk,
             Z0_Ds_jk, Z1_Ds_jk, Z0_Bs_jk, Z1_Bs_jk)
-
-'''
-central, errs, nsq_order, jk_params, masses_central = jackknife_fit(
-    all_ratios, reg_low, reg_up, nconf,
-    ds_blocks_gs, ds_blocks_es, bs_blocks_gs, bs_blocks_es,
-    frozen=True, T=dt   # <- 'ts' you already have from Ens.getEns(...)
-)
-'''
 
 (
     central, errs, nsq_order, jk_params,

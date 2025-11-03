@@ -183,6 +183,7 @@ def plot_all_t_eq30(
     plt.ylabel(r"$\tilde{V}(t)$", fontsize=16)
     #plt.ylim(0.09, 0.25)
     plt.ylim(0.2,0.6)
+    #plt.ylim(0.3,1.2)
     plt.legend(frameon=False)
     plt.tight_layout()
     plt.xticks(fontsize=14)
