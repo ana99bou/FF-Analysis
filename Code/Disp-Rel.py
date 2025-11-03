@@ -19,7 +19,7 @@ nsq = args.nsq
 cmass_index = args.cmass_index
 '''
 
-Ensemble = "C1"
+Ensemble = "M1"
 particle = "Ds"
 nsq=0
 cmass_index = 2
@@ -59,8 +59,8 @@ vecs=[[0,0,0],[1,0,0],[1,1,0],[1,1,1],[2,0,0],[2,1,0]]
 
 for i in range(num_files):
     disprel.append(calculate_value(1/inv,effective_mass[0],vecs[i],L))
-print(disprel)
 disperr=[errors[0] for _ in range(num_files)]
+'''
 plt.errorbar(x_values, effective_mass, yerr=errors, fmt='o', capsize=5,color='green', label='Fit')
 plt.errorbar(x_values, disprel,yerr=disperr, label='Disp. Relation', color='crimson',fmt='^')
 plt.xlabel(r'$n^2$', fontsize=16)
@@ -74,6 +74,7 @@ plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
 plt.legend(fontsize=14)
 #plt.grid(True)
 plt.savefig('../Results/DispRel/Disprel-{}-{}-{}.pdf'.format(Ensemble,cmass,particle), bbox_inches='tight', transparent=True)
+'''
 
 # Compute physical squared momenta (p_k^2 in GeV^2)
 p_squared = []
@@ -85,15 +86,18 @@ for vec in vecs:
         p2 += (2*np.pi / (a* L))**2 * (vec[i]**2)
     p_squared.append(p2)
 
-print(p_squared)
 #Faktore vier
 
 # Normalize the dispersion relation values
 normalized_disp = [(inv**2*effective_mass[i]**2 / (inv**2*disprel[0]**2+p_squared[i])) for i in  range(len(disprel))]
+tmp_disp=[((np.sqrt(disprel[0]**2+1/inv**2*p_squared[i]))) for i in  range(len(disprel))]
+tmp_disp_err=[((1/np.sqrt(disprel[0]**2+1/inv**2*p_squared[i])*errors[0])) for i in  range(len(disprel))]
 print(disprel)
 print(disprel[0])
 print(p_squared)
+print(tmp_disp)
 print(normalized_disp)
+
 
 # Dashed lines: 1 ± a * p^2 / 4
 pk2 = np.array(p_squared)
@@ -131,3 +135,22 @@ plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
 plt.legend(fontsize=14)
 plt.ylim(0.85, 1.15)
 plt.savefig('../Results/DispRel/Ratio-Disprel-{}-{}-{}.pdf'.format(Ensemble, cmass, particle), bbox_inches='tight',transparent=True)
+
+
+#######################
+
+plt.figure()
+plt.errorbar(x_values, effective_mass, yerr=errors, fmt='o', capsize=5,color='green', label='Fit')
+plt.errorbar(x_values, disprel,yerr=disperr, label='Latt. Disp. Relation', color='crimson',fmt='^')
+plt.errorbar(x_values, tmp_disp,yerr=tmp_disp_err, label='Cont. Disp. Relation', color='navy',fmt='s')
+plt.xlabel(r'$n^2$', fontsize=16)
+plt.ylabel(r'$E_{eff}$',fontsize=16)
+#plt.title('Effective Mass vs File Index')
+plt.legend()
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=15, color='grey', alpha=.7)
+plt.legend(fontsize=14)
+#plt.grid(True)
+plt.savefig('../Results/DispRel/Disprel-{}-{}-{}.pdf'.format(Ensemble,cmass,particle), bbox_inches='tight', transparent=True)
