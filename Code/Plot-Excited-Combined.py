@@ -10,9 +10,9 @@ from pathlib import Path
 from FitModel import model_eq30  # importiere deine Modellfunktion
 
 # --- Configuration ---
-ensemble = "C1"
-cmass = '0.400'
-FF = "V"
+ensemble = "M1"
+cmass = '0.340'
+FF = "A0"
 
 fit_file = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}.csv"
 out_plot = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}-Plot.pdf"
@@ -180,22 +180,21 @@ def plot_all_t_eq30(
                          mean[fit_mask]+err[fit_mask], color=color, alpha=0.3)
 
 
-        # --- horizontal O00 line with error band ---
+        # --- short O00 line at t=0 with local error band ---
         y0 = float(O00[i])
         dy = float(dO00[i])
-        plt.axhline(y0, color=color, linestyle='--', alpha=0.8)
-        plt.fill_between(
-            t_all,
-            y0 - dy,
-            y0 + dy,
-            color=color,
-            alpha=0.2
-        )
+        x0, x1 = 0, 1  # draw short segment starting right at t=0
+        plt.plot([x0, x1], [y0, y0], color=color, linestyle='--', linewidth=2)
+        plt.fill_between([x0, x1], [y0 - dy, y0 - dy], [y0 + dy, y0 + dy],
+                         color=color, alpha=0.25)
+
 
     plt.xlabel("t", fontsize=16)
+    plt.xticks(np.arange(0, int(max(t_all)) + 1, 5))  # force integer x-ticks
+    
     plt.ylabel(r"$\tilde{V}(t)$", fontsize=16)
-    #plt.ylim(0.09, 0.25)
-    plt.ylim(0.2,0.6)
+    #plt.ylim(0.05, 0.3)
+    #plt.ylim(0.2,0.8)
     #plt.ylim(0.3,1.2)
     plt.legend(frameon=False)
     plt.tight_layout()
@@ -204,6 +203,7 @@ def plot_all_t_eq30(
     plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
              fontsize=15, color='grey', alpha=.7)
     plt.legend(fontsize=14)
+    plt.xlim(0, max(t_all) + 0.5)
 
     plt.savefig(f'../Results/{ensemble}/{cmass}/Fit/'+outname, dpi=200, transparent=True)
     plt.show()

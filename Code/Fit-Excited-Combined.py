@@ -17,23 +17,23 @@ from scipy.stats import chi2 as chi2_dist
 import os
  
 #########Choose Params
-'''
+
 FF = sys.argv[1]
 #nsq = int(sys.argv[2])
 cmass_index = int(sys.argv[3])
 ensemble = sys.argv[4]
 use_disp=bool(int(sys.argv[5]))
 frozen_analysis = bool(int(sys.argv[6]))
+
+
 '''
-
-
 FF='V'
 nsq=1
 cmass_index=2
-ensemble="C1"
+ensemble="M1"
 use_disp=True
 frozen=True
-
+'''
 
 #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 cmass=Ens.getCmass(ensemble)[cmass_index]
@@ -528,40 +528,17 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
         else:
             cov_inv_i = cov_inv
 
-        '''
-        chi2_fun_i = make_chi2_eq30(
-            {int(nsq): np.delete(all_ratios[int(nsq)], i, axis=1) for nsq in nsq_order},
-            reg_low, reg_up, nsq_order,
-            cov_inv_i,
-            mDs_gs_jk[i], mDs_es_jk[i],
-            mBs_gs_jk[i], mBs_es_jk[i],
-            #{nsq: np.mean(np.delete(Z0_Ds_blocks[nsq], i)) for nsq in nsq_order},  # ✅ scalar per nsq
-            #{nsq: np.mean(np.delete(Z1_Ds_blocks[nsq], i)) for nsq in nsq_order},
-            #np.mean(np.delete(Z0_Bs_blocks, i)),  # ✅ single float
-            #np.mean(np.delete(Z1_Bs_blocks, i)),
-            Z0_Ds_jk[i], Z1_Ds_jk[i],
-            Z0_Bs_jk[i], Z1_Bs_jk[i],
-            T
-        )
-        '''
-
+       
         chi2_fun_i = make_chi2_eq30(
             {int(nsq): all_ratios[int(nsq)][:, i][:, None] for nsq in nsq_order},
             reg_low, reg_up, nsq_order,
             cov_inv_i,
             mDs_gs_jk[i], mDs_es_jk[i],
             mBs_gs_jk[i], mBs_es_jk[i],
-            #{nsq: np.mean(np.delete(Z0_Ds_blocks[nsq], i)) for nsq in nsq_order},  # ✅ scalar per nsq
-            #{nsq: np.mean(np.delete(Z1_Ds_blocks[nsq], i)) for nsq in nsq_order},
-            #np.mean(np.delete(Z0_Bs_blocks, i)),  # ✅ single float
-            #np.mean(np.delete(Z1_Bs_blocks, i)),
             Z0_Ds_jk[i], Z1_Ds_jk[i],
             Z0_Bs_jk[i], Z1_Bs_jk[i],
             T
         )
-
-        print(f"Jackknife {i}: np.mean(all_ratios[{nsq}]) = {np.mean(all_ratios[int(nsq)][:, i]):.5e}")
-
 
         mi = Minuit(chi2_fun_i, *p0)
         mi.migrad()
