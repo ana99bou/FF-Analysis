@@ -179,6 +179,19 @@ def plot_all_t_eq30(
         plt.fill_between(t_all[fit_mask], mean[fit_mask]-err[fit_mask],
                          mean[fit_mask]+err[fit_mask], color=color, alpha=0.3)
 
+
+        # --- horizontal O00 line with error band ---
+        y0 = float(O00[i])
+        dy = float(dO00[i])
+        plt.axhline(y0, color=color, linestyle='--', alpha=0.8)
+        plt.fill_between(
+            t_all,
+            y0 - dy,
+            y0 + dy,
+            color=color,
+            alpha=0.2
+        )
+
     plt.xlabel("t", fontsize=16)
     plt.ylabel(r"$\tilde{V}(t)$", fontsize=16)
     #plt.ylim(0.09, 0.25)
