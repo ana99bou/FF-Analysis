@@ -51,17 +51,20 @@ nsq_fit = {i: pd.read_csv(f'Fits/V/V-Av-nsq{i}-Fit-Disp-new.csv', sep='\s') for 
 plt.figure(figsize=(8,6))
 plt.xlabel('t', fontsize=15)
 plt.ylabel(r'$\widetilde{V}(t)$', fontsize=15)
+plt.xticks(np.arange(0, int(20) + 1, 5))  # force integer x-ticks
+    
 
 # Normale Daten
 for i in nsq:
-    plt.errorbar(range(1, 20), nsq[i][0][1:20], yerr=nsq[i][1][1:20],
+    t_all=np.arange(21)
+    plt.errorbar(t_all, nsq[i][0][0:21], yerr=nsq[i][1][0:21],
                  ls='none', fmt='x', label=fr'$n^2={i}$', color= colors[i-1 % len(colors)])
     
     fit = nsq_fit[i]
     eff, sigma = fit['EffectiveMass'], fit['Error']
     reg_low, reg_up = int(fit['RegLow']), int(fit['RegUp'])
 
-    plt.plot([0, 20], [eff, eff], color=colors[i-1 % len(colors)], linewidth=0.5)
+    plt.plot([reg_low, reg_up], [eff, eff], color=colors[i-1 % len(colors)], linewidth=0.5)
     plt.fill_between(range(47)[reg_low:reg_up+1], eff + sigma, eff - sigma,
                      color= colors[i-1 % len(colors)], alpha=0.2)
 
@@ -81,7 +84,7 @@ for i in nsq_disp:
 '''
 plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
              fontsize=15, color='grey', alpha=.7)
-
+plt.ylim(0.1,0.5)
 plt.tick_params(axis='both', which='major', labelsize=14)
 plt.legend(fontsize=10, ncol=2, markerscale=0.8)
 plt.savefig('Niceplot-V-new.png', transparent=True, dpi=200, bbox_inches='tight')
