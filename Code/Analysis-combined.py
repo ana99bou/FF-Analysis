@@ -393,7 +393,7 @@ def plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params):
         t_fit = np.arange(reg_low, reg_up)
 
         plt.plot(t_fit, np.full_like(t_fit, fit_central, dtype=float),
-         '-', color=colors[i % len(colors)], label=f'fit nsq={nsq}')
+         '-', color=colors[i % len(colors)])
 
         plt.fill_between(
         t_fit,
@@ -412,7 +412,7 @@ def plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params):
     #plt.xlabel("t")
     #plt.ylabel("Ratio")
     plt.xlabel('t', fontsize=15)
-    plt.ylabel(r'$\widetilde{V}$', fontsize=15)
+    plt.ylabel(r'$\widetilde{V}(t)$', fontsize=15)
     #plt.title("Global fit with per-nsq decay constants")
     plt.legend()
     plt.ylim(0.1,0.5)
