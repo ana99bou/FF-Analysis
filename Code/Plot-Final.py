@@ -109,8 +109,8 @@ marker_styles = {
 base_colors = {
     "C": plt.cm.Reds,
     "M": plt.cm.Blues}
-bright_pinks = ["#e91e63", "#f06292", "#f48fb1"] 
-
+#bright_pinks = ["#e91e63", "#f06292", "#f48fb1"] 
+bright_pinks = ["#43A047", "#66BB6A", "#9CCC65"]
 
 def get_rho_prefix(ens):
     if ens.startswith("C"):
@@ -158,7 +158,10 @@ for ens, masses in ens_masses.items():
         
         prefactor = rho_val * np.sqrt(zacc_val * zvbb_val)
         
-        filepath = f"../Results/Crosschecks/AB/Crosscheck-{ens}-{m}.csv"
+        if ens == 'F1S':
+            filepath = f"../Results/Crosschecks/AB/Crosscheck-{ens}-{m}.csv"
+        else:
+            filepath = f"../Results/Crosschecks/AB/Crosscheck-excited-{ens}-{m}-3pt.csv"    
         if not os.path.exists(filepath):
             print(f"File not found: {filepath}")
             continue
@@ -217,6 +220,7 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig('V-FPlot.png',transparent=True,dpi=200,bbox_inches='tight')
 
+'''
 # === Neuer Plot für A_0 ===
 plt.figure(figsize=(12, 8))
 
@@ -382,3 +386,4 @@ plt.ylabel(r"$A_1$")
 plt.grid(True)
 plt.tight_layout()
 plt.savefig('A1-FPlot.pdf')
+''' 
