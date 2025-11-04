@@ -48,9 +48,9 @@ nsq = {i: pd.read_csv(f'Ratios/V/V-nsq{i}-Disp-new.txt', sep=' ', header=None) f
 #nsq_fit = {i: pd.read_csv(f'Fits/V/V-Av-nsq{i}-Fit-new.csv', sep='\s') for i in base_colors}
 nsq_fit = {i: pd.read_csv(f'Fits/V/V-Av-nsq{i}-Fit-Disp-new.csv', sep='\s') for i in disp_colors}
 
-plt.figure(figsize=(6, 4))
+plt.figure(figsize=(8,6))
 plt.xlabel('t', fontsize=15)
-plt.ylabel(r'$\widetilde{V}$', fontsize=15)
+plt.ylabel(r'$\widetilde{V}(t)$', fontsize=15)
 
 # Normale Daten
 for i in nsq:
@@ -61,7 +61,7 @@ for i in nsq:
     eff, sigma = fit['EffectiveMass'], fit['Error']
     reg_low, reg_up = int(fit['RegLow']), int(fit['RegUp'])
 
-    plt.plot([-1, 22], [eff, eff], color=colors[i-1 % len(colors)], linewidth=0.5)
+    plt.plot([0, 20], [eff, eff], color=colors[i-1 % len(colors)], linewidth=0.5)
     plt.fill_between(range(47)[reg_low:reg_up+1], eff + sigma, eff - sigma,
                      color= colors[i-1 % len(colors)], alpha=0.2)
 

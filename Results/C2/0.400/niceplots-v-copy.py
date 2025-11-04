@@ -50,7 +50,7 @@ nsq_disp_fit = {i: pd.read_csv(f'Fits/V/V-Av-nsq{i}-Fit-Disp.csv', sep='\s') for
 
 plt.figure(figsize=(6, 4))
 plt.xlabel('Time', fontsize=15)
-plt.ylabel(r'$\widetilde{V}$', fontsize=15)
+plt.ylabel(r'$\widetilde{V}$(t)', fontsize=15)
 
 # Normale Daten
 for i in nsq:
