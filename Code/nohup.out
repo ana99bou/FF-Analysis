@@ -1,0 +1,25 @@
+Running for FF=A0, cmass_index=1, ensemble=C1, use_disp=1, frozen_analysis=1
+Fit-Excited-Combined.sh: line 23: python: command not found
+Running for FF=V, cmass_index=1, ensemble=C1, use_disp=1, frozen_analysis=1
+Fit-Excited-Combined.sh: line 23: python: command not found
+Running for FF=A0, cmass_index=1, ensemble=C1, use_disp=1, frozen_analysis=1
+Traceback (most recent call last):
+  File "/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Fit-Excited-Combined.py", line 15, in <module>
+    from iminuit import Minuit
+ModuleNotFoundError: No module named 'iminuit'
+Running for FF=V, cmass_index=1, ensemble=C1, use_disp=1, frozen_analysis=1
+Traceback (most recent call last):
+  File "/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Fit-Excited-Combined.py", line 15, in <module>
+    from iminuit import Minuit
+ModuleNotFoundError: No module named 'iminuit'
+Running for FF=A0, cmass_index=1, ensemble=C1, use_disp=1, frozen_analysis=1
+Processing nsq = 1 ...
+Traceback (most recent call last):
+  File "/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Fit-Excited-Combined.py", line 169, in <module>
+    jbb   = Jackblocks.create_blocks_2pt(avb, dt, nconf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Jackblocks.py", line 40, in create_blocks_2pt
+    res[t,i]=jack(dat[t],i)
+             ^^^^^^^^^^^^^^
+  File "/scratch/boushmelev/BsDsStar/FF-Analysis/Code/Jackblocks.py", line -1, in jack
+KeyboardInterrupt

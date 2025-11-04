@@ -14,7 +14,7 @@ import scipy
 import sys
  
 #########Choose Params
-
+'''
 FF = sys.argv[1]
 nsq = int(sys.argv[2])
 cmass_index = int(sys.argv[3])
@@ -25,11 +25,11 @@ frozen_analysis = bool(int(sys.argv[6]))
 print(use_disp)
 '''
 FF='V'
-nsq=1
-cmass_index=0
-ensemble='F1S'
+nsq=5
+cmass_index=2
+ensemble='C1'
 use_disp=True
-'''
+
 
 #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 cmass=Ens.getCmass(ensemble)[cmass_index]
@@ -42,8 +42,8 @@ elif ensemble in ['M1', 'M2', 'M3']:
     reg_up=22
     reg_low=18
 elif ensemble in ['C1', 'C2']:
-    reg_up=16
-    reg_low=12
+    reg_up=14#16
+    reg_low=9#12
 
 reg_up=reg_up+1
 
@@ -189,16 +189,16 @@ plt.ylabel(rf'$\widetilde{{{FF}}}$')
 plt.errorbar(list(range(dt)), np.absolute(avn0)[0:dt], yerr=errn0[0:dt],ls='none',fmt='x',label='nsq={}'.format(nsq))
 plt.legend()
 
-'''
+
 if use_disp:
-    plt.savefig('../Results/{}/{}/Ratios/{}/{}-nsq{}-Disp.png'.format(ensemble,cmass,FF,FF,nsq))
-    np.savetxt('../Results/{}/{}/Ratios/{}/{}-nsq{}-Disp.txt'.format(ensemble,cmass,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
-    np.save('../Results/{}/{}/Ratios/{}/Jackknife/nsq{}-Disp.npy'.format(ensemble,cmass,FF,nsq), ratiojack)
+    plt.savefig('../Results/{}/{}/Ratios/{}/{}-nsq{}-Disp-new.png'.format(ensemble,cmass,FF,FF,nsq))
+    np.savetxt('../Results/{}/{}/Ratios/{}/{}-nsq{}-Disp-new.txt'.format(ensemble,cmass,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
+    np.save('../Results/{}/{}/Ratios/{}/Jackknife/nsq{}-Disp-new.npy'.format(ensemble,cmass,FF,nsq), ratiojack)
 else:
-    plt.savefig('../Results/{}/{}/Ratios/{}/{}-nsq{}.png'.format(ensemble,cmass,FF,FF,nsq))
-    np.savetxt('../Results/{}/{}/Ratios/{}/{}-nsq{}.txt'.format(ensemble,cmass,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
-    np.save('../Results/{}/{}/Ratios/{}/Jackknife/nsq{}.npy'.format(ensemble,cmass,FF,nsq), ratiojack)
-'''
+    plt.savefig('../Results/{}/{}/Ratios/{}/{}-nsq{}-new.png'.format(ensemble,cmass,FF,FF,nsq))
+    np.savetxt('../Results/{}/{}/Ratios/{}/{}-nsq{}-new.txt'.format(ensemble,cmass,FF,FF,nsq), np.c_[np.absolute(avn0), errn0])
+    np.save('../Results/{}/{}/Ratios/{}/Jackknife/nsq{}-new.npy'.format(ensemble,cmass,FF,nsq), ratiojack)
+
 
 ###############################################################################
 
@@ -291,13 +291,13 @@ else:
     #df4['pval']=pval
     df4 = pd.DataFrame({'pval': [pval]})
 
-'''
+
 if use_disp:
-    plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-Disp.png'.format(ensemble,cmass,FF,FF,nsq))
-    df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-Disp.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
-    df4.to_csv('../Results/{}/{}/Fits/{}/pval-{}-nsq{}-Disp.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
+    plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-Disp-new.png'.format(ensemble,cmass,FF,FF,nsq))
+    df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-Disp-new.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
+    df4.to_csv('../Results/{}/{}/Fits/{}/pval-{}-nsq{}-Disp-new.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
 else:
-    plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.png'.format(ensemble,cmass,FF,FF,nsq))
-    df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
-    df4.to_csv('../Results/{}/{}/Fits/{}/pval-{}-nsq{}.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
-'''
+    plt.savefig('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-new.png'.format(ensemble,cmass,FF,FF,nsq))
+    df3.to_csv('../Results/{}/{}/Fits/{}/{}-Av-nsq{}-Fit-new.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
+    df4.to_csv('../Results/{}/{}/Fits/{}/pval-{}-nsq{}-new.csv'.format(ensemble,cmass,FF,FF,nsq), sep='\t')
+

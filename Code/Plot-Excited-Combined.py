@@ -10,9 +10,9 @@ from pathlib import Path
 from FitModel import model_eq30  # importiere deine Modellfunktion
 
 # --- Configuration ---
-ensemble = "M1"
-cmass = '0.340'
-FF = "A0"
+ensemble = "C2"
+cmass = '0.400'
+FF = "V"
 
 fit_file = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}.csv"
 out_plot = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}-Plot.pdf"

@@ -28,7 +28,7 @@ frozen_analysis = bool(int(sys.argv[6]))
 
 FF='V'
 nsq=1
-cmass_index=1
+cmass_index=2
 ensemble="C1"
 use_disp=True
 frozen=True
@@ -45,8 +45,8 @@ elif ensemble in ['M1', 'M2', 'M3']:
     reg_up=15
     reg_low=7
 elif ensemble in ['C1', 'C2']:
-    reg_up=18
-    reg_low=4
+    reg_up=14
+    reg_low=9
 
 reg_up=reg_up+1
 
@@ -235,177 +235,107 @@ print("nsq order in combined fit:", nsq_order)
 
 
 
-decay_const_by_nsq = {}
-for nsq in nsq_values:
-    path = f'../Data/{ensemble}/2pt/Excited-comb-Ds{cmass}Result-{int(nsq)}.csv'
-    val = float(pd.read_csv(path, sep='\t', index_col=0).loc[0, 'DeltaM'])
-    decay_const_by_nsq[int(nsq)] = val
+# --- after you build covmat_all ---
+# Use a robust inverse for possibly ill-conditioned covariances
+cov_inv_all = np.linalg.pinv(covmat_all)  # or np.linalg.inv if you’re sure
 
-lam_blocks = {}
-for nsq in nsq_values:
-    path = f'../Data/{ensemble}/2pt/Excited-comb-Blocks-Ds{cmass}-{int(nsq)}.csv'
-    df = pd.read_csv(path)   # no sep/index_col needed now
-    arr = df["dm"].to_numpy().flatten()
-    lam_blocks[int(nsq)] = arr  # store per nsq
-
-#print(lam_blocks)
-
-
-def model(params, tvals, nsq_order, lam_by_nsq):
+def model(params, tvals, nsq_order):
+    """
+    Trivial constant model per nsq: for each nsq, return a vector of length len(tvals)
+    filled with its own constant A[i], then stack all nsq blocks.
+    """
     nsq_order = [int(x) for x in nsq_order]
     n = len(nsq_order)
-    A = params[:n]
-    B = params[n:2*n]
+    A = np.asarray(params[:n], dtype=float)  # A[0], ..., A[n-1]
 
-    out = []
-    for i, nsq in enumerate(nsq_order):
-        lam = float(lam_by_nsq[int(nsq)])  # ensure pure float
-        out.append(A[i] + B[i] * np.exp(-lam * tvals))
-    return np.concatenate(out)
+    # one constant block per nsq, each of length len(tvals)
+    blocks = [np.full(len(tvals), A[i], dtype=float) for i in range(n)]
+    return np.concatenate(blocks)
 
-def chi2(params, all_ratios, reg_low, reg_up, nsq_order, cov_inv, lam_by_nsq):
-    t_fit = np.arange(reg_low, reg_up)
-    # stack data in the same order as model’s concatenation
-    #data = np.concatenate([
-    #    np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)
-    #    for nsq in nsq_order
-    #])
-    data = np.concatenate([
-    all_ratios[int(nsq)][reg_low:reg_up, -1]   # last column = central value
-    for nsq in nsq_order
-    ])
-    diff = data - model(params, t_fit, nsq_order, lam_by_nsq)
-    return diff @ cov_inv @ diff
-
-def make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv, lam_by_nsq):
+def make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv):
     def chi2_minuit(*params):
         t_fit = np.arange(reg_low, reg_up)
+        # central data vector: mean over jackknife columns for each time slice
         data = np.concatenate([
             np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)
             for nsq in nsq_order
         ])
-        diff = data - model(params, t_fit, nsq_order, lam_by_nsq)
+        diff = data - model(params, t_fit, nsq_order)
+        # quadratic form with inverse covariance
         return float(diff @ cov_inv @ diff)
     return chi2_minuit
 
-
-
-
-def jackknife_fit(all_ratios, reg_low, reg_up, nconf, lam_blocks, frozen=True):
+def jackknife_fit(all_ratios, reg_low, reg_up, nconf, frozen=True):
     nsq_order = sorted(all_ratios.keys())
     nsq_order = [int(x) for x in nsq_order]
     n = len(nsq_order)
 
-    # --- central λ dict from all configs ---
-    lam_central = {nsq: np.mean(lam_blocks[nsq]) for nsq in nsq_order}
-
-    # --- jackknife λ dicts ---
-    lam_jk_dicts = []
-    for i in range(nconf):
-        lam_jk_dicts.append({nsq: np.mean(np.delete(lam_blocks[nsq], i)) for nsq in nsq_order})
-
-    # --- build jackknife samples of ratios (like before) ---
+    # Build jackknife samples by taking column i (leave-one-out not required for the central definition you use)
     jk_samples = np.array([
-    np.concatenate([
-        all_ratios[int(nsq)][reg_low:reg_up, i]    # <-- TAKE COLUMN i, don't average
-        for nsq in nsq_order
+        np.concatenate([
+            all_ratios[int(nsq)][reg_low:reg_up, i]
+            for nsq in nsq_order
+        ])
+        for i in range(nconf)
     ])
-    for i in range(nconf)
-    ])
 
-    #jk_samples = []
-    #for i in range(nconf):
-    #    jk_samples.append(np.concatenate([
-    #        np.mean(np.delete(all_ratios[int(nsq)], i, axis=1)[reg_low:reg_up, :], axis=1)
-    #        for nsq in nsq_order
-    #    ]))
-    jk_samples = np.array(jk_samples)
+    # use the precomputed inverse covariance
+    cov_inv = cov_inv_all
 
-
-    cov_inv=covmat_all
-
-
-    # initial guess
+    # initial guess: time-avg of the central (mean over jk columns) for each nsq
     A0 = [np.mean(np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)) for nsq in nsq_order]
-    print(lam_central[int(nsq)])
-    print(all_ratios[int(nsq)][reg_low])
-    B0 = [(np.mean(all_ratios[int(nsq)][reg_low])-np.mean(np.mean(all_ratios[int(nsq)][reg_low:reg_up, :], axis=1)))*np.exp(float(lam_central[int(nsq)])*reg_low) for nsq in nsq_order]
-    p0 = A0 + B0
-
+    p0 = A0
     print("Initial guess:", p0)
 
     # --- central fit ---
-    chi2_fun = make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv, lam_central)
-    m = Minuit(chi2_fun, *p0)  # only fit parameters go here
-    m.tol = 1e-16/0.002 
-    
-    for i in range(5, 10):
-        m.limits[i] = (None, 0.0) 
-    
+    chi2_fun = make_chi2(all_ratios, reg_low, reg_up, nsq_order, cov_inv)
+    m = Minuit(chi2_fun, *p0)
+    # m.tol can stay default; if you keep it, avoid extreme values
     m.migrad()
 
-    #ndof = (reg_up - reg_low + 1) - m.nfit
     ndata = len(np.arange(reg_low, reg_up)) * len(nsq_order)
     ndof  = ndata - m.nfit
-
-    chi2 = m.fval
+    chi2  = m.fval
     chi2_dof = chi2 / ndof
     p_value = 1 - chi2_dist.cdf(chi2, df=ndof)
-    print('chi^2',chi2,"p-value", p_value)       
-
+    print('chi^2', chi2, "p-value", p_value)
     print(chi2, ndof, chi2_dof)
 
     central = np.array(list(m.values))
-    p0_central = central.tolist()
-
-    print("Central fit params:", central)
-
-
-
 
     # --- jackknife fits ---
     jk_params = []
     for i in range(nconf):
         if not frozen:
-            sub_jk = []
-            for j in range(nconf):
-                if j == i:
-                    continue
-                sub_jk.append(np.concatenate([
-                    np.mean(np.delete(np.delete(all_ratios[int(nsq)], i, axis=1), j, axis=1)[reg_low:reg_up, :], axis=1)
-                    for nsq in nsq_order
-                ]))
-            cov_i = np.cov(np.array(sub_jk), rowvar=False, ddof=1)
-            cov_inv_i = np.linalg.inv(cov_i)
+            # recompute covariance without sample i (optional path)
+            sub = np.delete(jk_samples, i, axis=0)
+            cov_i = np.cov(sub, rowvar=False, ddof=1)
+            cov_inv_i = np.linalg.pinv(cov_i)
         else:
             cov_inv_i = cov_inv
 
-        chi2_fun_i = make_chi2(
-            {int(nsq): np.delete(all_ratios[int(nsq)], i, axis=1) for nsq in nsq_order},
-            reg_low, reg_up, nsq_order, cov_inv_i, lam_jk_dicts[i]
-        )
-        m = Minuit(chi2_fun_i, *p0)
-        #m = Minuit(chi2_fun_i, *p0_central)
-        m.migrad()
-        jk_params.append(np.array(list(m.values)))
+        # remove column i from each nsq’s matrix for the data used inside chi2
+        #reduced = {int(nsq): np.delete(all_ratios[int(nsq)], i, axis=1) for nsq in nsq_order}
+        reduced={int(nsq): all_ratios[int(nsq)][:, i][:, None] for nsq in nsq_order}
+        chi2_fun_i = make_chi2(reduced, reg_low, reg_up, nsq_order, cov_inv_i)
 
+        m_i = Minuit(chi2_fun_i, *p0)   # or use central as start: *central.tolist()
+        m_i.migrad()
+        jk_params.append(np.array(list(m_i.values)))
 
+    jk_params = np.array(jk_params)
+    # jackknife error around the central estimate
+    errs = np.sqrt((nconf - 1) * np.mean((jk_params - central) ** 2, axis=0))
 
-    #jk_params = np.array(jk_params)
-    jk_params = np.array(jk_params)          # convert list -> array
-    jk_mean   = jk_params.mean(axis=0)
-    #errs = np.sqrt((nconf - 1) * np.mean((jk_params - jk_mean) ** 2, axis=0))   
-    errs = np.sqrt((nconf - 1) * np.mean((jk_params - central) ** 2, axis=0))   
-
-    #errs = np.sqrt(((nconf - 1) / nconf) * np.mean((jk_params - central) ** 2, axis=0))
+    lam_central = None  # keep signature compatible for now
     return central, errs, nsq_order, jk_params, lam_central
+
 
 def plot_all_t(all_ratios, nconf, nsq_order, central):
     plt.figure(figsize=(8,6))
     colors = plt.cm.tab10.colors
     n_nsq = len(nsq_order)
     A_vals = central[:n_nsq]
-    B_vals = central[n_nsq:2*n_nsq]
 
     for i, nsq in enumerate(nsq_order):
         nt = all_ratios[nsq].shape[0]
@@ -418,28 +348,26 @@ def plot_all_t(all_ratios, nconf, nsq_order, central):
                      color=colors[i % len(colors)], label=f'nsq={nsq}')
 
         # fit curve
-        fit_curve = A_vals[i] + B_vals[i] * np.exp(-decay_consts[nsq] * t_all)
+        fit_curve = A_vals[i] 
         plt.plot(t_all, fit_curve, '-', color=colors[i % len(colors)])
 
     plt.xlabel("t")
     plt.ylabel("Ratio")
-    plt.title(f"Global fit: A_i + B_i * exp(-{decay_consts} * t)")
+    #lt.title(f"Global fit: A_i)")
     plt.legend()
     plt.tight_layout()
     plt.savefig('Test-Combined-new.png')
 
-def plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params, lam_by_nsq):
+def plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params):
     plt.figure(figsize=(8,6))
     colors = plt.cm.tab10.colors
     nsq_order = [int(x) for x in nsq_order]
     n = len(nsq_order)
 
     A_c = central[:n]
-    B_c = central[n:2*n]
 
     jk_params = np.array(jk_params)
     A_jk = jk_params[:, :n]
-    B_jk = jk_params[:, n:2*n]
 
     for i, nsq in enumerate(nsq_order):
         nt = all_ratios[int(nsq)].shape[0]
@@ -450,55 +378,64 @@ def plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params, lam_
         plt.errorbar(t_all, data_mean, yerr=data_err, fmt='x',
                      color=colors[i % len(colors)], label=f'nsq={nsq}')
 
-        lam = float(lam_by_nsq[int(nsq)])
-        fit_central = A_c[i] + B_c[i] * np.exp(-lam * t_all)
+
+        fit_central = A_c[i] 
 
         fit_jk_vals = []
         for k in range(nconf):
             A_k = A_jk[k, i]
-            B_k = B_jk[k, i]
-            fit_jk_vals.append(A_k + B_k * np.exp(-lam * t_all))
+            fit_jk_vals.append(A_k)
         fit_jk_vals = np.array(fit_jk_vals)
 
         fit_mean = np.mean(fit_jk_vals, axis=0)
         fit_err = np.sqrt((nconf - 1) * np.mean((fit_jk_vals - fit_mean)**2, axis=0))
 
-        plt.plot(t_all, fit_central, '-', color=colors[i % len(colors)])
-        plt.fill_between(t_all, fit_mean - fit_err, fit_mean + fit_err,
-                         color=colors[i % len(colors)], alpha=0.3)
+        t_fit = np.arange(reg_low, reg_up)
 
-    plt.xlabel("t")
-    plt.ylabel("Ratio")
-    plt.title("Global fit with per-nsq decay constants")
+        plt.plot(t_fit, np.full_like(t_fit, fit_central, dtype=float),
+         '-', color=colors[i % len(colors)], label=f'fit nsq={nsq}')
+
+        plt.fill_between(
+        t_fit,
+        np.full_like(t_fit, fit_mean - fit_err, dtype=float),
+        np.full_like(t_fit, fit_mean + fit_err, dtype=float),
+        color=colors[i % len(colors)], alpha=0.2
+        )
+
+
+        #plt.plot(t_all, fit_central, '-', color=colors[i % len(colors)])
+        #plt.plot(t_all, np.full_like(t_all, fit_central, dtype=float), '-', color=colors[i % len(colors)])
+
+        #plt.fill_between(t_all, fit_mean - fit_err, fit_mean + fit_err,
+        #                 color=colors[i % len(colors)], alpha=0.3)
+
+    #plt.xlabel("t")
+    #plt.ylabel("Ratio")
+    plt.xlabel('t', fontsize=15)
+    plt.ylabel(r'$\widetilde{V}$', fontsize=15)
+    #plt.title("Global fit with per-nsq decay constants")
     plt.legend()
+    plt.ylim(0.1,0.5)
+    plt.xticks(np.arange(0, int(max(t_all)) + 1, 5))  # force integer x-ticks
+    
     plt.tight_layout()
-    plt.savefig('Test-Combined-with-per-nsq-decays.png')
+    plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=15, color='grey', alpha=.7)
+
+    plt.tick_params(axis='both', which='major', labelsize=14)
+    plt.legend(fontsize=10, ncol=2, markerscale=0.8)
+    plt.savefig('Test-Combined-with-per-nsq-decays.png',transparent=True, dpi=200)
 
 
 
 
 central, errs, nsq_order, jk_params, lam_central = jackknife_fit(
-    all_ratios, reg_low, reg_up, nconf, lam_blocks=lam_blocks, frozen=True
+    all_ratios, reg_low, reg_up, nconf, frozen=True
 )
 print(central)
 print(errs)
 #plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params, lam_by_nsq=decay_const_by_nsq)
-plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params, lam_by_nsq=lam_central)
-
-# Evaluate chi^2 at the central fit
-# Rebuild cov_inv exactly as in jackknife_fit for central chi2
-nsq_order_sorted = sorted(all_ratios.keys())
-jk_samples = []
-for i in range(nconf):
-    jk_samples.append(np.concatenate([
-        np.mean(np.delete(all_ratios[int(nsq)], i, axis=1)[reg_low:reg_up, :], axis=1)
-        for nsq in nsq_order_sorted
-    ]))
-jk_samples = np.array(jk_samples)
-cov = np.cov(jk_samples, rowvar=False, ddof=1)
-cov_inv = np.linalg.inv(cov)
-
-
+plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params)
 
 
 

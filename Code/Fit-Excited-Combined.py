@@ -42,12 +42,18 @@ cmass=Ens.getCmass(ensemble)[cmass_index]
 if ensemble == 'F1S':
     reg_up=19
     reg_low=8
-elif ensemble in ['M1', 'M2', 'M3']:
-    reg_up=20
-    reg_low=5
-elif ensemble in ['C1', 'C2']:
-    reg_up=18
+elif ensemble in ['M1', 'M3']:
+    reg_up=17
     reg_low=7
+elif ensemble in ['M2']:
+    reg_up=15
+    reg_low=5
+elif ensemble in ['C1']:
+    reg_up=14
+    reg_low=4
+elif ensemble in ['C2']:
+    reg_up=9
+    reg_low=1
 
 reg_up=reg_up+1
 

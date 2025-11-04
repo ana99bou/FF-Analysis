@@ -28,8 +28,8 @@ frozen_analysis = bool(int(sys.argv[6]))
 
 FF='V'
 nsq=1
-cmass_index=0
-ensemble="M1"
+cmass_index=2
+ensemble="C1"
 use_disp=True
 frozen=True
 
@@ -824,11 +824,11 @@ def plot_all_t_eq30(all_ratios, all_errs, nconf, nsq_order, central, jk_params,
         print("-------------------------------")
 
     plt.xlabel("t")
-    plt.ylabel("R³ᵖᵗ(t)")
+    plt.ylabel("r'$\widetilde{V}$'")
     plt.ylim(0.1, 0.9)
     plt.legend(frameon=False)
     plt.tight_layout()
-    plt.savefig("Ex-Fit-M1-0.280-V.png", dpi=200)
+    plt.savefig("CombFit.png", dpi=200)
     plt.show()
 
 plot_all_t_eq30(all_ratios, all_errs, nconf, nsq_order, central, jk_params,

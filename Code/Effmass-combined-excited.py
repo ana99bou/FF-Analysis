@@ -43,8 +43,8 @@ def extract(lst,number):
 
 Ensemble = 'C1'  # Example value, replace with actual input
 particle = 'Ds'  # Example value, replace with actual input
-nsq = 0  # Example value, replace with actual input
-cmass_index = 2  # Example value, replace with actual input
+nsq = 5  # Example value, replace with actual input
+cmass_index = 0  # Example value, replace with actual input
 
 '''
 parser = argparse.ArgumentParser()

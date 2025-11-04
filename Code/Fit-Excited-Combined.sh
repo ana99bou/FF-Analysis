@@ -3,7 +3,7 @@
 # Example: ./run_all_FF.sh 2 cA211a.40.24 1 0
 
 # --- Fixed FF values ---
-FF_list=("V" "A0")
+FF_list=("A0" "V")
 
 
 cmass_index=$1
@@ -20,5 +20,5 @@ fi
 # --- Loop over all form factors ---
 for FF in "${FF_list[@]}"; do
     echo "Running for FF=$FF, cmass_index=$cmass_index, ensemble=$ensemble, use_disp=$use_disp, frozen_analysis=$frozen_analysis"
-    python Fit-Excited-Combined.py "$FF" dummy "$cmass_index" "$ensemble" "$use_disp" "$frozen_analysis"
+    python3 Fit-Excited-Combined.py "$FF" dummy "$cmass_index" "$ensemble" "$use_disp" "$frozen_analysis"
 done
