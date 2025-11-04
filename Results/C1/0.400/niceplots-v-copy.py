@@ -64,8 +64,8 @@ for i in nsq:
     eff, sigma = fit['EffectiveMass'], fit['Error']
     reg_low, reg_up = int(fit['RegLow']), int(fit['RegUp'])
 
-    plt.plot([reg_low, reg_up], [eff, eff], color=colors[i-1 % len(colors)], linewidth=0.5)
-    plt.fill_between(range(47)[reg_low:reg_up+1], eff + sigma, eff - sigma,
+    plt.plot([reg_low, reg_up-1], [eff, eff], color=colors[i-1 % len(colors)], linewidth=0.5)
+    plt.fill_between(range(47)[reg_low:reg_up], eff + sigma, eff - sigma,
                      color= colors[i-1 % len(colors)], alpha=0.2)
 
 '''
