@@ -10,7 +10,7 @@ from pathlib import Path
 from FitModel import model_eq30  # importiere deine Modellfunktion
 
 # --- Configuration ---
-ensemble = "C2"
+ensemble = "C1"
 cmass = '0.400'
 FF = "V"
 
@@ -205,7 +205,8 @@ def plot_all_t_eq30(
     plt.legend(fontsize=14)
     plt.xlim(0, max(t_all) + 0.5)
 
-    plt.savefig(f'../Results/{ensemble}/{cmass}/Fit/'+outname, dpi=200, transparent=True)
+    #plt.savefig(f'../Results/{ensemble}/{cmass}/Fit/'+outname, dpi=200, transparent=True)
+    plt.savefig(f'../Results/{ensemble}/{cmass}/Fit/'+outname, dpi=200)
     plt.show()
 
 
