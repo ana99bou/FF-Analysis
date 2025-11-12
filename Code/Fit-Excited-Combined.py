@@ -18,33 +18,48 @@ import os
  
 #########Choose Params
 
+'''
 FF = sys.argv[1]
 #nsq = int(sys.argv[2])
 cmass_index = int(sys.argv[3])
 ensemble = sys.argv[4]
 use_disp=bool(int(sys.argv[5]))
 frozen_analysis = bool(int(sys.argv[6]))
-
-
 '''
-FF='V'
+
+
+FF='A1'
 nsq=1
 cmass_index=2
-ensemble="M1"
+ensemble="F1S"
 use_disp=True
-frozen=True
-'''
+frozen=False
+
 
 #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
 cmass=Ens.getCmass(ensemble)[cmass_index]
 
 #Fit range
 if ensemble == 'F1S':
-    reg_up=19
-    reg_low=8
-elif ensemble in ['M1', 'M3']:
-    reg_up=17
+    if FF == 'V':
+        reg_up=19
+        reg_low=13
+    elif FF == 'A0':
+        reg_up=19
+        reg_low=8
+    elif FF == 'A1':
+        reg_up=19
+        reg_low=12
+elif ensemble in ['M1']:
+    reg_up=17#18 fr M3 2 A0
     reg_low=7
+elif ensemble in ['M3']:
+    if FF == 'A1':
+        reg_up=17
+        reg_low=10
+    else:
+        reg_up=17#18 fr M3 2 A0
+        reg_low=7
 elif ensemble in ['M2']:
     reg_up=15
     reg_low=5
@@ -52,8 +67,15 @@ elif ensemble in ['C1']:
     reg_up=14
     reg_low=4
 elif ensemble in ['C2']:
-    reg_up=9
-    reg_low=1
+    if FF == 'V':
+        reg_up=11
+        reg_low=5
+    elif FF == 'A0':
+        reg_up=9
+        reg_low=3
+    if FF == 'A1':
+        reg_up=11
+        reg_low=5
 
 reg_up=reg_up+1
 
@@ -75,7 +97,10 @@ f2ptBs = h5py.File("../Data/{}/BsDsStar_{}_2ptBs.h5".format(ensemble,ensemble), 
 
 # Instead of reading nsq from sys.argv
 # Define which nsq values you want to process:
-nsq_values = [1, 2, 3, 4, 5]  # adjust to your available data
+if FF in ['V', 'A0']:
+    nsq_values = [0, 1, 2, 3, 4, 5]  # adjust to your available data
+elif FF in ['A1']:
+    nsq_values = [0,1, 2, 4, 5]  # adjust to your available data
 
 # Storage for results
 all_ratios = {}

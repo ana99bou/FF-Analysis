@@ -3,7 +3,7 @@
 # Example: ./run_all_FF.sh 2 cA211a.40.24 1 0
 
 # --- Fixed FF values ---
-FF_list=("A0" "V")
+FF_list=("V")
 
 
 cmass_index=$1

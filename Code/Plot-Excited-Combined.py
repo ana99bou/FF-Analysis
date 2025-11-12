@@ -10,8 +10,8 @@ from pathlib import Path
 from FitModel import model_eq30  # importiere deine Modellfunktion
 
 # --- Configuration ---
-ensemble = "C1"
-cmass = '0.400'
+ensemble = "C2"
+cmass = '0.300'
 FF = "V"
 
 fit_file = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}.csv"
@@ -196,6 +196,7 @@ def plot_all_t_eq30(
     #plt.ylim(0.05, 0.3)
     #plt.ylim(0.2,0.8)
     #plt.ylim(0.3,1.2)
+    #plt.ylim(0.15,0.5)
     plt.legend(frameon=False)
     plt.tight_layout()
     plt.xticks(fontsize=14)

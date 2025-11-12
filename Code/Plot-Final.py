@@ -158,10 +158,10 @@ for ens, masses in ens_masses.items():
         
         prefactor = rho_val * np.sqrt(zacc_val * zvbb_val)
         
-        if ens == 'F1S':
-            filepath = f"../Results/Crosschecks/AB/Crosscheck-{ens}-{m}.csv"
-        else:
-            filepath = f"../Results/Crosschecks/AB/Crosscheck-excited-{ens}-{m}-3pt.csv"    
+        #if ens == 'F1S':
+        #    filepath = f"../Results/Crosschecks/AB/Crosscheck-{ens}-{m}.csv"
+        #else:
+        filepath = f"../Results/Crosschecks/AB/Crosscheck-excited-{ens}-{m}-V-3pt.csv"    
         if not os.path.exists(filepath):
             print(f"File not found: {filepath}")
             continue
@@ -186,7 +186,7 @@ for ens, masses in ens_masses.items():
             y_vals_raw = df.iloc[7:12]["Value"].tolist()
             y_errs_raw = df.iloc[7:12]["Error"].tolist()
             
-            print(x_vals)
+            #print(x_vals)
 
             if len(x_vals) != len(y_vals_raw):
                 print(f"Length mismatch for {ens} {m}")
@@ -218,9 +218,9 @@ plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
 plt.legend(fontsize=16)
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('V-FPlot.png',transparent=True,dpi=200,bbox_inches='tight')
+plt.savefig('V-FPlot.png',dpi=200,bbox_inches='tight')
 
-'''
+
 # === Neuer Plot für A_0 ===
 plt.figure(figsize=(12, 8))
 
@@ -254,14 +254,14 @@ for ens, masses in ens_masses.items():
 
         prefactor = rho_val * np.sqrt(zacc_val * zvbb_val)
 
-        filepath = f"../Results/Crosschecks/AB/Crosscheck-{ens}-{m}.csv"
+        filepath = f"../Results/Crosschecks/AB/Crosscheck-excited-{ens}-{m}-A0-3pt.csv"
         if not os.path.exists(filepath):
             continue
 
         try:
             df = pd.read_csv(filepath, sep="\t")
 
-            if len(df) < 18:
+            if len(df) < 12:
                 print(f"File {filepath} too short for A₀ values")
                 continue
 
@@ -275,8 +275,8 @@ for ens, masses in ens_masses.items():
                 vals_list.append(calc)
 
             x_vals = vals_list[1:]
-            y_vals_raw = df.iloc[12:17]["Value"].tolist()
-            y_errs_raw = df.iloc[12:17]["Error"].tolist()
+            y_vals_raw = df.iloc[7:12]["Value"].tolist()
+            y_errs_raw = df.iloc[7:12]["Error"].tolist()
 
             if len(x_vals) != len(y_vals_raw):
                 print(f"Length mismatch for A₀ {ens} {m}")
@@ -284,6 +284,11 @@ for ens, masses in ens_masses.items():
 
             y_vals = [prefactor * y for y in y_vals_raw]
             y_errs = [prefactor * err for err in y_errs_raw]
+
+            print('here:')
+            print(x_vals)
+            print(y_vals)
+            print(y_errs)
 
             plt.errorbar(
                 x_vals, y_vals, yerr=y_errs,
@@ -337,14 +342,14 @@ for ens, masses in ens_masses.items():
 
         prefactor = rho_val * np.sqrt(zacc_val * zvbb_val)
 
-        filepath = f"../Results/Crosschecks/AB/Crosscheck-{ens}-{m}.csv"
+        filepath = f"../Results/Crosschecks/AB/Crosscheck-excited-{ens}-{m}-A1-3pt.csv"
         if not os.path.exists(filepath):
             continue
 
         try:
             df = pd.read_csv(filepath, sep="\t")
 
-            if len(df) < 22:
+            if len(df) < 12:
                 print(f"File {filepath} too short for A₁ values")
                 continue
 
@@ -359,8 +364,8 @@ for ens, masses in ens_masses.items():
 
             # x-Werte für A1: [0], [1], [2], [4], [5]
             x_vals = [vals_list[i] for i in [0, 1, 2, 4, 5]]
-            y_vals_raw = df.iloc[17:22]["Value"].tolist()
-            y_errs_raw = df.iloc[17:22]["Error"].tolist()
+            y_vals_raw = df.iloc[7:12]["Value"].tolist()
+            y_errs_raw = df.iloc[7:12]["Error"].tolist()
 
             if len(x_vals) != len(y_vals_raw):
                 print(f"Length mismatch for A₁ {ens} {m}")
@@ -386,4 +391,3 @@ plt.ylabel(r"$A_1$")
 plt.grid(True)
 plt.tight_layout()
 plt.savefig('A1-FPlot.pdf')
-''' 
