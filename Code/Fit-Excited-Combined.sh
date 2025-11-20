@@ -3,13 +3,14 @@
 # Example: ./run_all_FF.sh 2 cA211a.40.24 1 0
 
 # --- Fixed FF values ---
-FF_list=("V")
+FF_list=("V" "A0" "A1")
 
 
 cmass_index=$1
 ensemble=$2
 use_disp=$3
 frozen_analysis=$4
+
 
 # --- Check for correct usage ---
 if [ "$#" -ne 4 ]; then

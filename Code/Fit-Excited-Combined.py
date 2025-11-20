@@ -18,22 +18,24 @@ import os
  
 #########Choose Params
 
-'''
+
 FF = sys.argv[1]
 #nsq = int(sys.argv[2])
 cmass_index = int(sys.argv[3])
 ensemble = sys.argv[4]
 use_disp=bool(int(sys.argv[5]))
 frozen_analysis = bool(int(sys.argv[6]))
+
 '''
-
-
-FF='A1'
+FF='A0'
 nsq=1
 cmass_index=2
-ensemble="F1S"
+ensemble="M1"
 use_disp=True
-frozen=False
+frozen=True
+'''
+
+wofour=False
 
 
 #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
@@ -51,12 +53,15 @@ if ensemble == 'F1S':
         reg_up=19
         reg_low=12
 elif ensemble in ['M1']:
-    reg_up=17#18 fr M3 2 A0
+    reg_up=17#17
     reg_low=7
 elif ensemble in ['M3']:
     if FF == 'A1':
         reg_up=17
         reg_low=10
+    elif FF == 'A0':
+        reg_up=18
+        reg_low=7
     else:
         reg_up=17#18 fr M3 2 A0
         reg_low=7
@@ -97,10 +102,17 @@ f2ptBs = h5py.File("../Data/{}/BsDsStar_{}_2ptBs.h5".format(ensemble,ensemble), 
 
 # Instead of reading nsq from sys.argv
 # Define which nsq values you want to process:
-if FF in ['V', 'A0']:
-    nsq_values = [0, 1, 2, 3, 4, 5]  # adjust to your available data
-elif FF in ['A1']:
-    nsq_values = [0,1, 2, 4, 5]  # adjust to your available data
+
+if wofour==True:
+    if FF in ['V', 'A0']:
+        nsq_values = [1, 2, 3, 5]  # adjust to your available data
+    elif FF in ['A1']:
+        nsq_values = [0,1, 2, 5]  # adjust to your available data
+else:
+    if FF in ['V', 'A0']:
+        nsq_values = [1, 2, 3, 4, 5]  # adjust to your available data
+    elif FF in ['A1']:
+        nsq_values = [0,1, 2, 4, 5]  # adjust to your available data
 
 # Storage for results
 all_ratios = {}
@@ -213,6 +225,7 @@ for nsq in nsq_values:
 outdir = f"../Results/{ensemble}/{cmass}/Fit/"
 os.makedirs(outdir, exist_ok=True)
 np.savez_compressed(
+    #os.path.join(outdir, f"Excited-combined-{FF}-data-w04.npz"),
     os.path.join(outdir, f"Excited-combined-{FF}-data.npz"),
     all_ratios=all_ratios,
     all_errs=all_errs
@@ -454,6 +467,7 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
                   ds_blocks_gs, ds_blocks_es, bs_blocks_gs, bs_blocks_es,
                   frozen=True, T=None):
     assert T is not None, "Pass the temporal extent T (=ts)."
+    global outdir
     nsq_order = [int(x) for x in sorted(all_ratios.keys())]
     n = len(nsq_order)
 
@@ -578,6 +592,21 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
     jk_params = np.array(jk_params)
     errs = np.sqrt((nconf - 1) * np.mean((jk_params - central) ** 2, axis=0))
 
+    # ===== Save jackknife fit parameters =====
+    import os
+    jk_df = pd.DataFrame(
+        jk_params,
+        columns=[f"O00_{nsq}" for nsq in nsq_order] +
+                [f"O01_{nsq}" for nsq in nsq_order] +
+                [f"O10_{nsq}" for nsq in nsq_order]
+    )
+    jk_df.insert(0, "jackknife_index", np.arange(nconf))
+
+    outpath_jk = os.path.join(outdir, f"Excited-combined-{FF}-jkfit.csv")
+    jk_df.to_csv(outpath_jk, sep="\t", index=False)
+    print(f"💾 Saved jackknife fit parameters to {outpath_jk}")
+
+
     # ==========================================================
 # === Save fit results for plotting ========================
 # ==========================================================
@@ -589,6 +618,7 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
     os.makedirs(outdir, exist_ok=True)
 
     outpath = os.path.join(outdir, f"Excited-combined-{FF}.csv")
+    #outpath = os.path.join(outdir, f"Excited-combined-{FF}-wo4.csv")
 
 # Build a DataFrame
     n = len(nsq_order)
@@ -651,6 +681,7 @@ def jackknife_fit(all_ratios, reg_low, reg_up, nconf,
     "Z1_Bs": float(Z1_Bs_central),
     }
 
+    #json_path = os.path.join(outdir, f"Excited-combined-{FF}-meta-wo4.json")
     json_path = os.path.join(outdir, f"Excited-combined-{FF}-meta.json")
     with open(json_path, "w") as f:
         json.dump(meta_all, f, indent=2)
@@ -686,6 +717,7 @@ os.makedirs(outdir, exist_ok=True)
 
 # Save fit results and jackknife inputs for later plotting
 np.savez_compressed(
+    #os.path.join(outdir, f"Excited-combined-{FF}-fitparams-wo4.npz"),
     os.path.join(outdir, f"Excited-combined-{FF}-fitparams.npz"),
     central=central,
     errs=errs,
