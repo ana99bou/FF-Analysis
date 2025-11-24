@@ -218,10 +218,20 @@ Cinv = np.linalg.inv(Cov)
 # === Correlated χ² fit to: f = c0 + c1 * mass + c2 * nsq ====
 # ============================================================
 
+'''
 A = np.column_stack([
     np.ones(N_points),
     mass_arr,
     nsq_arr
+])
+'''
+# === NEW FIT: f = c0 + c1*M + c2*n + c3*(M*n) =========================
+
+A = np.column_stack([
+    np.ones(N_points),
+    mass_arr,
+    nsq_arr,
+    mass_arr * nsq_arr
 ])
 
 ATCi = A.T @ Cinv
@@ -229,21 +239,37 @@ M = ATCi @ A
 b = ATCi @ FF_mean
 c = np.linalg.solve(M, b)
 
-c0, c1, c2 = c
-Cov_c = np.linalg.inv(M)
-c_err = np.sqrt(np.diag(Cov_c))
 
 res = FF_mean - A @ c
 chi2 = res.T @ Cinv @ res
-dof = N_points - 3
+dof = N_points - 4
 
 from scipy.stats import chi2 as chi2_dist
 pval = 1 - chi2_dist.cdf(chi2, dof)
+
+'''
+c0, c1, c2 = c
+Cov_c = np.linalg.inv(M)
+c_err = np.sqrt(np.diag(Cov_c))
 
 print("\n================ CORRELATED CENTRAL FIT ================")
 print(f"c0 = {c0:.6e} ± {c_err[0]:.6e}")
 print(f"c1 = {c1:.6e} ± {c_err[1]:.6e}")
 print(f"c2 = {c2:.6e} ± {c_err[2]:.6e}")
+'''
+
+c0, c1, c2, c3 = c
+
+Cov_c = np.linalg.inv(M)
+c_err = np.sqrt(np.diag(Cov_c))
+
+print("\n================ CORRELATED CENTRAL FIT (4 params) ================")
+print(f"c0 = {c0:.6e} ± {c_err[0]:.6e}")
+print(f"c1 = {c1:.6e} ± {c_err[1]:.6e}")
+print(f"c2 = {c2:.6e} ± {c_err[2]:.6e}")
+print(f"c3 = {c3:.6e} ± {c_err[3]:.6e}")
+
+
 print(f"chi2/dof = {chi2:.3f}/{dof} = {chi2/dof:.3f}")
 print(f"p-value = {pval:.3f}")
 
@@ -252,7 +278,7 @@ print(f"p-value = {pval:.3f}")
 # === Jackknife parameter estimates ==========================
 # ============================================================
 
-c_jk = np.zeros((N_jk, 3))
+c_jk = np.zeros((N_jk, 4))
 
 for alpha in range(N_jk):
     FF_jk = JK[alpha]
@@ -265,9 +291,18 @@ c_var = (N_jk - 1)/N_jk * np.sum((c_jk - c_bar)**2, axis=0)
 c_jk_err = np.sqrt(c_var)
 
 print("\n================ JACKKNIFE ERRORS ======================")
+'''
 print(f"c0_jk_error = {c_jk_err[0]:.6e}")
 print(f"c1_jk_error = {c_jk_err[1]:.6e}")
 print(f"c2_jk_error = {c_jk_err[2]:.6e}")
+'''
+
+print("\n================ JACKKNIFE ERRORS (4 params) ======================")
+print(f"c0_jk_error = {c_jk_err[0]:.6e}")
+print(f"c1_jk_error = {c_jk_err[1]:.6e}")
+print(f"c2_jk_error = {c_jk_err[2]:.6e}")
+print(f"c3_jk_error = {c_jk_err[3]:.6e}")
+
 
 import plotly.graph_objects as go
 import numpy as np
