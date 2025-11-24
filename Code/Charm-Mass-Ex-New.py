@@ -165,7 +165,7 @@ for Ens in mass0_all:
 #Ense = "F1S"
 cmasses = ens_dict[Ense]      # [0.259, 0.275]
 #nsq_vals = [1,2,3,4,5]
-nsq_vals = [1,2,3,5]
+nsq_vals = [1,2,4,5]
 
 points = []   # list of (nsq, mass_mean, ff_mean, ff_jk)
 
