@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 
 # Define the FF you want to read (currently fixed to "V")
-Ens='F1S'
+Ense='F1S'
 FF = "V"
 
 # Your ensemble → cmass mapping
@@ -272,7 +272,7 @@ from mpl_toolkits.mplot3d import Axes3D
 # ============================================================
 
 #Ens = "F1S"
-cmasses = ens_dict[Ens]      # should be [0.259, 0.275]
+cmasses = ens_dict[Ense]      # should be [0.259, 0.275]
 nsq_vals = [1, 2, 3, 4, 5]
 #nsq_vals = [1, 2, 3, 5]
 
@@ -282,8 +282,8 @@ points = []   # will hold (cmass, nsq, mass_mean, ff_mean, ff_list)
 
 for cmass in cmasses:
     for nsq_idx, nsq in enumerate(nsq_vals):
-        ff_list   = results[Ens][cmass][nsq_idx]
-        mass_list = mass0_all[Ens][cmass][nsq_idx]
+        ff_list   = results[Ense][cmass][nsq_idx]
+        mass_list = mass0_all[Ense][cmass][nsq_idx]
 
         ff_mean   = ff_list[0]          # first entry = mean
         mass_mean = mass_list[0]        # first entry = mean
@@ -372,6 +372,7 @@ c_err = np.sqrt(np.diag(Cov_c))
 residual = FF_mean - A @ c
 chi2 = residual.T @ Cinv @ residual
 dof = N_points - len(c)
+#pval_central = 1 - chi2_dist.cdf(chi2, dof)
 
 from scipy.stats import chi2 as chi2_dist
 
@@ -395,8 +396,8 @@ ax = fig.add_subplot(111, projection='3d')
 colors = ["blue", "red"]
 
 for color, cmass in zip(colors, cmasses):
-    ff_means   = [results[Ens][cmass][i][0]      for i in range(5)]
-    mass_means = [mass0_all[Ens][cmass][i][0]    for i in range(5)]
+    ff_means   = [results[Ense][cmass][i][0]      for i in range(5)]
+    mass_means = [mass0_all[Ense][cmass][i][0]    for i in range(5)]
 
     ax.scatter(nsq_vals, mass_means, ff_means,
                color=color, s=80, label=f"{Ens} cmass={cmass}")
@@ -415,7 +416,7 @@ ax.set_xlabel("nsq", fontsize=12)
 ax.set_ylabel("Mass0 mean", fontsize=12)
 ax.set_zlabel("FF mean (O00)", fontsize=12)
 
-ax.set_title(f"Correlated plane fit for {Ens}", fontsize=14)
+ax.set_title(f"Correlated plane fit for {Ense}", fontsize=14)
 ax.legend()
 
 plt.tight_layout()
@@ -438,10 +439,10 @@ def create_3d_plot(ax):
     colors = ["blue", "red"]
 
     for color, cmass in zip(colors, cmasses):
-        ff_means   = [results[Ens][cmass][i][0]      for i in range(5)]
-        mass_means = [mass0_all[Ens][cmass][i][0]    for i in range(5)]
+        ff_means   = [results[Ense][cmass][i][0]      for i in range(5)]
+        mass_means = [mass0_all[Ense][cmass][i][0]    for i in range(5)]
         ax.scatter(nsq_vals, mass_means, ff_means,
-                   color=color, s=80, label=f"{Ens} cmass={cmass}")
+                   color=color, s=80, label=f"{Ense} cmass={cmass}")
 
     # Create the plane
     nsq_grid = np.linspace(nsq_vals[0], nsq_vals[-1], 30)
@@ -454,7 +455,7 @@ def create_3d_plot(ax):
     ax.set_xlabel("nsq")
     ax.set_ylabel("Mass0 mean")
     ax.set_zlabel("FF mean (O00)")
-    ax.set_title(f"Correlated Fit Plane — {Ens}")
+    ax.set_title(f"Correlated Fit Plane — {Ense}")
 
 # -------------------------------------------------
 # Generate the PDF with multiple viewpoints
