@@ -84,74 +84,6 @@ for Ens in results:
             print(f"  nsq {i}: length = {len(sublist)}")
 
 
-def build_super_jackknife(results):
-    """
-    Build the super-jackknife blocks for all ensembles and cmasses.
-
-    Input:
-        results[Ens][cmass][q_index] = [mean, jk1, jk2, ... jkN]
-
-    Output:
-        super_jk:
-            A list of length N_super
-            Each element is a dict:
-                super_jk[j][(Ens, cmass)][q_index] = value_j
-    """
-
-    # First collect all ensemble-cmass pairs and their JK counts
-    ec_pairs = []  # list of (Ens, cmass, Nk)
-    for Ens in results:
-        for cmass in results[Ens]:
-            # get number of jackknife samples
-            # results[Ens][cmass] is a list of q² entries,
-            # each entry has length Nk+1: [mean, jk1, ...]
-            Nk = len(results[Ens][cmass][0]) - 1
-            ec_pairs.append((Ens, cmass, Nk))
-
-    # total number of super JK blocks
-    N_super = sum(Nk for _,_,Nk in ec_pairs)
-
-    # build cumulative index boundaries
-    boundaries = []
-    running = 0
-    for (Ens, cmass, Nk) in ec_pairs:
-        boundaries.append((Ens, cmass, running, running + Nk))
-        running += Nk
-
-    # main output structure
-    super_jk = [{} for _ in range(N_super)]
-
-    # Loop over super-jk index j
-    for j in range(N_super):
-
-        # find which ensemble-cmass block j belongs to
-        for (Ens, cmass, start, end) in boundaries:
-            if start <= j < end:
-                active_Ens = Ens
-                active_cmass = cmass
-                internal_j = j - start  # internal jk index in this ensemble
-                break
-
-        # fill the data vector for all ensemble-cmass pairs
-        for (Ens, cmass, Nk) in [(e,c,n) for (e,c,n) in ec_pairs]:
-            super_jk[j][(Ens, cmass)] = []
-
-            for q_idx, q_entry in enumerate(results[Ens][cmass]):
-
-                mean = q_entry[0]
-                jks = q_entry[1:]
-
-                if Ens == active_Ens and cmass == active_cmass:
-                    # use the jackknife block for this ensemble
-                    value = jks[internal_j]
-                else:
-                    # use the central value
-                    value = mean
-
-                super_jk[j][(Ens, cmass)].append(value)
-
-    return super_jk
-
 mass0_all = {}
 
 for Ens in ens_dict:
@@ -230,9 +162,10 @@ for Ens in mass0_all:
 # === Build combined dataset for fitting =====================
 # ============================================================
 
-Ense = "F1S"
+#Ense = "F1S"
 cmasses = ens_dict[Ense]      # [0.259, 0.275]
-nsq_vals = [1,2,3,4,5]
+#nsq_vals = [1,2,3,4,5]
+nsq_vals = [1,2,3,5]
 
 points = []   # list of (nsq, mass_mean, ff_mean, ff_jk)
 
@@ -273,7 +206,7 @@ for alpha in range(N_jk):
     Cov += np.outer(diff, diff)
 
 Cov *= (N_jk - 1)/N_jk
-Cov += 1e-12 * np.eye(N_points)         # stabilizer
+#Cov += 1e-12 * np.eye(N_points)         # stabilizer
 
 Cinv = np.linalg.inv(Cov)
 
@@ -362,8 +295,10 @@ mass_2 = []
 ff_2   = []
 
 for i, cmass in enumerate([cmass1, cmass2]):
-    for nsq_idx in range(5):
-        p = points[i*5 + nsq_idx]  # (nsq, mass, ff, ff_list)
+    #for nsq_idx in range(5):
+        #p = points[i*5 + nsq_idx]  # (nsq, mass, ff, ff_list)
+    for nsq_idx in range(len(nsq_vals)):
+        p = points[i * len(nsq_vals) + nsq_idx]  # (
         nsq, m, ff_mean, _ = p
 
         if cmass == cmass1:
