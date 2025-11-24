@@ -4,7 +4,7 @@ import numpy as np
 
 # Define the FF you want to read (currently fixed to "V")
 Ense='F1S'
-FF = "A0"
+FF = "V"
 
 # Your ensemble → cmass mapping
 ens_dict = {
@@ -315,7 +315,15 @@ nsq_grid = np.linspace(nsq_arr.min(), nsq_arr.max(), 40)
 mass_grid = np.linspace(mass_arr.min(), mass_arr.max(), 40)
 NSQ, MASS = np.meshgrid(nsq_grid, mass_grid)
 
-FF_plane = c0 + c1 * MASS + c2 * NSQ
+#FF_plane = c0 + c1 * MASS + c2 * NSQ
+# New plane including cross-term
+FF_plane = (
+    c0
+    + c1 * MASS
+    + c2 * NSQ
+    + c3 * MASS * NSQ
+)
+
 
 # ============================================================
 # Separate points by charm mass for coloring
@@ -383,7 +391,7 @@ fig.add_trace(go.Surface(
 # ============================================================
 
 fig.update_layout(
-    title=f"Correlated Fit 3D — {Ense}",
+    #title=f"Correlated Fit 3D — {Ense}",
     scene=dict(
         xaxis_title="nsq",
         yaxis_title="Mass0 mean",
