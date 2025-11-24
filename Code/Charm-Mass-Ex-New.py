@@ -4,7 +4,7 @@ import numpy as np
 
 # Define the FF you want to read (currently fixed to "V")
 Ense='F1S'
-FF = "V"
+FF = "A1"
 
 # Your ensemble → cmass mapping
 ens_dict = {
@@ -163,9 +163,12 @@ for Ens in mass0_all:
 # ============================================================
 
 #Ense = "F1S"
-cmasses = ens_dict[Ense]      # [0.259, 0.275]
-#nsq_vals = [1,2,3,4,5]
-nsq_vals = [1,2,4,5]
+cmasses = ens_dict[Ense]
+if FF =='A1':
+    nsq_vals=[0,1,2,4,5]    
+else:
+    nsq_vals = [1,2,3,4,5]
+#nsq_vals = [1,2,4,5]
 
 points = []   # list of (nsq, mass_mean, ff_mean, ff_jk)
 
