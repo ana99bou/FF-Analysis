@@ -4,7 +4,7 @@ import numpy as np
 
 # Define the FF you want to read (currently fixed to "V")
 Ense='F1S'
-FF = "A1"
+FF = "A0"
 
 # Your ensemble → cmass mapping
 ens_dict = {
