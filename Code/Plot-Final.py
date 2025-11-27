@@ -180,8 +180,9 @@ for ens, masses in ens_masses.items():
             for x in range(1, 7):
                 valx = df.iloc[x]["Value"]
                 calc = inv_lat_sp[ens]**2 * (val0**2 + val1**2 - 2 * val0 * valx)
+                print(val0**2,val1**2,2*val0*valx,inv_lat_sp[ens]**2,calc)
                 vals_list.append(calc)
-            
+
             x_vals = vals_list[1:]
             y_vals_raw = df.iloc[7:12]["Value"].tolist()
             y_errs_raw = df.iloc[7:12]["Error"].tolist()

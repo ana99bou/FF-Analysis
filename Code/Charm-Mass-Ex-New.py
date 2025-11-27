@@ -405,5 +405,153 @@ fig.update_layout(
 # Save as HTML
 # ============================================================
 
-fig.write_html("fit3D.html")
+fig.write_html(f"../Results/{Ense}/Charm/fit3D-{FF}.html")
 print("Saved interactive plot as fit3D.html")
+
+
+# ============================================================
+# === PHYSICAL MASS TABLE SELECTION ==========================
+# ============================================================
+
+mass_table_F = {
+    0: 0.756409336,
+    1: 0.828998994,
+    2: 0.894566406,
+    3: 0.954605277,
+    4: 1.003281042,
+    5: 1.055503647,
+}
+
+mass_table_M = {
+    0: 0.884068309,
+    1: 0.965686408,
+    2: 1.039242255,
+    3: 1.106429577,
+    4: 1.157998541,
+    5: 1.216349189,
+}
+
+mass_table_C = {
+    0: 1.180524429,
+    1: 1.278285683,
+    2: 1.366006012,
+    3: 1.445744696,
+    4: 1.497189015,
+    5: 1.566507142,
+}
+
+if Ense == "F1S":
+    mass_table_phys = mass_table_F
+elif Ense in ["M1","M2","M3"]:
+    mass_table_phys = mass_table_M
+elif Ense in ["C1","C2"]:
+    mass_table_phys = mass_table_C
+else:
+    raise ValueError(f"No physical mass table for Ensemble {Ense}")
+
+
+# ============================================================
+# === nsq VALUES FOR PREDICTION ==============================
+# ============================================================
+
+if FF == "A1":
+    nsq_pred = [0,1,2,4,5]
+else:
+    nsq_pred = [1,2,3,4,5]
+
+
+# ============================================================
+# === FIT FUNCTION ===========================================
+# ============================================================
+
+def fit_function(nsq, mass, params):
+    c0, c1, c2, c3 = params
+    return c0 + c1*mass + c2*nsq + c3*(mass*nsq)
+
+
+# ============================================================
+# === PHYSICAL PREDICTIONS (CENTRAL + JK) ====================
+# ============================================================
+
+phys_central = []
+phys_err = []
+phys_jk = np.zeros((N_jk, len(nsq_pred)))
+
+for i, nsq_val in enumerate(nsq_pred):
+
+    mass_val = mass_table_phys[nsq_val]
+
+    # CENTRAL
+    central_val = fit_function(nsq_val, mass_val, c)
+    phys_central.append(central_val)
+
+    # JK BLOCKS
+    jk_vals = np.array([fit_function(nsq_val, mass_val, c_jk[a]) for a in range(N_jk)])
+    phys_jk[:, i] = jk_vals
+
+    # JK ERROR
+    mean_jk = np.mean(jk_vals)
+    err_jk = np.sqrt((N_jk - 1)/N_jk * np.sum((jk_vals - mean_jk)**2))
+    phys_err.append(err_jk)
+
+
+# ============================================================
+# === OUTPUT DIRECTORY =======================================
+# ============================================================
+
+out_dir = Path(f"../Results/{Ense}/Charm")
+out_dir.mkdir(parents=True, exist_ok=True)
+
+
+# ============================================================
+# === FILE 1: FIT SUMMARY INCLUDING PHYSICAL PREDICTIONS =====
+# ============================================================
+
+file1 = out_dir / f"FitSummary-{FF}.csv"
+
+with open(file1, "w", newline="") as f:
+    w = csv.writer(f)
+
+    header = [
+        "Ensemble","FF","chi2","dof","pvalue",
+        "c0","c0_err","c1","c1_err","c2","c2_err","c3","c3_err"
+    ]
+
+    # Add phys. prediction columns
+    for nsq in nsq_pred:
+        header.append(f"phys_central_nsq{nsq}")
+        header.append(f"phys_err_nsq{nsq}")
+
+    w.writerow(header)
+
+    row = [
+        Ense, FF, chi2, dof, pval,
+        c0, c_err[0], c1, c_err[1], c2, c_err[2], c3, c_err[3]
+    ]
+
+    # Add central and error
+    for cval, err in zip(phys_central, phys_err):
+        row.extend([cval, err])
+
+    w.writerow(row)
+
+print("Saved Fit Summary →", file1)
+
+
+# ============================================================
+# === FILE 2: JACKKNIFE RESULTS FOR PHYSICAL POINTS ==========
+# ============================================================
+
+file2 = out_dir / f"PhysResults-JK-{FF}.csv"
+
+with open(file2, "w", newline="") as f:
+    w = csv.writer(f)
+
+    header = ["jk_index"] + [f"nsq{nsq}" for nsq in nsq_pred]
+    w.writerow(header)
+
+    for a in range(N_jk):
+        row = [a] + list(phys_jk[a, :])
+        w.writerow(row)
+
+print("Saved Jackknife Physical Results →", file2)
