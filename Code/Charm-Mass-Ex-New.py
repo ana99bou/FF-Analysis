@@ -324,6 +324,31 @@ FF_plane = (
     + c3 * MASS * NSQ
 )
 
+# ============================================================
+# Compute jackknife planes
+# ============================================================
+
+FF_jk_planes = np.zeros((N_jk, MASS.shape[0], MASS.shape[1]))
+
+for a in range(N_jk):
+    c0_j, c1_j, c2_j, c3_j = c_jk[a]
+    FF_jk_planes[a] = (
+        c0_j
+        + c1_j * MASS
+        + c2_j * NSQ
+        + c3_j * MASS * NSQ
+    )
+
+# Jackknife mean and variance at each plane grid point
+FF_mean_plane = np.mean(FF_jk_planes, axis=0)
+
+FF_var_plane = (N_jk - 1)/N_jk * np.sum((FF_jk_planes - FF_mean_plane)**2, axis=0)
+FF_err_plane = np.sqrt(FF_var_plane)
+
+FF_plane_plus  = FF_mean_plane + FF_err_plane
+FF_plane_minus = FF_mean_plane - FF_err_plane
+
+
 
 # ============================================================
 # Separate points by charm mass for coloring
@@ -441,6 +466,8 @@ fig.add_trace(go.Scatter3d(
 for t in z_error_segments(nsq_2, mass_2, ff_2, zerr_2, color='red'):
     fig.add_trace(t)
 
+
+'''
 # Fitted plane
 fig.add_trace(go.Surface(
     x=NSQ, y=MASS, z=FF_plane,
@@ -448,6 +475,37 @@ fig.add_trace(go.Surface(
     opacity=0.6,
     name="Fit plane"
 ))
+'''
+
+# Central plane
+fig.add_trace(go.Surface(
+    x=NSQ, y=MASS, z=FF_plane,
+    showscale=False,
+    opacity=0.55,
+    name="Central fit plane",
+    colorscale="Viridis"
+))
+
+# +1σ plane
+fig.add_trace(go.Surface(
+    x=NSQ, y=MASS, z=FF_plane_plus,
+    showscale=False,
+    opacity=0.35,
+    name="+1σ plane",
+    surfacecolor=np.zeros_like(FF_plane_plus),
+    colorscale=[[0, "red"], [1, "red"]],
+))
+
+# -1σ plane
+fig.add_trace(go.Surface(
+    x=NSQ, y=MASS, z=FF_plane_minus,
+    showscale=False,
+    opacity=0.35,
+    name="−1σ plane",
+    surfacecolor=np.zeros_like(FF_plane_minus),
+    colorscale=[[0, "blue"], [1, "blue"]],
+))
+
 
 
 
