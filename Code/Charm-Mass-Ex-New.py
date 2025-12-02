@@ -415,14 +415,6 @@ fig.add_trace(go.Scatter3d(
     name=f"{Ense}, cmass={cmass2}",
     marker=dict(size=6, color='red')
 ))
-
-# Fitted plane
-fig.add_trace(go.Surface(
-    x=NSQ, y=MASS, z=FF_plane,
-    showscale=False,
-    opacity=0.6,
-    name="Fit plane"
-))
 '''
 
 # Data points – cmass 1
@@ -448,6 +440,14 @@ fig.add_trace(go.Scatter3d(
 # Add z error bars (cmass 2)
 for t in z_error_segments(nsq_2, mass_2, ff_2, zerr_2, color='red'):
     fig.add_trace(t)
+
+# Fitted plane
+fig.add_trace(go.Surface(
+    x=NSQ, y=MASS, z=FF_plane,
+    showscale=False,
+    opacity=0.6,
+    name="Fit plane"
+))
 
 
 
