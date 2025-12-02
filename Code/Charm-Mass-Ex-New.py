@@ -340,6 +340,7 @@ nsq_2  = []
 mass_2 = []
 ff_2   = []
 
+
 for i, cmass in enumerate([cmass1, cmass2]):
     #for nsq_idx in range(5):
         #p = points[i*5 + nsq_idx]  # (nsq, mass, ff, ff_list)
@@ -360,8 +361,45 @@ for i, cmass in enumerate([cmass1, cmass2]):
 # Build the 3D figure
 # ============================================================
 
+# Compute z errors using jackknife values
+
+#err = sqrt((N_jk - 1)/N_jk * Σ (ff_jk - mean_jk)^2)
+
+zerr_1 = []
+zerr_2 = []
+
+for cmass in [cmass1, cmass2]:
+    for nsq_idx in range(len(nsq_vals)):
+        p = points[(0 if cmass == cmass1 else 1) * len(nsq_vals) + nsq_idx]
+        _, _, ff_mean, ff_list = p
+
+        jk_vals = np.array(ff_list[1:])
+        mean_jk = np.mean(jk_vals)
+        err_jk = np.sqrt((N_jk - 1)/N_jk * np.sum((jk_vals - mean_jk)**2))
+
+        if cmass == cmass1:
+            zerr_1.append(err_jk)
+        else:
+            zerr_2.append(err_jk)
+
+def z_error_segments(x, y, z, zerr, color):
+    traces = []
+    for xi, yi, zi, ei in zip(x, y, z, zerr):
+        traces.append(go.Scatter3d(
+            x=[xi, xi],
+            y=[yi, yi],
+            z=[zi - ei, zi + ei],
+            mode="lines",
+            line=dict(color=color, width=3),
+            showlegend=False
+        ))
+    return traces
+
+
+
 fig = go.Figure()
 
+'''
 # Data points – cmass 1
 fig.add_trace(go.Scatter3d(
     x=nsq_1, y=mass_1, z=ff_1,
@@ -385,6 +423,33 @@ fig.add_trace(go.Surface(
     opacity=0.6,
     name="Fit plane"
 ))
+'''
+
+# Data points – cmass 1
+fig.add_trace(go.Scatter3d(
+    x=nsq_1, y=mass_1, z=ff_1,
+    mode='markers',
+    name=f"{Ense}, cmass={cmass1}",
+    marker=dict(size=6, color='blue')
+))
+
+# Add z error bars (cmass 1)
+for t in z_error_segments(nsq_1, mass_1, ff_1, zerr_1, color='blue'):
+    fig.add_trace(t)
+
+# Data points – cmass 2
+fig.add_trace(go.Scatter3d(
+    x=nsq_2, y=mass_2, z=ff_2,
+    mode='markers',
+    name=f"{Ense}, cmass={cmass2}",
+    marker=dict(size=6, color='red')
+))
+
+# Add z error bars (cmass 2)
+for t in z_error_segments(nsq_2, mass_2, ff_2, zerr_2, color='red'):
+    fig.add_trace(t)
+
+
 
 # ============================================================
 # Axis labels and layout

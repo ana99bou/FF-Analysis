@@ -207,6 +207,8 @@ def make_plot(FF, outname):
         # Compute x-axis = q² for nsq = 1..5
         x_vals = []
 
+        ratio_lst = []
+
         if FF in ['A0', 'V']:
             nsq_vals=[1,2,3,4,5]
         else:
@@ -217,11 +219,14 @@ def make_plot(FF, outname):
             q2 = inv_lat_sp[ens]**2 * (val0**2 + val1**2 - 2*val0*valx)
             print(val0**2,val1**2,2*val0*valx,inv_lat_sp[ens]**2,q2)
             x_vals.append(q2)
+            ratio=(valx/val0)**2
+            ratio_lst.append(ratio)
 
         # apply prefactor
         y_vals = [prefactor * y for y in y_vals_raw]
         y_errs = [prefactor * e for e in y_errs_raw]
 
+        '''
         plt.errorbar(
             x_vals, y_vals, yerr=y_errs,
             fmt=marker,
@@ -229,9 +234,19 @@ def make_plot(FF, outname):
             capsize=3,
             label=f"{ens}"
         )
+        '''
+
+        plt.errorbar(
+            ratio_lst, y_vals, yerr=y_errs,
+            fmt=marker,
+            color=colors[0],
+            capsize=3,
+            label=f"{ens}"
+        )
 
     plt.legend()
-    plt.xlabel(r"$q^2\,[\mathrm{GeV}^2]$", fontsize=20)
+    #plt.xlabel(r"$q^2\,[\mathrm{GeV}^2]$", fontsize=20)
+    plt.xlabel(r"$(E_{D_s^*}/M_{B_s})^2$", fontsize=20)
     plt.ylabel(FF, fontsize=20)
     plt.grid(True)
     plt.tight_layout()
@@ -241,6 +256,6 @@ def make_plot(FF, outname):
 #################################################################
 # MAKE THE THREE NEW PLOTS
 #################################################################
-make_plot("V",  "V-FPlot_physical.png")
-make_plot("A0", "A0-FPlot_physical.png")
-make_plot("A1", "A1-FPlot_physical.png")
+make_plot("V",  "V-FPlot_physical-ratio.png")
+make_plot("A0", "A0-FPlot_physical-ratio.png")
+make_plot("A1", "A1-FPlot_physical-ratio.png")
