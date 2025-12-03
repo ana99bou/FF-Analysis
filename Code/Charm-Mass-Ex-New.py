@@ -3,8 +3,8 @@ from pathlib import Path
 import numpy as np
 
 # Define the FF you want to read (currently fixed to "V")
-Ense='C2'
-FF = "V"
+Ense='C1'
+FF = "A1"
 
 # Your ensemble → cmass mapping
 ens_dict = {
@@ -350,10 +350,44 @@ FF_plane_minus = FF_mean_plane - FF_err_plane
 
 
 
+
+
+cmasses = ens_dict[Ense]             # e.g. [0.300, 0.350, 0.400]
+cmass_points = {c: {"nsq": [], "mass": [], "ff": [], "err": []} for c in cmasses}
+
+idx = 0
+for cmass in cmasses:
+    for nsq_idx in range(len(nsq_vals)):
+        nsq, m, ff_mean, ff_list = points[idx]
+        idx += 1
+
+        cmass_points[cmass]["nsq"].append(nsq)
+        cmass_points[cmass]["mass"].append(m)
+        cmass_points[cmass]["ff"].append(ff_mean)
+
+        # compute jackknife error
+        jk_vals = np.array(ff_list[1:])
+        mean_jk = np.mean(jk_vals)
+        err_jk  = np.sqrt((N_jk - 1)/N_jk * np.sum((jk_vals - mean_jk)**2))
+
+        cmass_points[cmass]["err"].append(err_jk)
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ============================================================
 # Separate points by charm mass for coloring
 # ============================================================
-
+'''
 cmass1 = ens_dict[Ense][0]
 cmass2 = ens_dict[Ense][1]
 
@@ -381,6 +415,38 @@ for i, cmass in enumerate([cmass1, cmass2]):
             nsq_2.append(nsq)
             mass_2.append(m)
             ff_2.append(ff_mean)
+'''
+
+import plotly.colors as colors
+color_list = colors.qualitative.Dark24  # many distinct colors
+
+fig = go.Figure()
+
+for i, cmass in enumerate(cmasses):
+    col = color_list[i % len(color_list)]
+    data = cmass_points[cmass]
+
+    # points
+    fig.add_trace(go.Scatter3d(
+        x=data["nsq"],
+        y=data["mass"],
+        z=data["ff"],
+        mode="markers",
+        name=f"{Ense}, cmass={cmass}",
+        marker=dict(size=6, color=col)
+    ))
+
+    # error bars
+    for x, y, z, e in zip(data["nsq"], data["mass"], data["ff"], data["err"]):
+        fig.add_trace(go.Scatter3d(
+            x=[x, x],
+            y=[y, y],
+            z=[z-e, z+e],
+            mode="lines",
+            line=dict(color=col, width=3),
+            showlegend=False
+        ))
+
 
 # ============================================================
 # Build the 3D figure
@@ -389,7 +455,7 @@ for i, cmass in enumerate([cmass1, cmass2]):
 # Compute z errors using jackknife values
 
 #err = sqrt((N_jk - 1)/N_jk * Σ (ff_jk - mean_jk)^2)
-
+'''
 zerr_1 = []
 zerr_2 = []
 
@@ -423,7 +489,7 @@ def z_error_segments(x, y, z, zerr, color):
 
 
 fig = go.Figure()
-
+'''
 '''
 # Data points – cmass 1
 fig.add_trace(go.Scatter3d(
@@ -441,7 +507,7 @@ fig.add_trace(go.Scatter3d(
     marker=dict(size=6, color='red')
 ))
 '''
-
+'''
 # Data points – cmass 1
 fig.add_trace(go.Scatter3d(
     x=nsq_1, y=mass_1, z=ff_1,
@@ -465,7 +531,7 @@ fig.add_trace(go.Scatter3d(
 # Add z error bars (cmass 2)
 for t in z_error_segments(nsq_2, mass_2, ff_2, zerr_2, color='red'):
     fig.add_trace(t)
-
+'''
 
 '''
 # Fitted plane
