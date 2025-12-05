@@ -5,6 +5,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+de=0.935
+
 ############################################################
 #  NEW: Ds masses in lattice units (val1 and valx)
 ############################################################
@@ -217,7 +219,7 @@ def make_plot(FF, outname):
         for nsq in nsq_vals:
             valx = Ds_mass_phys[ens][nsq]
             q2 = inv_lat_sp[ens]**2 * (val0**2 + val1**2 - 2*val0*valx)
-            print(val0**2,val1**2,2*val0*valx,inv_lat_sp[ens]**2,q2)
+            #print(val0**2,val1**2,2*val0*valx,inv_lat_sp[ens]**2,q2)
             x_vals.append(q2)
             ratio=(valx/val0)**2
             ratio_lst.append(ratio)
@@ -292,111 +294,6 @@ def choose_m_for_ens(ens):
     else:
         return '0.400'
 
-'''
-def build_data_for_fit(FF):
-    """
-    Build:
-      E_arr[i]            : E_{Ds*} (in lattice units) of point i
-      ens_arr[i]          : ensemble name of point i
-      y_mean[i]           : central value (renormalized) of point i
-      C, Cinv             : covariance and its inverse from jackknife
-      MBs_dict[ens]       : M_{Bs} (val0) for each ensemble
-    """
-    nsq_phys = nsq_list_for_FF(FF)
-
-    E_list = []
-    ens_list = []
-    MBs_dict = {}
-
-    jk_blocks = []      # list of arrays with shape (N_jk, n_points_for_this_ens)
-    N_jk_global = None
-
-    for ens in Ds_mass_phys.keys():
-        # rho factor
-        rho_prefix = get_rho_prefix(ens)
-        rho_val = variables.get(f"rho_Vi_{rho_prefix}")
-        if rho_val is None:
-            print(f"[fit {FF}] Missing rho for {ens}, skipping.")
-            continue
-
-        # Z factors
-        zacc_val = variables.get(f"Zacc_{ens}_m1")
-        zvbb_val = variables.get(f"Zvbb_{ens}")
-        if zacc_val is None or zvbb_val is None:
-            print(f"[fit {FF}] Missing Zacc/Zvbb for {ens}, skipping.")
-            continue
-
-        prefactor = rho_val * np.sqrt(zacc_val * zvbb_val)
-
-        # M_Bs from the same cross-check file as before
-        m_choice = choose_m_for_ens(ens)
-        path_bs = f"../Results/Crosschecks/AB/Crosscheck-excited-{ens}-{m_choice}-V-3pt.csv"
-        if not os.path.exists(path_bs):
-            print(f"[fit {FF}] Missing Bs file for {ens}: {path_bs}")
-            continue
-        df_bs = pd.read_csv(path_bs, sep="\t")
-        MBs = df_bs.iloc[0]["Value"]
-        MBs_dict[ens] = MBs
-
-        # jackknife file for this ens and FF
-        path_jk = f"../Results/{ens}/Charm/PhysResults-JK-{FF}.csv"
-        if not os.path.exists(path_jk):
-            print(f"[fit {FF}] Missing jackknife file for {ens}: {path_jk}")
-            continue
-
-        df_jk = pd.read_csv(path_jk)
-        N_jk = len(df_jk)
-
-        if N_jk_global is None:
-            N_jk_global = N_jk
-        elif N_jk_global != N_jk:
-            raise RuntimeError(
-                f"Number of jackknife blocks differs: {N_jk_global} vs {N_jk} for {ens}"
-            )
-
-        # local jackknife matrix for this ensemble
-        npts_ens = len(nsq_phys)
-        jk_local = np.zeros((N_jk, npts_ens))
-
-        # mapping: column 'nsq1'..'nsq5' correspond in order to nsq_phys
-        for j, nsq in enumerate(nsq_phys):
-            col = f"nsq{j+1}"
-            if col not in df_jk.columns:
-                raise KeyError(f"{col} not found in JK file for {ens}, FF={FF}")
-            raw_vals = df_jk[col].to_numpy()
-            jk_local[:, j] = prefactor * raw_vals
-
-            # store kinematics once per point
-            E_list.append(Ds_mass_phys[ens][nsq])
-            ens_list.append(ens)
-
-        jk_blocks.append(jk_local)
-
-    if not jk_blocks:
-        raise RuntimeError(f"No data points collected for FF={FF}")
-
-    # concatenate JK over ensembles: shape (N_jk, N_points_total)
-    Y_jk = np.concatenate(jk_blocks, axis=1)   # (N_jk, Np)
-    N_jk = Y_jk.shape[0]
-    Np = Y_jk.shape[1]
-
-    # central values and covariance from jackknife
-    y_mean = np.mean(Y_jk, axis=0)
-    diffs = Y_jk - y_mean
-    factor = (N_jk - 1) / N_jk
-    C = factor * diffs.T @ diffs
-
-    # small regularization for safety
-    C_reg = C + 1e-10 * np.eye(Np)
-    Cinv = np.linalg.inv(C_reg)
-
-    E_arr = np.array(E_list)
-    ens_arr = np.array(ens_list, dtype=object)
-
-    return E_arr, ens_arr, y_mean, C, Cinv, MBs_dict
-'''
-
-
 def build_data_for_fit(FF):
     """
     Build:
@@ -449,7 +346,8 @@ def build_data_for_fit(FF):
 
         # Fill ensemble's jackknife block
         for j, nsq in enumerate(nsq_phys):
-            col = f"nsq{j+1}"
+            #col = f"nsq{j+1}"
+            col = f"nsq{nsq}"
             raw = df_jk[col].to_numpy()
             Y_jk_local[:, j] = prefactor * raw
 
@@ -523,57 +421,282 @@ def build_data_for_fit(FF):
     # build MBs dictionary
     MBs_dict = {ens: d["MBs"] for ens, d in per_ens.items()}
 
-    return E_arr, ens_arr, y_mean, C, Cinv, MBs_dict
-
+    return E_arr, ens_arr, y_mean, C, Cinv, MBs_dict, Y_super
 
 
 def ff_model(params, E_arr, ens_arr):
-    """
-    Global fit model:
-    1/E * ( c0*(1 + (f(MpiS)+f(MpiP))/(4π f_pi)^2)
-            + c1*ΔM_pi + c2*E + c3*E^2 + c4*a^2 )
-    with ensemble-dependent MpiS, ΔM_pi, a.
-    """
-    c0, c1, c2, c3, c4 = params
+    c0, c1, c2, c3, c4, c5 = params
+
     y = np.zeros_like(E_arr)
 
     for i, (E, ens) in enumerate(zip(E_arr, ens_arr)):
         inp = fit_inputs[ens]
-        MpiS = inp["MpiS"]
+        MpiS = inp["MpiS"]         # stays unused now (no chiral logs)
         DeltaM = inp["DeltaMpi"]
         a = inp["a"]
 
-        fS = chiral_f(MpiS)
-        chiral_factor = 1.0 + (fS + _fP) / _four_pi_f_sq
-
         numer = (
-            c0 * chiral_factor
+              c0
             + c1 * DeltaM
             + c2 * E
             + c3 * E**2
-            + c4 * a**2
+            + c4 * a
+            + c5 * a**2
         )
-        y[i] = numer / E
+
+        y[i] = numer / (E+de)
 
     return y
+
+
+'''
+def ff_model(params, E_arr, ens_arr):
+    # now 7 parameters
+    #c0, c1, c2, c3, c4, c5, c6 = params
+
+    y = np.zeros_like(E_arr)
+
+    for i, (E, ens) in enumerate(zip(E_arr, ens_arr)):
+        inp = fit_inputs[ens]
+        MpiS   = inp["MpiS"]
+        DeltaM = inp["DeltaMpi"]
+        a      = inp["a"]
+
+        # chiral log difference term: [δf(MpiS) - δf(MpiP)] / (4π fπ)^2
+        delta_chi = (chiral_f(MpiS) - _fP) / _four_pi_f_sq
+
+        numer = (
+              c0
+            + c1 * DeltaM
+            + c2 * E
+            + c3 * E**2
+            + c4 * a
+            + c5 * a**2
+            + c6 * delta_chi
+        )
+
+        y[i] = numer / (E+de)
+
+    return y
+'''
+
 
 def chi2_global(params, E_arr, ens_arr, y_mean, Cinv):
     diff = y_mean - ff_model(params, E_arr, ens_arr)
     return float(diff.T @ Cinv @ diff)
 
+
+def build_design_matrix(E_arr, ens_arr):
+    """
+    Build F such that y_model = F @ params, with
+    params = (c0, c1, c2, c3, c4, c5).
+
+    y_i = [c0 + c1*ΔM + c2*E + c3*E**2 + c4*a + c5*a**2] / E
+        = c0*(1/E) + c1*(ΔM/E) + c2*1 + c3*E + c4*(a/E) + c5*(a^2/E)
+    """
+    Np = len(E_arr)
+    F = np.zeros((Np, 6))
+
+    for i, (E, ens) in enumerate(zip(E_arr, ens_arr)):
+        inp = fit_inputs[ens]
+        DeltaM = inp["DeltaMpi"]
+        a = inp["a"]
+
+        F[i, 0] = 1.0 / (E+de)          # c0
+        F[i, 1] = DeltaM / (E+de)       # c1
+        F[i, 2] = E / (E+de)              # c2
+        F[i, 3] = E                # c3
+        F[i, 4] = a / (E+de)            # c4
+        F[i, 5] = (a * a) / (E+de)      # c5
+
+    return F
+
+'''
+def build_design_matrix(E_arr, ens_arr):
+    """
+    Build F such that y_model = F @ params, with
+    params = (c0, c1, c2, c3, c4, c5, c6).
+
+    y_i = [c0 + c1*ΔM + c2*E + c3*E**2 + c4*a + c5*a**2 + c6*Δχ] / E
+         = c0*(1/E) + c1*(ΔM/E) + c2*1 + c3*E + c4*(a/E) + c5*(a^2/E)
+           + c6*(Δχ/E)
+    """
+    Np = len(E_arr)
+    F = np.zeros((Np, 7))
+
+    for i, (E, ens) in enumerate(zip(E_arr, ens_arr)):
+        inp = fit_inputs[ens]
+        DeltaM = inp["DeltaMpi"]
+        a      = inp["a"]
+        MpiS   = inp["MpiS"]
+
+        delta_chi = (chiral_f(MpiS) - _fP) / _four_pi_f_sq
+
+        F[i, 0] = 1.0 / (E+de)           # c0
+        F[i, 1] = DeltaM / (E+de)        # c1
+        F[i, 2] = E/(E+de)               # c2
+        F[i, 3] = E**2/(E+de)                 # c3
+        F[i, 4] = a / (E+de)             # c4
+        F[i, 5] = (a * a) / (E+de)       # c5
+        #F[i, 6] = delta_chi / (E+de)     # c6
+
+    return F
+'''
+
+
 def fit_and_plot_FF(FF):
     
     # build data & covariance
-    E_arr, ens_arr, y_mean, C, Cinv, MBs_dict = build_data_for_fit(FF)
+    E_arr, ens_arr, y_mean, C, Cinv, MBs_dict, Y_super = build_data_for_fit(FF)
+
+    # --- correlated linear least-squares fit ---
+    F = build_design_matrix(E_arr, ens_arr)
+
+    A = F.T @ Cinv @ F
+    b = F.T @ Cinv @ y_mean
+
+    Cov_p = np.linalg.inv(A)
+    params_fit = Cov_p @ b
+
+    resid = y_mean - F @ params_fit
+    chic2 = float(resid.T @ Cinv @ resid)
+    dof = len(y_mean) - len(params_fit)
+
+    from scipy.stats import chi2
+    p_value = chi2.sf(chic2, dof)
+
+
+    #print(f"\n=== {FF} fit (analytic χ² minimum) ===")
+    print("chi2:", chic2, "  dof:", dof, "  chi2/dof:", chic2/dof, "  pvalue:", p_value)
+
+    p_err = np.sqrt(np.diag(Cov_p))
+    #print("\n=== PARAMS ===")
+    for i, (val, err) in enumerate(zip(params_fit, p_err)):
+        print(f"c{i} = {val:.6f} ± {err:.6f}")
+
+    ax = plt.gca()
+
+    # === Compute x-values of the data ===
+    MBs_for_points = np.array([MBs_dict[e] for e in ens_arr])
+    x_data = (E_arr / MBs_for_points)**2
+    x_min = x_data.min()
+    x_max = x_data.max()
+
+    # ======================================================
+    # 1) FIT CURVE PER ENSEMBLE (each in its ensemble color)
+    # ======================================================
+
+    ensemble_colors = {
+        "F1S": "#43A047",   # bright green
+        "M1": plt.cm.Blues(0.55),
+        "M2": plt.cm.Blues(0.70),
+        "M3": plt.cm.Blues(0.85),
+        "C1": plt.cm.Reds(0.55),
+        "C2": plt.cm.Reds(0.85),
+    }
+
+    for ens in Ds_mass_phys.keys():
+        mask = (ens_arr == ens)
+        if not np.any(mask):
+            continue
+
+        # Ensemble-specific E-range
+        E_ens = E_arr[mask]
+        MBs = MBs_dict[ens]
+
+        Emin = E_ens.min()
+        Emax = E_ens.max()
+        E_grid_ens = np.linspace(Emin, Emax, 200)
+
+        ens_grid_ens = np.array([ens] * len(E_grid_ens), dtype=object)
+
+        # Evaluate model with the ensemble’s actual ΔM and a
+        y_grid_ens = ff_model(params_fit, E_grid_ens, ens_grid_ens)
+
+        x_grid_ens = (E_grid_ens / MBs)**2
+
+        ax.plot(
+            x_grid_ens, y_grid_ens,
+            color=ensemble_colors[ens],
+            linewidth=2.0,
+            label=f"{ens} fit"
+        )
+
+    '''
+    # ======================================================
+    # 2) Black PHYSICAL CURVE (a=0, ΔM=0)
+    # ======================================================
+
+    MBs_ref = np.mean(list(MBs_dict.values()))
+    x_grid_phys = np.linspace(x_min, x_max, 400)
+    E_grid_phys = MBs_ref * np.sqrt(x_grid_phys)
+
+    # Insert physical inputs:
+    fit_inputs["PHYS"] = dict(MpiS=MpiP, DeltaMpi=0.0, a=0.0)
+
+    ens_phys = np.array(["PHYS"] * len(E_grid_phys), dtype=object)
+    y_phys = ff_model(params_fit, E_grid_phys, ens_phys)
+
+    del fit_inputs["PHYS"]
+
+    ax.plot(
+        x_grid_phys, y_phys,
+        color="black", linewidth=3.0,
+        label="physical (a=0, ΔM=0)"
+    )
+    '''
+
+
+make_plot("V",  "V-FPlot_physical-test.png")
+make_plot("A0", "A0-FPlot_physical-test.png")
+make_plot("A1", "A1-FPlot_physical-test.png")
+
+
+
+'''
+def build_design_matrix(E_arr, ens_arr):
+    """
+    Build F such that y_model = F @ params, with
+    params = (c0, c1, c2, c3, c4, c5).
+
+    y_i = [c0 + c1*ΔM + c2*E + c3*E**2 + c4*a + c5*a**2] / E
+        = c0*(1/E) + c1*(ΔM/E) + c2*1 + c3*E + c4*(a/E) + c5*(a^2/E)
+    """
+    Np = len(E_arr)
+    F = np.zeros((Np, 6))
+
+    for i, (E, ens) in enumerate(zip(E_arr, ens_arr)):
+        inp = fit_inputs[ens]
+        DeltaM = inp["DeltaMpi"]
+        a = inp["a"]
+
+        F[i, 0] = 1.0 / E          # c0
+        F[i, 1] = DeltaM / E       # c1
+        F[i, 2] = 1.0              # c2
+        F[i, 3] = E                # c3
+        F[i, 4] = a / E            # c4
+        F[i, 5] = (a * a) / E      # c5
+
+    return F
+'''
+'''
+def fit_and_plot_FF(FF):
+    
+    # build data & covariance
+    E_arr, ens_arr, y_mean, C, Cinv, MBs_dict, Y_super = build_data_for_fit(FF)
     
     # initial guess for parameters [c0, c1, c2, c3, c4]
-    x0 = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+    #x0 = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
+    
+    x0 = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+
 
     res = minimize(
         chi2_global, x0,
         args=(E_arr, ens_arr, y_mean, Cinv),
         method="BFGS"
     )
+    
 
     print(f"\n=== {FF} fit ===")
     print("success:", res.success)
@@ -581,37 +704,147 @@ def fit_and_plot_FF(FF):
     print("params:", res.x)
 
     params_fit = res.x
+    
+
+        # --- correlated linear least-squares fit ---
+    F = build_design_matrix(E_arr, ens_arr)
+
+    # A = F^T C^{-1} F,  b = F^T C^{-1} y
+    A = F.T @ Cinv @ F
+    b = F.T @ Cinv @ y_mean
+
+    Cov_p = np.linalg.inv(A)
+    params_fit = Cov_p @ b
+
+    # central chi^2
+    resid = y_mean - F @ params_fit
+    chi2 = float(resid.T @ Cinv @ resid)
+    dof = len(y_mean) - len(params_fit)
+
+    print(f"\n=== {FF} fit (analytic χ² minimum) ===")
+    print("chi2:", chi2, "  dof:", dof, "  chi2/dof:", chi2/dof)
+
+    # parameter errors from covariance
+    p_err = np.sqrt(np.diag(Cov_p))
+    print("\n=== PARAMS (from Cov_p) ===")
+    for i, (val, err) in enumerate(zip(params_fit, p_err)):
+        print(f"c{i} = {val:.6f} ± {err:.6f}")
+
+
     ax = plt.gca()
+    ######
 
-    '''
-    # plot one smooth curve per ensemble using the ensemble's inputs
-    for ens in Ds_mass_phys.keys():
-        mask = (ens_arr == ens)
-        if not np.any(mask):
-            continue
+        # === Compute x-values of the data ===
+    MBs_for_points = np.array([MBs_dict[e] for e in ens_arr])
+    x_data = (E_arr / MBs_for_points)**2
+    x_min = x_data.min()
+    x_max = x_data.max()
+    x_grid = np.linspace(x_min, x_max, 400)
 
-        E_ens = E_arr[mask]
-        Emin, Emax = E_ens.min(), E_ens.max()
-        E_grid = np.linspace(Emin, Emax, 200)
-        ens_grid = np.array([ens] * len(E_grid), dtype=object)
-        y_grid = ff_model(params_fit, E_grid, ens_grid)
+    # Use some representative MBs to map x -> E for the fit curve
+    MBs_ref = np.mean(list(MBs_dict.values()))
+    E_grid = MBs_ref * np.sqrt(x_grid)
 
-        # convert to the x-variable you plot: (E_Ds*/M_Bs)^2
-        MBs = MBs_dict[ens]
-        x_grid = (E_grid / MBs)**2
+    # build fake ensemble array with physical inputs
+    fit_inputs["PHYS"] = dict(MpiS=MpiP, DeltaMpi=0.0, a=0.0)
+    ens_grid = np.array(["PHYS"] * len(E_grid), dtype=object)
 
-        prefix = ens[0]
-        if prefix == "F":
-            color = bright_pinks[0]
-        else:
-            cmap = base_colors.get(prefix, plt.cm.Greys)
-            color = cmap(0.5)
+    y_grid = ff_model(params_fit, E_grid, ens_grid)
 
-        ax.plot(x_grid, y_grid, linestyle='-', color=color)
-    '''
-        
-    # === Plot ONE single global curve ===
-    # physical-continuum reference inputs
+    del fit_inputs["PHYS"]
+
+    ax.plot(x_grid, y_grid, color="black", linewidth=2.0, label="global fit")
+    #plt.ylim(0.8, 1.5)
+
+
+    ######
+    
+        # --------------------------------------------------------
+    #  JACKKNIFE ERROR BAND FOR THE FIT CURVE
+    # --------------------------------------------------------
+    # compute x-grid exactly as earlier
+    MBs_for_points = np.array([MBs_dict[e] for e in ens_arr])
+    x_data = (E_arr / MBs_for_points)**2
+    x_min = x_data.min()
+    x_max = x_data.max()
+    x_grid = np.linspace(x_min, x_max, 200)
+
+    MBs_ref = np.mean(list(MBs_dict.values()))
+    E_grid = MBs_ref * np.sqrt(x_grid)
+
+    # prepare PHYS ensemble inputs
+    fit_inputs["PHYS"] = dict(MpiS=MpiP, DeltaMpi=0.0, a=0.0)
+    ens_grid_phys = np.array(["PHYS"] * len(E_grid), dtype=object)
+
+    # number of jackknife samples
+    N_jk = Y_super.shape[0]   # ← exists already from build_data_for_fit
+
+    # store all jackknife curves
+    y_jk_grid = np.zeros((N_jk, len(E_grid)))
+
+    param_jk_list = []
+
+    # --- loop over all jackknife samples ---
+    for k in range(N_jk):
+        # jackknife sample output for y_mean
+        y_mean_jk = Y_super[k]
+
+        # local chi2 using that sample
+        def chi2_jk(params):
+            diff = y_mean_jk - ff_model(params, E_arr, ens_arr)
+            return float(diff.T @ Cinv @ diff)
+
+        # re-fit parameters to this jk sample
+        res_jk = minimize(chi2_jk, params_fit, method="BFGS")
+        p_jk = res_jk.x
+
+        # evaluate model on the grid
+        y_jk_grid[k] = ff_model(p_jk, E_grid, ens_grid_phys)
+
+        res_jk = minimize(chi2_jk, params_fit, method="BFGS")
+        p_jk = res_jk.x
+
+        param_jk_list.append(p_jk)
+
+
+    param_jk = np.array(param_jk_list)   # shape (N_jk, n_params)
+
+    # jackknife mean
+    p_mean = np.mean(param_jk, axis=0)
+
+    # jackknife std: sqrt((N−1)/N * Σ (p_k − p_mean)^2)
+    diffs = param_jk - p_mean
+    p_std = np.sqrt((N_jk - 1) / N_jk * np.sum(diffs**2, axis=0))
+
+    print("\n=== JACKKNIFE PARAMETER ERRORS ===")
+    for i, (mean, err) in enumerate(zip(p_mean, p_std)):
+        print(f"c{i} = {mean:.6f} ± {err:.6f}")
+
+
+    # delete phys entry
+    del fit_inputs["PHYS"]
+
+    # --- jackknife mean and std ---
+    y_mean_grid = np.mean(y_jk_grid, axis=0)
+    diffs = y_jk_grid - y_mean_grid
+    y_std_grid = np.sqrt((N_jk - 1) / N_jk * np.sum(diffs**2, axis=0))
+
+    # --- plot band ---
+    ax.fill_between(
+        x_grid,
+        y_mean_grid - y_std_grid,
+        y_mean_grid + y_std_grid,
+        color="black",
+        alpha=0.2,
+        linewidth=0,
+        label="fit error band"
+    )
+
+    # --- plot central fit curve ---
+    ax.plot(x_grid, y_mean_grid, color="black", linewidth=2)
+    plt.ylim(0.8, 1.5)
+    
+
     MpiS_phys = MpiP         # = M_pi^P
     DeltaM_phys = 0.0
     a_phys = 0.0
@@ -628,6 +861,7 @@ def fit_and_plot_FF(FF):
     temp = dict(MpiS=MpiS_phys, DeltaMpi=DeltaM_phys, a=a_phys)
     fit_inputs["PHYS"] = temp
 
+    
     y_grid = ff_model(params_fit, E_grid, ens_grid)
 
     # remove temporary entry again
@@ -640,9 +874,33 @@ def fit_and_plot_FF(FF):
 
     ax = plt.gca()
     ax.plot(x_grid, y_grid, color="black", linewidth=2.0, label="global fit")
+    
 
+    
+     # === Compute x-values of the data ===
+    MBs_for_points = np.array([MBs_dict[e] for e in ens_arr])
+    x_data = (E_arr / MBs_for_points)**2
 
+    # === Build grid over actual x-range used in the plot ===
+    x_min = x_data.min()
+    x_max = x_data.max()
+    x_grid = np.linspace(x_min, x_max, 400)
 
-make_plot("V",  "V-FPlot_physical-test.png")
-make_plot("A0", "A0-FPlot_physical-test.png")
-#make_plot("A1", "A1-FPlot_physical-test.png")
+    # Use a representative MBs (average or picked ensemble)
+    MBs_ref = np.mean(list(MBs_dict.values()))
+
+    # Convert x-grid back to E-grid
+    E_grid = MBs_ref * np.sqrt(x_grid)
+
+    # Build fake ensemble array for continuum
+    ens_grid = np.array(["PHYS"] * len(E_grid), dtype=object)
+    fit_inputs["PHYS"] = dict(MpiS=MpiP, DeltaMpi=0.0, a=0.0)
+
+    y_grid = ff_model(params_fit, E_grid, ens_grid)
+
+    del fit_inputs["PHYS"]
+
+    # plot
+    ax.plot(x_grid, y_grid, color="black", linewidth=2.0, label="global fit")
+''' 
+
