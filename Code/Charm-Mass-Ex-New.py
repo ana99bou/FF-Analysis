@@ -4,7 +4,7 @@ import numpy as np
 
 # Define the FF you want to read (currently fixed to "V")
 Ense='C1'
-FF = "A1"
+FF = "V"
 
 # Your ensemble → cmass mapping
 ens_dict = {
@@ -304,300 +304,6 @@ print(f"c2_jk_error = {c_jk_err[2]:.6e}")
 print(f"c3_jk_error = {c_jk_err[3]:.6e}")
 
 
-import plotly.graph_objects as go
-import numpy as np
-
-# ============================================================
-# Create fine grid for the fitted plane
-# ============================================================
-
-nsq_grid = np.linspace(nsq_arr.min(), nsq_arr.max(), 40)
-mass_grid = np.linspace(mass_arr.min(), mass_arr.max(), 40)
-NSQ, MASS = np.meshgrid(nsq_grid, mass_grid)
-
-#FF_plane = c0 + c1 * MASS + c2 * NSQ
-# New plane including cross-term
-FF_plane = (
-    c0
-    + c1 * MASS
-    + c2 * NSQ
-    + c3 * MASS * NSQ
-)
-
-# ============================================================
-# Compute jackknife planes
-# ============================================================
-
-FF_jk_planes = np.zeros((N_jk, MASS.shape[0], MASS.shape[1]))
-
-for a in range(N_jk):
-    c0_j, c1_j, c2_j, c3_j = c_jk[a]
-    FF_jk_planes[a] = (
-        c0_j
-        + c1_j * MASS
-        + c2_j * NSQ
-        + c3_j * MASS * NSQ
-    )
-
-# Jackknife mean and variance at each plane grid point
-FF_mean_plane = np.mean(FF_jk_planes, axis=0)
-
-FF_var_plane = (N_jk - 1)/N_jk * np.sum((FF_jk_planes - FF_mean_plane)**2, axis=0)
-FF_err_plane = np.sqrt(FF_var_plane)
-
-FF_plane_plus  = FF_mean_plane + FF_err_plane
-FF_plane_minus = FF_mean_plane - FF_err_plane
-
-
-
-
-
-cmasses = ens_dict[Ense]             # e.g. [0.300, 0.350, 0.400]
-cmass_points = {c: {"nsq": [], "mass": [], "ff": [], "err": []} for c in cmasses}
-
-idx = 0
-for cmass in cmasses:
-    for nsq_idx in range(len(nsq_vals)):
-        nsq, m, ff_mean, ff_list = points[idx]
-        idx += 1
-
-        cmass_points[cmass]["nsq"].append(nsq)
-        cmass_points[cmass]["mass"].append(m)
-        cmass_points[cmass]["ff"].append(ff_mean)
-
-        # compute jackknife error
-        jk_vals = np.array(ff_list[1:])
-        mean_jk = np.mean(jk_vals)
-        err_jk  = np.sqrt((N_jk - 1)/N_jk * np.sum((jk_vals - mean_jk)**2))
-
-        cmass_points[cmass]["err"].append(err_jk)
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ============================================================
-# Separate points by charm mass for coloring
-# ============================================================
-'''
-cmass1 = ens_dict[Ense][0]
-cmass2 = ens_dict[Ense][1]
-
-nsq_1  = []
-mass_1 = []
-ff_1   = []
-
-nsq_2  = []
-mass_2 = []
-ff_2   = []
-
-
-for i, cmass in enumerate([cmass1, cmass2]):
-    #for nsq_idx in range(5):
-        #p = points[i*5 + nsq_idx]  # (nsq, mass, ff, ff_list)
-    for nsq_idx in range(len(nsq_vals)):
-        p = points[i * len(nsq_vals) + nsq_idx]  # (
-        nsq, m, ff_mean, _ = p
-
-        if cmass == cmass1:
-            nsq_1.append(nsq)
-            mass_1.append(m)
-            ff_1.append(ff_mean)
-        else:
-            nsq_2.append(nsq)
-            mass_2.append(m)
-            ff_2.append(ff_mean)
-'''
-
-import plotly.colors as colors
-color_list = colors.qualitative.Dark24  # many distinct colors
-
-fig = go.Figure()
-
-for i, cmass in enumerate(cmasses):
-    col = color_list[i % len(color_list)]
-    data = cmass_points[cmass]
-
-    # points
-    fig.add_trace(go.Scatter3d(
-        x=data["nsq"],
-        y=data["mass"],
-        z=data["ff"],
-        mode="markers",
-        name=f"{Ense}, cmass={cmass}",
-        marker=dict(size=6, color=col)
-    ))
-
-    # error bars
-    for x, y, z, e in zip(data["nsq"], data["mass"], data["ff"], data["err"]):
-        fig.add_trace(go.Scatter3d(
-            x=[x, x],
-            y=[y, y],
-            z=[z-e, z+e],
-            mode="lines",
-            line=dict(color=col, width=3),
-            showlegend=False
-        ))
-
-
-# ============================================================
-# Build the 3D figure
-# ============================================================
-
-# Compute z errors using jackknife values
-
-#err = sqrt((N_jk - 1)/N_jk * Σ (ff_jk - mean_jk)^2)
-'''
-zerr_1 = []
-zerr_2 = []
-
-for cmass in [cmass1, cmass2]:
-    for nsq_idx in range(len(nsq_vals)):
-        p = points[(0 if cmass == cmass1 else 1) * len(nsq_vals) + nsq_idx]
-        _, _, ff_mean, ff_list = p
-
-        jk_vals = np.array(ff_list[1:])
-        mean_jk = np.mean(jk_vals)
-        err_jk = np.sqrt((N_jk - 1)/N_jk * np.sum((jk_vals - mean_jk)**2))
-
-        if cmass == cmass1:
-            zerr_1.append(err_jk)
-        else:
-            zerr_2.append(err_jk)
-
-def z_error_segments(x, y, z, zerr, color):
-    traces = []
-    for xi, yi, zi, ei in zip(x, y, z, zerr):
-        traces.append(go.Scatter3d(
-            x=[xi, xi],
-            y=[yi, yi],
-            z=[zi - ei, zi + ei],
-            mode="lines",
-            line=dict(color=color, width=3),
-            showlegend=False
-        ))
-    return traces
-
-
-
-fig = go.Figure()
-'''
-'''
-# Data points – cmass 1
-fig.add_trace(go.Scatter3d(
-    x=nsq_1, y=mass_1, z=ff_1,
-    mode='markers',
-    name=f"{Ense}, cmass={cmass1}",
-    marker=dict(size=6, color='blue')
-))
-
-# Data points – cmass 2
-fig.add_trace(go.Scatter3d(
-    x=nsq_2, y=mass_2, z=ff_2,
-    mode='markers',
-    name=f"{Ense}, cmass={cmass2}",
-    marker=dict(size=6, color='red')
-))
-'''
-'''
-# Data points – cmass 1
-fig.add_trace(go.Scatter3d(
-    x=nsq_1, y=mass_1, z=ff_1,
-    mode='markers',
-    name=f"{Ense}, cmass={cmass1}",
-    marker=dict(size=6, color='blue')
-))
-
-# Add z error bars (cmass 1)
-for t in z_error_segments(nsq_1, mass_1, ff_1, zerr_1, color='blue'):
-    fig.add_trace(t)
-
-# Data points – cmass 2
-fig.add_trace(go.Scatter3d(
-    x=nsq_2, y=mass_2, z=ff_2,
-    mode='markers',
-    name=f"{Ense}, cmass={cmass2}",
-    marker=dict(size=6, color='red')
-))
-
-# Add z error bars (cmass 2)
-for t in z_error_segments(nsq_2, mass_2, ff_2, zerr_2, color='red'):
-    fig.add_trace(t)
-'''
-
-'''
-# Fitted plane
-fig.add_trace(go.Surface(
-    x=NSQ, y=MASS, z=FF_plane,
-    showscale=False,
-    opacity=0.6,
-    name="Fit plane"
-))
-'''
-
-# Central plane
-fig.add_trace(go.Surface(
-    x=NSQ, y=MASS, z=FF_plane,
-    showscale=False,
-    opacity=0.55,
-    name="Central fit plane",
-    colorscale="Viridis"
-))
-
-# +1σ plane
-fig.add_trace(go.Surface(
-    x=NSQ, y=MASS, z=FF_plane_plus,
-    showscale=False,
-    opacity=0.35,
-    name="+1σ plane",
-    surfacecolor=np.zeros_like(FF_plane_plus),
-    colorscale=[[0, "red"], [1, "red"]],
-))
-
-# -1σ plane
-fig.add_trace(go.Surface(
-    x=NSQ, y=MASS, z=FF_plane_minus,
-    showscale=False,
-    opacity=0.35,
-    name="−1σ plane",
-    surfacecolor=np.zeros_like(FF_plane_minus),
-    colorscale=[[0, "blue"], [1, "blue"]],
-))
-
-
-
-
-# ============================================================
-# Axis labels and layout
-# ============================================================
-
-fig.update_layout(
-    #title=f"Correlated Fit 3D — {Ense}",
-    scene=dict(
-        xaxis_title="nsq",
-        yaxis_title="Mass0 mean",
-        zaxis_title="FF mean (O00)"
-    ),
-    width=900,
-    height=700
-)
-
-# ============================================================
-# Save as HTML
-# ============================================================
-
-fig.write_html(f"../Results/{Ense}/Charm/fit3D-{FF}.html")
-print("Saved interactive plot as fit3D.html")
-
-
 # ============================================================
 # === PHYSICAL MASS TABLE SELECTION ==========================
 # ============================================================
@@ -744,3 +450,228 @@ with open(file2, "w", newline="") as f:
         w.writerow(row)
 
 print("Saved Jackknife Physical Results →", file2)
+
+
+import plotly.graph_objects as go
+import numpy as np
+
+# ============================================================
+# Create fine grid for the fitted plane
+# ============================================================
+
+nsq_grid = np.linspace(nsq_arr.min(), nsq_arr.max(), 40)
+mass_grid = np.linspace(mass_arr.min(), mass_arr.max(), 40)
+NSQ, MASS = np.meshgrid(nsq_grid, mass_grid)
+
+#FF_plane = c0 + c1 * MASS + c2 * NSQ
+# New plane including cross-term
+FF_plane = (
+    c0
+    + c1 * MASS
+    + c2 * NSQ
+    + c3 * MASS * NSQ
+)
+
+# ============================================================
+# Compute jackknife planes
+# ============================================================
+
+FF_jk_planes = np.zeros((N_jk, MASS.shape[0], MASS.shape[1]))
+
+for a in range(N_jk):
+    c0_j, c1_j, c2_j, c3_j = c_jk[a]
+    FF_jk_planes[a] = (
+        c0_j
+        + c1_j * MASS
+        + c2_j * NSQ
+        + c3_j * MASS * NSQ
+    )
+
+# Jackknife mean and variance at each plane grid point
+FF_mean_plane = np.mean(FF_jk_planes, axis=0)
+
+FF_var_plane = (N_jk - 1)/N_jk * np.sum((FF_jk_planes - FF_mean_plane)**2, axis=0)
+FF_err_plane = np.sqrt(FF_var_plane)
+
+FF_plane_plus  = FF_mean_plane + FF_err_plane
+FF_plane_minus = FF_mean_plane - FF_err_plane
+
+
+
+
+
+cmasses = ens_dict[Ense]             # e.g. [0.300, 0.350, 0.400]
+cmass_points = {c: {"nsq": [], "mass": [], "ff": [], "err": []} for c in cmasses}
+
+idx = 0
+for cmass in cmasses:
+    for nsq_idx in range(len(nsq_vals)):
+        nsq, m, ff_mean, ff_list = points[idx]
+        idx += 1
+
+        cmass_points[cmass]["nsq"].append(nsq)
+        cmass_points[cmass]["mass"].append(m)
+        cmass_points[cmass]["ff"].append(ff_mean)
+
+        # compute jackknife error
+        jk_vals = np.array(ff_list[1:])
+        mean_jk = np.mean(jk_vals)
+        err_jk  = np.sqrt((N_jk - 1)/N_jk * np.sum((jk_vals - mean_jk)**2))
+
+        cmass_points[cmass]["err"].append(err_jk)
+
+
+# ============================================================
+# Separate points by charm mass for coloring
+# ============================================================
+'''
+cmass1 = ens_dict[Ense][0]
+cmass2 = ens_dict[Ense][1]
+
+nsq_1  = []
+mass_1 = []
+ff_1   = []
+
+nsq_2  = []
+mass_2 = []
+ff_2   = []
+
+
+for i, cmass in enumerate([cmass1, cmass2]):
+    #for nsq_idx in range(5):
+        #p = points[i*5 + nsq_idx]  # (nsq, mass, ff, ff_list)
+    for nsq_idx in range(len(nsq_vals)):
+        p = points[i * len(nsq_vals) + nsq_idx]  # (
+        nsq, m, ff_mean, _ = p
+
+        if cmass == cmass1:
+            nsq_1.append(nsq)
+            mass_1.append(m)
+            ff_1.append(ff_mean)
+        else:
+            nsq_2.append(nsq)
+            mass_2.append(m)
+            ff_2.append(ff_mean)
+'''
+
+import plotly.colors as colors
+color_list = colors.qualitative.Dark24  # many distinct colors
+
+fig = go.Figure()
+
+for i, cmass in enumerate(cmasses):
+    col = color_list[i % len(color_list)]
+    data = cmass_points[cmass]
+
+    # points
+    fig.add_trace(go.Scatter3d(
+        x=data["nsq"],
+        y=data["mass"],
+        z=data["ff"],
+        mode="markers",
+        name=f"{Ense}, cmass={cmass}",
+        marker=dict(size=6, color=col)
+    ))
+
+    # error bars
+    for x, y, z, e in zip(data["nsq"], data["mass"], data["ff"], data["err"]):
+        fig.add_trace(go.Scatter3d(
+            x=[x, x],
+            y=[y, y],
+            z=[z-e, z+e],
+            mode="lines",
+            line=dict(color=col, width=3),
+            showlegend=False
+        ))
+
+
+# ============================================================
+# Build the 3D figure
+# ============================================================
+
+# Compute z errors using jackknife values
+
+#err = sqrt((N_jk - 1)/N_jk * Σ (ff_jk - mean_jk)^2)
+
+# Central plane
+fig.add_trace(go.Surface(
+    x=NSQ, y=MASS, z=FF_plane,
+    showscale=False,
+    opacity=0.55,
+    name="Central fit plane",
+    colorscale="Viridis"
+))
+
+# +1σ plane
+fig.add_trace(go.Surface(
+    x=NSQ, y=MASS, z=FF_plane_plus,
+    showscale=False,
+    opacity=0.35,
+    name="+1σ plane",
+    surfacecolor=np.zeros_like(FF_plane_plus),
+    colorscale=[[0, "red"], [1, "red"]],
+))
+
+# -1σ plane
+fig.add_trace(go.Surface(
+    x=NSQ, y=MASS, z=FF_plane_minus,
+    showscale=False,
+    opacity=0.35,
+    name="−1σ plane",
+    surfacecolor=np.zeros_like(FF_plane_minus),
+    colorscale=[[0, "blue"], [1, "blue"]],
+))
+
+
+# ============================================================
+# === Add physical prediction points (already in memory) =====
+# ============================================================
+
+phys_nsq  = nsq_pred
+phys_mass = [mass_table_phys[n] for n in nsq_pred]
+phys_ff   = phys_central
+phys_errz = phys_err
+
+# Central physical points
+fig.add_trace(go.Scatter3d(
+    x=phys_nsq,
+    y=phys_mass,
+    z=phys_ff,
+    mode="markers",
+    name="Physical FF (Ds mass)",
+    marker=dict(size=9, color="black", symbol="diamond")
+))
+
+# Vertical error bars
+for x, y, z, e in zip(phys_nsq, phys_mass, phys_ff, phys_errz):
+    fig.add_trace(go.Scatter3d(
+        x=[x, x],
+        y=[y, y],
+        z=[z - e, z + e],
+        mode="lines",
+        line=dict(color="black", width=4),
+        showlegend=False
+    ))
+
+
+# ============================================================
+# Axis labels and layout
+# ============================================================
+
+fig.update_layout(
+    #title=f"Correlated Fit 3D — {Ense}",
+    scene=dict(
+        xaxis_title="nsq",
+        yaxis_title="Mass0 mean",
+        zaxis_title="FF mean (O00)"
+    ),
+    width=900,
+    height=700
+)
+
+# ============================================================
+# Save as HTML
+# ============================================================
+
+fig.write_html(f"../Results/{Ense}/Charm/fit3D-{FF}.html")
+print("Saved interactive plot as fit3D.html")
