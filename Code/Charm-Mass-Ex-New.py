@@ -3,8 +3,8 @@ from pathlib import Path
 import numpy as np
 
 # Define the FF you want to read (currently fixed to "V")
-Ense='C2'
-FF = "V"
+Ense='F1S'
+FF = "A1"
 
 # Your ensemble → cmass mapping
 ens_dict = {
@@ -93,12 +93,12 @@ for Ens in ens_dict:
         cmass_str = f"{cmass:.3f}"
 
         # create empty lists for nsq = 1..5
-        mass0_all[Ens][cmass] = [[] for _ in range(5)]
+        mass0_all[Ens][cmass] = [[] for _ in range(6)]
 
         # -----------------------------
         # PART 1: read static Mass0
         # -----------------------------
-        for nsq in range(1, 6):
+        for nsq in range(0, 6):
             result_path = Path(f"../Data/{Ens}/2pt/Excited-comb-Ds{cmass_str}Result-{nsq}.csv")
             
             with open(result_path, "r") as f:
@@ -121,14 +121,14 @@ for Ens in ens_dict:
                     static_mass0 = float(row[mass0_idx])
                     
                     # store as FIRST element
-                    mass0_all[Ens][cmass][nsq - 1].append(static_mass0)
+                    mass0_all[Ens][cmass][nsq].append(static_mass0)
                     break   # only want first row
 
 
         # -----------------------------
         # PART 2: append m0 block values
         # -----------------------------
-        for nsq in range(1, 6):
+        for nsq in range(0, 6):
             blocks_path = Path(f"../Data/{Ens}/2pt/Excited-comb-Blocks-Ds{cmass_str}-{nsq}.csv")
 
             with open(blocks_path, "r") as f:
@@ -147,7 +147,7 @@ for Ens in ens_dict:
 
                     # data rows: append AFTER static Mass0
                     m0_val = float(row[m0_idx])
-                    mass0_all[Ens][cmass][nsq - 1].append(m0_val)
+                    mass0_all[Ens][cmass][nsq].append(m0_val)
 
 for Ens in mass0_all:
     for cmass in mass0_all[Ens]:
@@ -172,8 +172,12 @@ else:
 
 points = []   # list of (nsq, mass_mean, ff_mean, ff_jk)
 
+print(mass0_all[Ense])
 for cmass in cmasses:
     for nsq_idx, nsq in enumerate(nsq_vals):
+
+        #print('nsq idx', nsq_idx)
+        print('nsq', nsq)
 
         ff_list   = results[Ense][cmass][nsq_idx]      # [mean, jk...]
         mass_list = mass0_all[Ense][cmass][nsq_idx]    # [mean, jk...]
@@ -507,6 +511,8 @@ idx = 0
 for cmass in cmasses:
     for nsq_idx in range(len(nsq_vals)):
         nsq, m, ff_mean, ff_list = points[idx]
+        print('NSQ: ',nsq)
+        print('Mass', m)
         idx += 1
 
         cmass_points[cmass]["nsq"].append(nsq)
@@ -672,6 +678,8 @@ fig.update_layout(
 # ============================================================
 # Save as HTML
 # ============================================================
+
+print(cmass_points)
 
 fig.write_html(f"../Results/{Ense}/Charm/fit3D-{FF}.html")
 print("Saved interactive plot as fit3D.html")
