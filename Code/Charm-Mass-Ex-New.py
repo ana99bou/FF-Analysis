@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 
 # Define the FF you want to read (currently fixed to "V")
-Ense='C1'
+Ense='C2'
 FF = "V"
 
 # Your ensemble → cmass mapping
