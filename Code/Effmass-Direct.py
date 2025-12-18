@@ -41,10 +41,10 @@ def extract(lst,number):
     return [item[number] for item in lst]
 
 
-Ensemble = 'M1'  # Example value, replace with actual input
+Ensemble = 'F1S'  # Example value, replace with actual input
 particle = 'Ds'  # Example value, replace with actual input
 nsq = 0  # Example value, replace with actual input
-cmass_index = 0  # Example value, replace with actual input
+cmass_index = 1  # Example value, replace with actual input
 
 '''
 parser = argparse.ArgumentParser()
@@ -228,12 +228,14 @@ full_fit = [best_a1 * (np.exp(-best_a2 * t) + np.exp(-best_a2 * (ti - t))) for t
 plt.plot(full_range, full_fit, color='red', label='Fit: $A_1 e^{-A_2 t} + A_1 e^{-A_2 (T - t)}$')
 
 plt.yscale('log')  
-plt.xlabel('Time')
-plt.ylabel('2pt Correlator')
+plt.xlabel('Time',fontsize=16)
+plt.ylabel('2pt Correlator',fontsize=16)
 #plt.title(f'{particle} Correlator Fit')
-plt.legend()
+plt.legend(fontsize=16)
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-plt.tight_layout()
+#plt.tight_layout()
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 plt.savefig('Fit.pdf')
 
 df3 = pd.DataFrame([{
