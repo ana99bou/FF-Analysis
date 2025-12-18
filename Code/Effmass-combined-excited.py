@@ -664,7 +664,7 @@ plt.fill_between(t_fit_eff,
 plt.axvline(reg_low, color='gray', ls='--', lw=1, alpha=0.5)
 plt.axvline(reg_up-1, color='gray', ls='--', lw=1, alpha=0.5)
 
-plt.xlabel("t", fontsize=16)
+plt.xlabel("Time", fontsize=16)
 plt.ylabel(r"$E_{\rm eff}(t)$", fontsize=16)
 #plt.title("Effective mass with two-state fit curves (fit window only)")
 plt.ylim(0.65, 1.3)
