@@ -41,10 +41,10 @@ def extract(lst,number):
     return [item[number] for item in lst]
 
 
-Ensemble = 'C1'  # Example value, replace with actual input
+Ensemble = 'F1S'  # Example value, replace with actual input
 particle = 'Ds'  # Example value, replace with actual input
 nsq = 0  # Example value, replace with actual input
-cmass_index = 2  # Example value, replace with actual input
+cmass_index = 1  # Example value, replace with actual input
 
 '''
 parser = argparse.ArgumentParser()
@@ -667,9 +667,9 @@ plt.axvline(reg_up-1, color='gray', ls='--', lw=1, alpha=0.5)
 plt.xlabel("t", fontsize=16)
 plt.ylabel(r"$E_{\rm eff}(t)$", fontsize=16)
 #plt.title("Effective mass with two-state fit curves (fit window only)")
-plt.ylim(1.05, 1.2)
+plt.ylim(0.65, 1.3)
 plt.grid(True, which="both", ls="--", lw=0.5)
-plt.legend()
+plt.legend(fontsize=14)
 #plt.ylim(0.92, 1.05)
 plt.tight_layout()
 plt.tight_layout()

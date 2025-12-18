@@ -40,13 +40,13 @@ def var(data):
 def extract(lst,number):
     return [item[number] for item in lst]
 
-'''
+
 Ensemble = 'F1S'  # Example value, replace with actual input
 particle = 'Ds'  # Example value, replace with actual input
 nsq = 0  # Example value, replace with actual input
-cmass_index = 0  # Example value, replace with actual input
-'''
+cmass_index = 1  # Example value, replace with actual input
 
+'''
 parser = argparse.ArgumentParser()
 parser.add_argument('--ensemble', type=str, required=True)
 parser.add_argument('--particle', type=str, required=True)
@@ -59,7 +59,7 @@ Ensemble = args.ensemble
 particle = args.particle
 nsq = args.nsq
 cmass_index = args.cmass_index
-
+'''
 
 
 if Ensemble == 'F1S':
@@ -312,7 +312,7 @@ m0_init = np.log(res_old[reg_low+5]/res_old[reg_low+6])  # rough log-ratio
 A0_old_init=res_old[reg_low]*np.exp(m0_init*reg_low)
 A0_new_init=res_new[reg_low]*np.exp(m0_init*reg_low)
 p0 = [A0_old_init, A0_old_init, A0_new_init, A0_new_init, m0_init, m0_init+0.2]  # initial guesses: amplitudes, m0, m1
-p0= Aol_old_init, A1_old_init, A0_new_init, A1_new_init, m0_init, m0_init+0.2
+p0= A0_old_init, A0_old_init, A0_new_init, A0_new_init, m0_init, m0_init+0.2
 #res_fit = minimize(chi2_two_state, p0, method='BFGS')
 #A0_old, A1_old, A0_new, A1_new, m0_best, m1_best = res_fit.x
 
@@ -688,11 +688,11 @@ plt.fill_between(t_fit_eff,
 plt.axvline(reg_low, color='gray', ls='--', lw=1, alpha=0.5)
 plt.axvline(reg_up-1, color='gray', ls='--', lw=1, alpha=0.5)
 
-plt.xlabel("t")
-plt.ylabel(r"$E_{\rm eff}(t)$")
-plt.title("Effective mass with two-state fit curves (fit window only)")
+plt.xlabel("Time", fontsize=16)
+plt.ylabel(r"$E_{\rm eff}(t)$", fontsize=16)
+#plt.title("Effective mass with two-state fit curves (fit window only)")
 plt.grid(True, which="both", ls="--", lw=0.5)
-plt.legend()
-plt.ylim(0.92, 1.05)
+plt.legend(fontsize=14)
+plt.ylim(0.65, 1.3)
 plt.tight_layout()
 plt.savefig(outdir+'Effective_mass_with_fit_band-unfrozen-{}-nsq{}.pdf'.format(cmass,nsq))
