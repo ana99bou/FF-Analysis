@@ -10,9 +10,9 @@ from pathlib import Path
 from FitModel import model_eq30  # importiere deine Modellfunktion
 
 # --- Configuration ---
-ensemble = "C2"
-cmass = '0.300'
-FF = "V"
+ensemble = "F1S"
+cmass = '0.259'
+FF = "A1"
 
 fit_file = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}.csv"
 out_plot = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}-Plot.pdf"
@@ -189,7 +189,7 @@ def plot_all_t_eq30(
                          color=color, alpha=0.25)
 
 
-    plt.xlabel("t", fontsize=16)
+    plt.xlabel("Time", fontsize=16)
     plt.xticks(np.arange(0, int(max(t_all)) + 1, 5))  # force integer x-ticks
     
     plt.ylabel(r"$\tilde{V}(t)$", fontsize=16)
@@ -197,7 +197,7 @@ def plot_all_t_eq30(
     #plt.ylim(0.2,0.8)
     #plt.ylim(0.3,1.2)
     #plt.ylim(0.15,0.5)
-    plt.legend(frameon=False)
+    plt.legend(frameon=False, fontsize=14)
     plt.tight_layout()
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)

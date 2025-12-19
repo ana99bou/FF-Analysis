@@ -26,12 +26,12 @@ frozen_analysis = bool(int(sys.argv[6]))
 '''
 
 
-FF='V'
+FF='A0'
 nsq=1
-cmass_index=2
-ensemble="C1"
+cmass_index=1
+ensemble="F1S"
 use_disp=True
-frozen=True
+frozen=False
 
 
 #Ens.getCmass(ensemble) gives us an array of the different charm masses for each ens; chose which one
@@ -79,6 +79,7 @@ f2ptBs = h5py.File("../Data/{}/BsDsStar_{}_2ptBs.h5".format(ensemble,ensemble), 
 # Instead of reading nsq from sys.argv
 # Define which nsq values you want to process:
 nsq_values = [1, 2, 3, 4, 5]  # adjust to your available data
+#nsq_values = [0,1, 2, 4, 5]
 
 # Storage for results
 all_ratios = {}
@@ -424,7 +425,7 @@ def plot_all_t_with_bands(all_ratios, nconf, nsq_order, central, jk_params):
 
     plt.tick_params(axis='both', which='major', labelsize=14)
     plt.legend(fontsize=10, ncol=2, markerscale=0.8)
-    plt.savefig('Test-Combined-with-per-nsq-decays.png',transparent=True, dpi=200)
+    plt.savefig('Combined-F1S-259-A1.png',transparent=True, dpi=200)
 
 
 
