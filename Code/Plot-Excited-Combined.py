@@ -12,7 +12,7 @@ from FitModel import model_eq30  # importiere deine Modellfunktion
 # --- Configuration ---
 ensemble = "F1S"
 cmass = '0.259'
-FF = "A1"
+FF = "V"
 
 fit_file = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}.csv"
 out_plot = f"../Results/{ensemble}/{cmass}/Fit/Excited-combined-{FF}-Plot.pdf"
@@ -119,7 +119,7 @@ def plot_all_t_eq30(
     fit_mask = (t_all >= reg_low) & (t_all < reg_up)
 
     for i, nsq in enumerate(nsq_order):
-        color = colors[i % len(colors)]
+        color = colors[nsq % len(colors)]
         data_mean = all_ratios[int(nsq)][:, -1]
         data_err  = all_errs[int(nsq)]
 
@@ -192,9 +192,9 @@ def plot_all_t_eq30(
     plt.xlabel("Time", fontsize=16)
     plt.xticks(np.arange(0, int(max(t_all)) + 1, 5))  # force integer x-ticks
     
-    #plt.ylabel(r"$\tilde{V}(t)$", fontsize=16)
+    plt.ylabel(r"$\tilde{V}(t)$", fontsize=16)
     #plt.ylabel(r"$\tilde{A_0}(t)$", fontsize=16)
-    plt.ylabel(r"$\tilde{A_1}(t)$", fontsize=16)
+    #plt.ylabel(r"$\tilde{A_1}(t)$", fontsize=16)
     #plt.ylim(0.05, 0.3)
     #plt.ylim(0.2,0.8)
     #plt.ylim(0.3,1.2)
