@@ -192,7 +192,9 @@ def plot_all_t_eq30(
     plt.xlabel("Time", fontsize=16)
     plt.xticks(np.arange(0, int(max(t_all)) + 1, 5))  # force integer x-ticks
     
-    plt.ylabel(r"$\tilde{V}(t)$", fontsize=16)
+    #plt.ylabel(r"$\tilde{V}(t)$", fontsize=16)
+    #plt.ylabel(r"$\tilde{A_0}(t)$", fontsize=16)
+    plt.ylabel(r"$\tilde{A_1}(t)$", fontsize=16)
     #plt.ylim(0.05, 0.3)
     #plt.ylim(0.2,0.8)
     #plt.ylim(0.3,1.2)
