@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+'''
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -8,7 +10,7 @@ mb = 1.9257122802734448
 md_vals = {
     0: 0.73482022,
     1: 0.7458868408203149,
-    2: 0.7567413220078149,
+    2: 0.7567412020078149,
     4: 0.77745605,
     5: 0.787656860351565
 }
@@ -65,7 +67,7 @@ for i in nsq:
     reg_up = int(nsq_fit[i]['RegUp'])
 
     plt.plot([-1, 22], [eff, eff], color=base_colors[i], linewidth=0.5)
-    plt.fill_between(range(47)[reg_low:reg_up+1], eff + sigma, eff - sigma,
+    plt.fill_between(range(20)[reg_low:reg_up+1], eff + sigma, eff - sigma,
                      color=base_colors[i], alpha=0.2)
 
 # Disp-Daten + Disp-Fits
@@ -79,7 +81,7 @@ for i in nsq_disp:
     reg_up = int(nsq_disp_fit[i]['RegUp'])
 
     plt.plot([-1, 22], [eff, eff], color=disp_colors[i], linewidth=0.5)
-    plt.fill_between(range(47)[reg_low:reg_up+1], eff + sigma, eff - sigma,
+    plt.fill_between(range(20)[reg_low:reg_up+1], eff + sigma, eff - sigma,
                      color=disp_colors[i], alpha=0.2)
 
 plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
@@ -88,8 +90,9 @@ plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
 plt.tick_params(axis='both', which='major', labelsize=14)
 plt.legend(fontsize=10, ncol=2, markerscale=0.8)
 plt.savefig('Niceplot-A1-Disp.pdf', transparent=True, dpi=200, bbox_inches='tight')
-
 '''
+
+
 import numpy as np
 import pandas as pd
 #from bokeh.plotting import figure, show, output_file
@@ -98,7 +101,7 @@ import matplotlib.pyplot as plt
 mb=1.9257122802734448
 md0=0.73482022
 md1=0.7458868408203149
-md2=0.7567413220078149
+md2=0.7567412020078149
 md4=0.77745605
 md5=0.787656860351565
 pre1=-1/(mb+md1)
@@ -164,25 +167,25 @@ plt.errorbar(list(range(20)), nsq4[0][0:20], yerr=nsq4[1][0:20],ls='none',fmt='x
 plt.errorbar(list(range(20)), nsq5[0][0:20], yerr=nsq5[1][0:20],ls='none',fmt='x',label='$n^2=5$',color='magenta')
 
 plt.plot(x0,y0,color='g')
-plt.fill_between(list(range(47))[int(reg_low0):int(reg_up0+1)], nsq0plt['EffectiveMass']+sigma0, nsq0plt['EffectiveMass']-sigma0, color='g',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low0):int(reg_up0+1)], nsq0plt['EffectiveMass']+sigma0, nsq0plt['EffectiveMass']-sigma0, color='g',alpha=0.2)
 
 plt.plot(x1,y1, color='b',linewidth=0.5)
-plt.fill_between(list(range(47))[int(reg_low1):int(reg_up1+1)], nsq1plt['EffectiveMass']+sigma1, nsq1plt['EffectiveMass']-sigma1, color='b',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low1):int(reg_up1+1)], nsq1plt['EffectiveMass']+sigma1, nsq1plt['EffectiveMass']-sigma1, color='b',alpha=0.2)
 plt.plot(x2,y2,color='orange',linewidth=0.5)
-plt.fill_between(list(range(47))[int(reg_low2):int(reg_up2+1)], nsq2plt['EffectiveMass']+sigma2, nsq2plt['EffectiveMass']-sigma2, color='orange',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low2):int(reg_up2+1)], nsq2plt['EffectiveMass']+sigma2, nsq2plt['EffectiveMass']-sigma2, color='orange',alpha=0.2)
 #plt.plot(x3,y3, color='brown',linewidth=0.5)
-#plt.fill_between(list(range(47))[int(reg_low1):int(reg_up1+1)], nsq3plt['EffectiveMass']+sigma3, nsq3plt['EffectiveMass']-sigma3, color='brown',alpha=0.2)
+#plt.fill_between(list(range(20))[int(reg_low1):int(reg_up1+1)], nsq3plt['EffectiveMass']+sigma3, nsq3plt['EffectiveMass']-sigma3, color='brown',alpha=0.2)
 plt.plot(x4,y4, color='red',linewidth=0.5)
-plt.fill_between(list(range(47))[int(reg_low4):int(reg_up4+1)], nsq4plt['EffectiveMass']+sigma4, nsq4plt['EffectiveMass']-sigma4, color='red',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low4):int(reg_up4+1)], nsq4plt['EffectiveMass']+sigma4, nsq4plt['EffectiveMass']-sigma4, color='red',alpha=0.2)
 plt.plot(x5,y5, color='magenta',linewidth=0.5)
-plt.fill_between(list(range(47))[int(reg_low5):int(reg_up5+1)], nsq5plt['EffectiveMass']+sigma5, nsq5plt['EffectiveMass']-sigma5, color='magenta',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low5):int(reg_up5+1)], nsq5plt['EffectiveMass']+sigma5, nsq5plt['EffectiveMass']-sigma5, color='magenta',alpha=0.2)
 
 plt.annotate(r'$\bf{preliminary}$',xy=(0.17,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=.7)
 #plt.axis((0,20,0,4))
 plt.tick_params(axis='both', which='major', labelsize=14)  # For ma
 
-
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 #plt.yscale('log')
-plt.legend()
+plt.legend(fontsize=14)
 plt.savefig('Niceplot-A1.pdf',transparent=True,dpi=200,bbox_inches='tight')
-'''

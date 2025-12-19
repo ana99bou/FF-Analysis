@@ -21,15 +21,15 @@ Created on Mon Jun 10 11:15:26 2024
 
 @author: anastasiaboushmelev
 """
-
+'''
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 mb = 1.9257122802734448
-md0 = 0.73482032
+md0 = 0.73482020
 md1 = 0.7458868408203149
-md2 = 0.7567413320078149
+md2 = 0.7567413200078149
 md4 = 0.77745605
 md5 = 0.787656860351565
 pre1 = -1/(mb + md1)
@@ -126,7 +126,7 @@ for i, (c, plt_data, sigma, rlow, rup) in enumerate(zip(
 )):
     em = plt_data['EffectiveMass']
     plt.plot([-1, 22], [em, em], color=c, linewidth=0.5)
-    plt.fill_between(range(47)[int(rlow):int(rup + 1)], em + sigma, em - sigma, color=c, alpha=0.2)
+    plt.fill_between(range(20)[int(rlow):int(rup + 1)], em + sigma, em - sigma, color=c, alpha=0.2)
 
 # Fits + Bänder (Disp)
 for i, (c, plt_data) in enumerate(zip(disp_colors.values(), [
@@ -136,7 +136,7 @@ for i, (c, plt_data) in enumerate(zip(disp_colors.values(), [
     rlow = int(plt_data['RegLow'])
     rup = int(plt_data['RegUp'])
     plt.plot([-1, 22], [em, em], color=c, linewidth=0.5)
-    plt.fill_between(range(47)[rlow:rup + 1], em + sigma, em - sigma, color=c, alpha=0.2)
+    plt.fill_between(range(20)[rlow:rup + 1], em + sigma, em - sigma, color=c, alpha=0.2)
 
 # Rest
 plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
@@ -144,18 +144,18 @@ plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
 plt.tick_params(axis='both', which='major', labelsize=14)
 plt.legend(fontsize=7)  
 plt.savefig('Niceplot-A0-Disp.pdf', transparent=True, dpi=200, bbox_inches='tight')
-
-
 '''
+
+
 import numpy as np
 import pandas as pd
 #from bokeh.plotting import figure, show, output_file
 import matplotlib.pyplot as plt
 
 mb=1.9257122802734448
-md0=0.73482032
+md0=0.73482020
 md1=0.7458868408203149
-md2=0.7567413320078149
+md2=0.7567413200078149
 md4=0.77745605
 md5=0.787656860351565
 pre1=-1/(mb+md1)
@@ -178,12 +178,12 @@ nsq3plt=pd.read_csv('./Fits/A0/A0-Av-nsq3-Fit.csv',sep='\s')
 nsq4plt=pd.read_csv('./Fits/A0/A0-Av-nsq4-Fit.csv',sep='\s')
 nsq5plt=pd.read_csv('./Fits/A0/A0-Av-nsq5-Fit.csv',sep='\s')
 
-#x0, y0 = [-1, 32], [-nsq0plt['EffectiveMass'], -nsq0plt['EffectiveMass']]
-x1, y1 = [-1, 32], [nsq1plt['EffectiveMass'], nsq1plt['EffectiveMass']]
-x2, y2 = [-1, 32], [nsq2plt['EffectiveMass'], nsq2plt['EffectiveMass']]
-x3, y3 = [-1, 32], [nsq3plt['EffectiveMass'], nsq3plt['EffectiveMass']]
-x4, y4 = [-1, 32], [nsq4plt['EffectiveMass'], nsq4plt['EffectiveMass']]
-x5, y5 = [-1, 32], [nsq5plt['EffectiveMass'], nsq5plt['EffectiveMass']]
+#x0, y0 = [-1, 20], [-nsq0plt['EffectiveMass'], -nsq0plt['EffectiveMass']]
+x1, y1 = [-1, 20], [nsq1plt['EffectiveMass'], nsq1plt['EffectiveMass']]
+x2, y2 = [-1, 20], [nsq2plt['EffectiveMass'], nsq2plt['EffectiveMass']]
+x3, y3 = [-1, 20], [nsq3plt['EffectiveMass'], nsq3plt['EffectiveMass']]
+x4, y4 = [-1, 20], [nsq4plt['EffectiveMass'], nsq4plt['EffectiveMass']]
+x5, y5 = [-1, 20], [nsq5plt['EffectiveMass'], nsq5plt['EffectiveMass']]
 
 reg_low1=nsq1plt['RegLow']
 reg_up1=nsq1plt['RegUp']
@@ -218,25 +218,25 @@ plt.errorbar(list(range(20)), nsq4[0][0:20], yerr=nsq4[1][0:20],ls='none',fmt='x
 plt.errorbar(list(range(20)), nsq5[0][0:20], yerr=nsq5[1][0:20],ls='none',fmt='x',label='$n^2=5$',color='magenta')
 
 #plt.plot(x0,y0,color='g')
-#plt.fill_between(list(range(47))[int(reg_low0):int(reg_up0+1)], -nsq0plt['EffectiveMass']+sigma0, -nsq0plt['EffectiveMass']-sigma0, color='g',alpha=0.2)
+#plt.fill_between(list(range(20))[int(reg_low0):int(reg_up0+1)], -nsq0plt['EffectiveMass']+sigma0, -nsq0plt['EffectiveMass']-sigma0, color='g',alpha=0.2)
 
 plt.plot(x1,y1, color='b',linewidth=0.5)
-plt.fill_between(list(range(47))[int(reg_low1):int(reg_up1+1)], nsq1plt['EffectiveMass']+sigma1, nsq1plt['EffectiveMass']-sigma1, color='b',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low1):int(reg_up1+1)], nsq1plt['EffectiveMass']+sigma1, nsq1plt['EffectiveMass']-sigma1, color='b',alpha=0.2)
 plt.plot(x2,y2,color='orange',linewidth=0.5)
-plt.fill_between(list(range(47))[int(reg_low2):int(reg_up2+1)], nsq2plt['EffectiveMass']+sigma2, nsq2plt['EffectiveMass']-sigma2, color='orange',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low2):int(reg_up2+1)], nsq2plt['EffectiveMass']+sigma2, nsq2plt['EffectiveMass']-sigma2, color='orange',alpha=0.2)
 plt.plot(x3,y3, color='brown',linewidth=0.5)
-plt.fill_between(list(range(47))[int(reg_low1):int(reg_up1+1)], nsq3plt['EffectiveMass']+sigma3, nsq3plt['EffectiveMass']-sigma3, color='brown',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low1):int(reg_up1+1)], nsq3plt['EffectiveMass']+sigma3, nsq3plt['EffectiveMass']-sigma3, color='brown',alpha=0.2)
 plt.plot(x4,y4, color='red',linewidth=0.5)
-plt.fill_between(list(range(47))[int(reg_low4):int(reg_up4+1)], nsq4plt['EffectiveMass']+sigma4, nsq4plt['EffectiveMass']-sigma4, color='red',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low4):int(reg_up4+1)], nsq4plt['EffectiveMass']+sigma4, nsq4plt['EffectiveMass']-sigma4, color='red',alpha=0.2)
 plt.plot(x5,y5, color='magenta',linewidth=0.5)
-plt.fill_between(list(range(47))[int(reg_low5):int(reg_up5+1)], nsq5plt['EffectiveMass']+sigma5, nsq5plt['EffectiveMass']-sigma5, color='magenta',alpha=0.2)
+plt.fill_between(list(range(20))[int(reg_low5):int(reg_up5+1)], nsq5plt['EffectiveMass']+sigma5, nsq5plt['EffectiveMass']-sigma5, color='magenta',alpha=0.2)
 
 plt.annotate(r'$\bf{preliminary}$',xy=(0.17,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=.7)
 #plt.axis((0,20,0,4))
 plt.tick_params(axis='both', which='major', labelsize=14)  # For ma
-
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 #plt.yscale('log')
-plt.legend()
+plt.legend(fontsize=14)
 plt.savefig('Niceplot-A0.pdf',transparent=True,dpi=200,bbox_inches='tight')
-'''

@@ -93,8 +93,9 @@ plt.fill_between(list(range(47))[int(reg_low5):int(reg_up5+1)], nsq5plt['Effecti
 plt.annotate(r'$\bf{preliminary}$',xy=(0.17,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=.7)
 plt.axis((0,20,0,1))
 plt.tick_params(axis='both', which='major', labelsize=14)  # For ma
-
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 #plt.yscale('log')
-plt.legend()
+plt.legend(fontsize=14)
 plt.savefig('Niceplot-A2.pdf',transparent=True,dpi=200,bbox_inches='tight')
