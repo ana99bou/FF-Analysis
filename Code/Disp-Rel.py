@@ -19,10 +19,10 @@ nsq = args.nsq
 cmass_index = args.cmass_index
 '''
 
-Ensemble = "F1S"
+Ensemble = "C1"
 particle = "Ds"
 nsq=0
-cmass_index = 1
+cmass_index = 0
 
 
 cmass=Ens.getCmass(Ensemble)[cmass_index]
@@ -126,7 +126,7 @@ plt.axhline(1.0, color='black', linewidth=0.8)
 
 plt.xlabel(r'$k^2$ [GeV$^2$]',fontsize=16)
 plt.ylabel(r'$E^2 / (k^2 + M^2)$',fontsize=16)
-plt.legend()
+plt.legend(fontsize=14)
 plt.tight_layout()
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)

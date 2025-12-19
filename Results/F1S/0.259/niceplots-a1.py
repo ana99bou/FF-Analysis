@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+'''
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -88,8 +89,11 @@ plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
 plt.tick_params(axis='both', which='major', labelsize=14)
 plt.legend(fontsize=10, ncol=2, markerscale=0.8)
 plt.savefig('Niceplot-A1-Disp.pdf', transparent=True, dpi=300, bbox_inches='tight')
-
 '''
+
+
+
+
 import numpy as np
 import pandas as pd
 #from bokeh.plotting import figure, show, output_file
@@ -163,6 +167,7 @@ plt.errorbar(list(range(30)), nsq2[0][0:30], yerr=nsq2[1][0:30],ls='none',fmt='x
 plt.errorbar(list(range(30)), nsq4[0][0:30], yerr=nsq4[1][0:30],ls='none',fmt='x',label='$n^2=4$',color='red')
 plt.errorbar(list(range(30)), nsq5[0][0:30], yerr=nsq5[1][0:30],ls='none',fmt='x',label='$n^2=5$',color='magenta')
 
+'''
 plt.plot(x0,y0,color='g')
 plt.fill_between(list(range(47))[int(reg_low0):int(reg_up0+1)], nsq0plt['EffectiveMass']+sigma0, nsq0plt['EffectiveMass']-sigma0, color='g',alpha=0.2)
 
@@ -176,7 +181,7 @@ plt.plot(x4,y4, color='red',linewidth=0.5)
 plt.fill_between(list(range(47))[int(reg_low4):int(reg_up4+1)], nsq4plt['EffectiveMass']+sigma4, nsq4plt['EffectiveMass']-sigma4, color='red',alpha=0.2)
 plt.plot(x5,y5, color='magenta',linewidth=0.5)
 plt.fill_between(list(range(47))[int(reg_low5):int(reg_up5+1)], nsq5plt['EffectiveMass']+sigma5, nsq5plt['EffectiveMass']-sigma5, color='magenta',alpha=0.2)
-
+'''
 plt.annotate(r'$\bf{preliminary}$',xy=(0.17,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=.7)
 #plt.axis((0,30,0,4))
 plt.tick_params(axis='both', which='major', labelsize=14)  # For ma
@@ -184,5 +189,4 @@ plt.tick_params(axis='both', which='major', labelsize=14)  # For ma
 
 #plt.yscale('log')
 plt.legend()
-plt.savefig('Niceplot-A1.pdf',transparent=True,dpi=300,bbox_inches='tight')
-'''
+plt.savefig('Niceplot-A1-plain.pdf',transparent=True,dpi=300,bbox_inches='tight')
