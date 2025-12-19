@@ -157,7 +157,7 @@ plt.errorbar(list(range(29)), nsq5[0][1:30], yerr=nsq5[1][1:30],ls='none',fmt='x
 
 #plt.plot(x0,y0,color='g')
 #plt.fill_between(list(range(47))[int(reg_low0):int(reg_up0+1)], nsq0plt['EffectiveMass']+sigma0, nsq0plt['EffectiveMass']-sigma0, color='g',alpha=0.2)
-'''
+
 plt.plot(x1,y1, color='b',linewidth=0.5)
 plt.fill_between(list(range(47))[int(reg_low1):int(reg_up1+1)], nsq1plt['EffectiveMass']+sigma1, nsq1plt['EffectiveMass']-sigma1, color='b',alpha=0.2)
 plt.plot(x2,y2,color='orange',linewidth=0.5)
@@ -169,7 +169,7 @@ plt.plot(x4,y4, color='red',linewidth=0.5)
 plt.fill_between(list(range(47))[int(reg_low4):int(reg_up4+1)], (nsq4plt['EffectiveMass']+sigma4), (nsq4plt['EffectiveMass']-sigma4), color='red',alpha=0.2)
 plt.plot(x5,y5, color='magenta',linewidth=0.5)
 plt.fill_between(list(range(47))[int(reg_low5):int(reg_up5+1)], (nsq5plt['EffectiveMass']+sigma5), (nsq5plt['EffectiveMass']-sigma5), color='magenta',alpha=0.2)
-'''
+
 plt.tick_params(axis='both', which='major', labelsize=14) 
 #plt.axis((0,30,0.05,0.11))
 plt.xticks(fontsize=14)
@@ -177,4 +177,4 @@ plt.yticks(fontsize=14)
 plt.annotate(r'$\bf{preliminary}$',xy=(0.17,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=.7)
 #plt.yscale('log')
 plt.legend(fontsize=14)
-plt.savefig('Niceplot-V-plain.pdf',transparent=True,dpi=300,bbox_inches='tight')
+plt.savefig('Niceplot-V.pdf',transparent=True,dpi=300,bbox_inches='tight')
