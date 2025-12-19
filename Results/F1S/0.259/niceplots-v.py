@@ -174,7 +174,7 @@ plt.tick_params(axis='both', which='major', labelsize=14)
 #plt.axis((0,30,0.05,0.11))
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
-
+plt.annotate(r'$\bf{preliminary}$',xy=(0.17,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=.7)
 #plt.yscale('log')
 plt.legend(fontsize=14)
 plt.savefig('Niceplot-V-plain.pdf',transparent=True,dpi=300,bbox_inches='tight')
