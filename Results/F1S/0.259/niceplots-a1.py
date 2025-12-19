@@ -152,8 +152,8 @@ reg_up5=nsq5plt['RegUp']
 sigma5=nsq5plt['Error']
 
 figure_size = (6, 4)
-plt.xlabel('Time',fontsize=15)
-plt.ylabel(r'$\widetilde{A}_1$',fontsize=15)
+plt.xlabel('Time',fontsize=16)
+plt.ylabel(r'$\widetilde{A}_1$',fontsize=16)
 #plt.plot(range(96),nsq1[0])
 #plt.plot(range(30),avn0y[0:30])
 #plt.plot(range(30),avn0z[0:30])
@@ -185,8 +185,9 @@ plt.fill_between(list(range(47))[int(reg_low5):int(reg_up5+1)], nsq5plt['Effecti
 plt.annotate(r'$\bf{preliminary}$',xy=(0.17,0.03),xycoords='axes fraction',fontsize=15,color='grey',alpha=.7)
 #plt.axis((0,30,0,4))
 plt.tick_params(axis='both', which='major', labelsize=14)  # For ma
-
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 #plt.yscale('log')
-plt.legend()
+plt.legend(fontsize=14)
 plt.savefig('Niceplot-A1-plain.pdf',transparent=True,dpi=300,bbox_inches='tight')
