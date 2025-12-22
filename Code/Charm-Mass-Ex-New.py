@@ -668,7 +668,7 @@ fig.update_layout(
     #title=f"Correlated Fit 3D — {Ense}",
     scene=dict(
         xaxis_title=r"n²",
-        yaxis_title=r"E(eff) (Ds*)",
+        yaxis_title=r"E(eff) Ds*",
         zaxis_title=r"V"
     ),
     width=900,
