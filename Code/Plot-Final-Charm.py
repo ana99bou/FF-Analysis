@@ -252,6 +252,8 @@ def make_plot(FF, outname):
     plt.xlabel(r"$(E_{D_s^*}/M_{B_s})^2$", fontsize=20)
     plt.ylabel(FF, fontsize=20)
     plt.grid(True)
+    plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=20, color='grey', alpha=.7)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     plt.tight_layout()

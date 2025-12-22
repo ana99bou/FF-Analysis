@@ -198,21 +198,22 @@ def ff_model(params, E_arr, ens_arr):
     f(E) = [c0 + c1 ΔM_phys + c2 E + c3 E^2 + c4 a_phys + c5 a_phys^2] / (E + de)
     All mass-like quantities here are in GeV, a_phys in GeV^-1.
     """
-    c0, c1, c2, c3, c4, c5 = params
+    #c0, c1, c2, c3, c4, c5 = params
+    c0, c1, c2, c3, c5 = params
     y = np.zeros_like(E_arr)
 
     for i, (E, ens) in enumerate(zip(E_arr, ens_arr)):
         inp = fit_inputs[ens]
-        DeltaM = inp["DeltaMpi_phys"]  # GeV
-        a_phys = inp["a_phys"]         # GeV^-1
+        DeltaM = inp["DeltaMpi_phys"]  
+        a = inp["a_phys"]        
 
         numer = (
             c0
             + c1 * DeltaM
             + c2 * E
             + c3 * E**2
-            + c4 * a_phys
-            + c5 * a_phys**2
+            #+ c4 * a
+            + c5 * a**2
         )
 
         y[i] = numer / (E + de)
@@ -349,7 +350,8 @@ def fit_and_plot_FF(FF, variables):
     E_arr, ens_arr, y_mean, C, Cinv, MBs_dict = build_data_for_fit(FF, variables)
 
     # Numerical minimization
-    npar = 6
+    #npar = 6
+    npar = 5
     p0 = np.zeros(npar)
     p0[0] = np.mean(y_mean)
 
@@ -357,7 +359,7 @@ def fit_and_plot_FF(FF, variables):
         chi2_global,
         p0,
         args=(E_arr, ens_arr, y_mean, Cinv),
-        method="Nelder-Mead",
+        method="BFGS",
     )
 
     if not result.success:
