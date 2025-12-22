@@ -228,7 +228,7 @@ def make_plot(FF, outname):
         y_vals = [prefactor * y for y in y_vals_raw]
         y_errs = [prefactor * e for e in y_errs_raw]
 
-        
+        '''
         plt.errorbar(
             x_vals, y_vals, yerr=y_errs,
             fmt=marker,
@@ -245,11 +245,11 @@ def make_plot(FF, outname):
             capsize=3,
             label=f"{ens}"
         )
-        '''
+        
 
     plt.legend()
-    plt.xlabel(r"$q^2\,[\mathrm{GeV}^2]$", fontsize=20)
-    #plt.xlabel(r"$(E_{D_s^*}/M_{B_s})^2$", fontsize=20)
+    #plt.xlabel(r"$q^2\,[\mathrm{GeV}^2]$", fontsize=20)
+    plt.xlabel(r"$(E_{D_s^*}/M_{B_s})^2$", fontsize=20)
     plt.ylabel(FF, fontsize=20)
     plt.grid(True)
     plt.tight_layout()
