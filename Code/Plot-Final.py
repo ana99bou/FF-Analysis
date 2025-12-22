@@ -219,7 +219,7 @@ plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
 plt.legend(fontsize=16)
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('V-FPlot.png',dpi=200,bbox_inches='tight')
+plt.savefig('V-FPlot.pdf',dpi=200,bbox_inches='tight')
 
 
 # === Neuer Plot für A_0 ===
@@ -302,9 +302,13 @@ for ens, masses in ens_masses.items():
         except Exception as e:
             print(f"Error processing {filepath} for A₀: {e}")
 
-plt.legend()
-plt.xlabel(r"$q^2\ [\mathrm{GeV}^2]$")
-plt.ylabel(r"$A_0$")
+plt.xlabel(r"$q^2 [GeV]$",fontsize=20)  # z. B. "Energy [GeV²]"
+plt.ylabel(r"$A_0$",fontsize=20)
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=20, color='grey', alpha=.7)
+plt.legend(fontsize=16)
 plt.grid(True)
 plt.tight_layout()
 plt.savefig('A0-FPlot.pdf')
@@ -386,9 +390,13 @@ for ens, masses in ens_masses.items():
         except Exception as e:
             print(f"Error processing {filepath} for A₁: {e}")
 
-plt.legend()
-plt.xlabel(r"$q^2\ [\mathrm{GeV}^2]$")
-plt.ylabel(r"$A_1$")
+plt.xlabel(r"$q^2 [GeV]$",fontsize=20)  # z. B. "Energy [GeV²]"
+plt.ylabel(r"$A_1$",fontsize=20)
+plt.xticks(fontsize=20)
+plt.yticks(fontsize=20)
+plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=20, color='grey', alpha=.7)
+plt.legend(fontsize=16)
 plt.grid(True)
 plt.tight_layout()
 plt.savefig('A1-FPlot.pdf')
