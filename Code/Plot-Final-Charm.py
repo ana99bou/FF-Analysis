@@ -247,11 +247,13 @@ def make_plot(FF, outname):
         )
         
 
-    plt.legend()
+    plt.legend(fontsize=16)
     #plt.xlabel(r"$q^2\,[\mathrm{GeV}^2]$", fontsize=20)
     plt.xlabel(r"$(E_{D_s^*}/M_{B_s})^2$", fontsize=20)
     plt.ylabel(FF, fontsize=20)
     plt.grid(True)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
     plt.tight_layout()
     plt.savefig(outname, dpi=200, bbox_inches='tight')
 
