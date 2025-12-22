@@ -231,11 +231,19 @@ A = np.column_stack([
 '''
 # === NEW FIT: f = c0 + c1*M + c2*n + c3*(M*n) =========================
 
+'''
 A = np.column_stack([
     np.ones(N_points),
     mass_arr,
     nsq_arr,
     mass_arr * nsq_arr
+])
+'''
+
+A = np.column_stack([
+    np.ones(N_points),
+    mass_arr,
+    nsq_arr
 ])
 
 ATCi = A.T @ Cinv
@@ -262,7 +270,8 @@ print(f"c1 = {c1:.6e} ± {c_err[1]:.6e}")
 print(f"c2 = {c2:.6e} ± {c_err[2]:.6e}")
 '''
 
-c0, c1, c2, c3 = c
+#c0, c1, c2, c3 = c
+c0, c1, c2 = c
 
 Cov_c = np.linalg.inv(M)
 c_err = np.sqrt(np.diag(Cov_c))
@@ -271,7 +280,7 @@ print("\n================ CORRELATED CENTRAL FIT (4 params) ================")
 print(f"c0 = {c0:.6e} ± {c_err[0]:.6e}")
 print(f"c1 = {c1:.6e} ± {c_err[1]:.6e}")
 print(f"c2 = {c2:.6e} ± {c_err[2]:.6e}")
-print(f"c3 = {c3:.6e} ± {c_err[3]:.6e}")
+#print(f"c3 = {c3:.6e} ± {c_err[3]:.6e}")
 
 
 print(f"chi2/dof = {chi2:.3f}/{dof} = {chi2/dof:.3f}")
@@ -282,7 +291,8 @@ print(f"p-value = {pval:.3f}")
 # === Jackknife parameter estimates ==========================
 # ============================================================
 
-c_jk = np.zeros((N_jk, 4))
+#c_jk = np.zeros((N_jk, 4))
+c_jk = np.zeros((N_jk, 3))
 
 for alpha in range(N_jk):
     FF_jk = JK[alpha]
@@ -305,7 +315,7 @@ print("\n================ JACKKNIFE ERRORS (4 params) ======================")
 print(f"c0_jk_error = {c_jk_err[0]:.6e}")
 print(f"c1_jk_error = {c_jk_err[1]:.6e}")
 print(f"c2_jk_error = {c_jk_err[2]:.6e}")
-print(f"c3_jk_error = {c_jk_err[3]:.6e}")
+#print(f"c3_jk_error = {c_jk_err[3]:.6e}")
 
 
 # ============================================================
@@ -363,9 +373,16 @@ else:
 # === FIT FUNCTION ===========================================
 # ============================================================
 
+'''
 def fit_function(nsq, mass, params):
     c0, c1, c2, c3 = params
     return c0 + c1*mass + c2*nsq + c3*(mass*nsq)
+'''
+
+def fit_function(nsq, mass, params):
+    c0, c1, c2 = params
+    return c0 + c1*mass + c2*nsq 
+
 
 
 # ============================================================
@@ -413,7 +430,7 @@ with open(file1, "w", newline="") as f:
 
     header = [
         "Ensemble","FF","chi2","dof","pvalue",
-        "c0","c0_err","c1","c1_err","c2","c2_err","c3","c3_err"
+        "c0","c0_err","c1","c1_err","c2","c2_err"#,"c3","c3_err"
     ]
 
     # Add phys. prediction columns
@@ -425,7 +442,7 @@ with open(file1, "w", newline="") as f:
 
     row = [
         Ense, FF, chi2, dof, pval,
-        c0, c_err[0], c1, c_err[1], c2, c_err[2], c3, c_err[3]
+        c0, c_err[0], c1, c_err[1], c2, c_err[2]#, c3, c_err[3]
     ]
 
     # Add central and error
@@ -469,11 +486,19 @@ NSQ, MASS = np.meshgrid(nsq_grid, mass_grid)
 
 #FF_plane = c0 + c1 * MASS + c2 * NSQ
 # New plane including cross-term
+'''
 FF_plane = (
     c0
     + c1 * MASS
     + c2 * NSQ
     + c3 * MASS * NSQ
+)
+'''
+
+FF_plane = (
+    c0
+    + c1 * MASS
+    + c2 * NSQ
 )
 
 # ============================================================
@@ -482,6 +507,7 @@ FF_plane = (
 
 FF_jk_planes = np.zeros((N_jk, MASS.shape[0], MASS.shape[1]))
 
+'''
 for a in range(N_jk):
     c0_j, c1_j, c2_j, c3_j = c_jk[a]
     FF_jk_planes[a] = (
@@ -490,6 +516,16 @@ for a in range(N_jk):
         + c2_j * NSQ
         + c3_j * MASS * NSQ
     )
+'''
+
+for a in range(N_jk):
+    c0_j, c1_j, c2_j = c_jk[a]
+    FF_jk_planes[a] = (
+        c0_j
+        + c1_j * MASS
+        + c2_j * NSQ
+    )
+
 
 # Jackknife mean and variance at each plane grid point
 FF_mean_plane = np.mean(FF_jk_planes, axis=0)
@@ -599,7 +635,6 @@ for i, cmass in enumerate(cmasses):
 
 #err = sqrt((N_jk - 1)/N_jk * Σ (ff_jk - mean_jk)^2)
 
-'''
 # Central plane
 fig.add_trace(go.Surface(
     x=NSQ, y=MASS, z=FF_plane,
@@ -628,12 +663,12 @@ fig.add_trace(go.Surface(
     surfacecolor=np.zeros_like(FF_plane_minus),
     colorscale=[[0, "blue"], [1, "blue"]],
 ))
-'''
+
 
 # ============================================================
 # === Add physical prediction points (already in memory) =====
 # ============================================================
-'''
+
 phys_nsq  = nsq_pred
 phys_mass = [mass_table_phys[n] for n in nsq_pred]
 phys_ff   = phys_central
@@ -659,7 +694,7 @@ for x, y, z, e in zip(phys_nsq, phys_mass, phys_ff, phys_errz):
         line=dict(color="black", width=4),
         showlegend=False
     ))
-'''
+
 
 # ============================================================
 # Axis labels and layout
@@ -682,5 +717,5 @@ fig.update_layout(
 
 print(cmass_points)
 
-fig.write_html(f"../Results/{Ense}/Charm/fit3D-{FF}-plain.html")
+fig.write_html(f"../Results/{Ense}/Charm/fit3D-{FF}-const.html")
 print("Saved interactive plot as fit3D.html")
