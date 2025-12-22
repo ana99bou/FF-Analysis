@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 
 # Define the FF you want to read (currently fixed to "V")
-Ense='F1S'
+Ense='C1'
 FF = "V"
 
 # Your ensemble → cmass mapping
@@ -463,8 +463,31 @@ import numpy as np
 # Create fine grid for the fitted plane
 # ============================================================
 
-nsq_grid = np.linspace(nsq_arr.min(), nsq_arr.max(), 40)
-mass_grid = np.linspace(mass_arr.min(), mass_arr.max(), 40)
+#nsq_grid = np.linspace(nsq_arr.min(), nsq_arr.max(), 40)
+#mass_grid = np.linspace(mass_arr.min(), mass_arr.max(), 40)
+
+# ============================================================
+# Create fine grid for the fitted plane (extend to phys points)
+# ============================================================
+
+phys_nsq  = np.array(nsq_pred, float)
+phys_mass = np.array([mass_table_phys[n] for n in nsq_pred], float)
+
+nsq_min  = min(nsq_arr.min(),  phys_nsq.min())
+nsq_max  = max(nsq_arr.max(),  phys_nsq.max())
+mass_min = min(mass_arr.min(), phys_mass.min())
+mass_max = max(mass_arr.max(), phys_mass.max())
+
+# optional: add a small padding so the plane doesn't end exactly at the points
+pad_n = 0.05 * (nsq_max - nsq_min) if nsq_max > nsq_min else 0.5
+pad_m = 0.05 * (mass_max - mass_min) if mass_max > mass_min else 0.05
+
+nsq_grid  = np.linspace(nsq_min - pad_n,  nsq_max + pad_n,  60)
+mass_grid = np.linspace(mass_min - pad_m, mass_max + pad_m, 60)
+
+NSQ, MASS = np.meshgrid(nsq_grid, mass_grid)
+
+
 NSQ, MASS = np.meshgrid(nsq_grid, mass_grid)
 
 #FF_plane = c0 + c1 * MASS + c2 * NSQ
