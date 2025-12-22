@@ -668,9 +668,9 @@ for x, y, z, e in zip(phys_nsq, phys_mass, phys_ff, phys_errz):
 fig.update_layout(
     #title=f"Correlated Fit 3D — {Ense}",
     scene=dict(
-        xaxis_title=r"n^2",
-        yaxis_title=r"E_{Eff}^{D_s^*}",
-        zaxis_title=r"\widetilde V"
+        xaxis_title="n²",
+        yaxis_title=r"E(Eff) Ds*",
+        zaxis_title=r"V"
     ),
     width=900,
     height=700
