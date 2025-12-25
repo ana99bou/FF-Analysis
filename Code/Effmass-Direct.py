@@ -234,6 +234,8 @@ plt.ylabel('2pt Correlator',fontsize=16)
 plt.legend(fontsize=16)
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 #plt.tight_layout()
+plt.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=16, color='grey', alpha=.7)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.savefig('Fit.pdf')
