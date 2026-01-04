@@ -19,10 +19,10 @@ nsq = args.nsq
 cmass_index = args.cmass_index
 '''
 
-Ensemble = "F1S"
+Ensemble = "C1"
 particle = "Ds"
 nsq=0
-cmass_index = 1
+cmass_index = 0
 
 
 cmass=Ens.getCmass(Ensemble)[cmass_index]
