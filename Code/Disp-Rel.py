@@ -19,10 +19,10 @@ nsq = args.nsq
 cmass_index = args.cmass_index
 '''
 
-Ensemble = "C1"
+Ensemble = "F1S"
 particle = "Ds"
 nsq=0
-cmass_index = 0
+cmass_index = 1
 
 
 cmass=Ens.getCmass(Ensemble)[cmass_index]
@@ -119,7 +119,7 @@ plt.errorbar(p_squared, normalized_disp, yerr=[2 * val * err / disprel[0] for va
 plt.errorbar(p_squared, normalized_cont, yerr=cont_errors,
              fmt='^', color='crimson', capsize=4, label='lat. disp. rel.')
 
-plt.plot(pk2, upper_line, linestyle='--', color='navy', alpha=0.7, label=r'$+ak^2/4$')
+plt.plot(pk2, upper_line, linestyle='--', color='navy', alpha=0.7, label=r'$\pm ak^2/4$')
 plt.plot(pk2, lower_line, linestyle='--', color='navy', alpha=0.7)
 
 plt.axhline(1.0, color='black', linewidth=0.8)
