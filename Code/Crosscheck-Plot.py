@@ -1,9 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-ens= 'C2'  
-ens_ow='010'
-m='0.400'
+ens= 'F1S'  
+ens_ow='002144'
+m='0.259'
 
 # === Load data1 ===
 df1 = pd.read_csv("../Results/Crosschecks/AB/Crosscheck-{}-{}.csv".format(ens,m), sep="\t", header=None, names=["value", "error", "pval"])
@@ -28,7 +28,8 @@ def plot_range(start, end, df1, df2, title,labels=None,ylim=None):
     ids = df1['id'].iloc[start+1:end+2]
     x_labels = labels[start:end+1] if labels else ids
 
-    plt.figure(figsize=(10, 5))
+    #plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(3, 5))
     print(df1['value'].iloc[start+1:end+2])
     plt.errorbar(ids, df1['value'].iloc[start+1:end+2], yerr=df1['error'].iloc[start+1:end+2],
                  fmt='o', label='AB', capsize=3, color='blue')
@@ -45,7 +46,7 @@ def plot_range(start, end, df1, df2, title,labels=None,ylim=None):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig('../Results//Crosschecks/Comparison-{}-{}_{}-{}.png'.format(start, end,ens,m), dpi=300)
+    plt.savefig('../Results//Crosschecks/Comparison-{}-{}_{}-{}-new.png'.format(start, end,ens,m), dpi=300)
     plt.close()
 
 df1["value"] = pd.to_numeric(df1["value"], errors="coerce")
@@ -55,5 +56,6 @@ df2_selected["error"] = pd.to_numeric(df2_selected["error"], errors="coerce")
 
 # === Plot in two parts ===
 #ylim=(0.8, 2.3)
-plot_range(0, 6, df1, df2_selected, "",labels=observable_names)
-plot_range(7, 21, df1, df2_selected, "",labels=observable_names)
+plot_range(0, 0, df1, df2_selected, "",labels=observable_names,ylim=(1.9, 1.95))
+#plot_range(1, 6, df1, df2_selected, "",labels=observable_names)
+#plot_range(7, 21, df1, df2_selected, "",labels=observable_names)

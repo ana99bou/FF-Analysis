@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-ens = 'C2'  # or 'M1', 'M2', etc.
-m='0.300'
+ens = 'F1S'  # or 'M1', 'M2', etc.
+m='0.259'
 
 bs2pt=pd.read_csv('../Data/{}/2pt/BsResult.csv'.format(ens), sep='\s')['EffectiveMass'].iloc[0]
 ds2pt0=pd.read_csv('../Data/{}/2pt/Ds{}Result-0.csv'.format(ens,m), sep='\s')['EffectiveMass'].iloc[0]
