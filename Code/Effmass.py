@@ -103,8 +103,8 @@ nsq = args.nsq
 cmass_index = args.cmass_index
 
 if Ensemble == 'F1S':
-    reg_low=19#18
-    reg_up=25#25
+    reg_low=18#19#18
+    reg_up=31#25
 elif Ensemble in ['M1', 'M2', 'M3']:
     reg_low=19#17#12
     reg_up=25
