@@ -1,0 +1,2 @@
+FormFactor,Lambda_GeV,Delta_X_GeV,chi2,dof,chi2_dof,p_value,c0_norm,c0_norm_err,c1_Mpi2,c1_Mpi2_err,c2_E,c2_E_err,c3_E2,c3_E2_err,c4_a2,c4_a2_err
+V,1.000000,0.050000,4.821439,15,0.321429,0.993533,-4.754000,15.939832,-0.111609,0.263703,8.000588,14.681789,-1.996080,3.357652,-1.184023,0.666309
