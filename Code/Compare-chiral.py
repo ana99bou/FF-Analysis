@@ -399,11 +399,13 @@ def plot_continuum_comparison(FF, results_dict):
                        color=colors[set_name], alpha=0.25, zorder=3)
     
     ax.set_xlabel(r'$(E_{D_s^*}/M_{B_s})^2$', fontsize=20)
+    ax.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
+             fontsize=20, color='grey', alpha=.7)
     ax.set_ylabel(f'{FF}', fontsize=20)
     #ax.set_title(f'{FF} Form Factor: Continuum Extrapolation Comparison', 
     #             fontsize=18, fontweight='bold', pad=20)
     ax.grid(True, alpha=0.3)
-    ax.legend(fontsize=12, framealpha=0.95, loc='best')
+    ax.legend(fontsize=14, framealpha=0.95, loc='best')
     ax.tick_params(labelsize=14)
     
     plt.tight_layout()
