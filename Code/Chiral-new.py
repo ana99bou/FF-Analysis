@@ -513,7 +513,7 @@ def plot_results(FF, ensemble_data, fit_result, data_dict):
     ax.set_xlabel(r'$(E_{D_s^*}/M_{B_s})^2$', fontsize=20)
     ax.set_ylabel(f'{FF}', fontsize=20)
     ax.grid(True, alpha=0.3)
-    ax.legend(fontsize=11, framealpha=0.9, loc='best', ncol=2)
+    ax.legend(fontsize=14, framealpha=0.9, loc='best', ncol=2)
     ax.tick_params(labelsize=14)
     ax.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
              fontsize=20, color='grey', alpha=.7)
