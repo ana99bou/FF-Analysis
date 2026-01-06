@@ -393,8 +393,12 @@ def plot_continuum_comparison(FF, results_dict):
         
         # Plot
         label = f"{set_name} (χ²/dof={fit_result['chi2']/fit_result['dof']:.2f}, p={fit_result['p_value']:.3f})"
+        if set_name== "With M1/M2":
+            label='Cont. Fit incl. all ensembles'
+        else:
+            label='Cont. Fit excl. M1, M2'
         ax.plot(q2_cont, y_cont, linestyle=linestyles[set_name], 
-                color=colors[set_name], linewidth=3, zorder=5)
+                color=colors[set_name], linewidth=3, zorder=5, label=label)
         ax.fill_between(q2_cont, y_cont - y_cont_std, y_cont + y_cont_std,
                        color=colors[set_name], alpha=0.25, zorder=3)
     
