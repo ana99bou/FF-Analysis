@@ -11,7 +11,7 @@ from scipy.stats import chi2 as chi2_dist
 # CONFIG
 # ============================================================
 
-active_ensembles = ["F1S", "M3", "C1", "C2"]
+active_ensembles = ["F1S","M3", "C1", "C2"]
 FF_list = ["V", "A0", "A1"]
 show_continuum = True
 
@@ -529,7 +529,7 @@ def plot_results(FF, ensemble_data, fit_result, data_dict):
 def save_fit_results(FF, fit_result, Lambda, Delta_X, filename=None):
     """Save fit results to CSV file."""
     if filename is None:
-        filename = f"{FF}-Fit-Results.csv"
+        filename = f"{FF}-Fit-Results-wom.csv"
     
     # Create results dictionary
     results = {
@@ -603,7 +603,7 @@ def main():
         save_fit_results(FF, fit_result, Lambda_fit, Delta_X_fit)
         
         fig = plot_results(FF, ensemble_data, fit_result, data_dict)
-        outname = f"{FF}-Fit-NoChiralLog.png"
+        outname = f"{FF}-Fit-NoChiralLog-wom.png"
         fig.savefig(outname, dpi=300, bbox_inches='tight')
         print(f"\nPlot saved: {outname}")
         plt.close()
