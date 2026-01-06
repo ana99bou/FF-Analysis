@@ -11,9 +11,13 @@ from scipy.stats import chi2 as chi2_dist
 # CONFIG
 # ============================================================
 
-active_ensembles = ["F1S", "M1", "M2", "M3", "C1", "C2"]
+# Two ensemble sets to compare
+ensemble_sets = {
+    "With M1/M2": ["F1S", "M1", "M2", "M3", "C1", "C2"],
+    "Without M1/M2": ["F1S", "M3", "C1", "C2"]
+}
+
 FF_list = ["V", "A0", "A1"]
-show_continuum = True
 
 # Physical constants
 M_pi_phys = 0.135  # physical pion mass in GeV
@@ -46,9 +50,9 @@ fit_inputs = {
 
 for ens, d in fit_inputs.items():
     a_inv = inv_lat_sp[ens]
-    d["DeltaMpi_phys"] = d["DeltaMpi"] * a_inv  # GeV
-    d["MpiS_phys"] = d["MpiS"] * a_inv  # GeV (simulated pion mass)
-    d["a_phys"] = 1.0 / a_inv  # GeV
+    d["DeltaMpi_phys"] = d["DeltaMpi"] * a_inv
+    d["MpiS_phys"] = d["MpiS"] * a_inv
+    d["a_phys"] = 1.0 / a_inv
 
 marker_styles = {"C1": "x", "C2": "o", "M1": "^", "M2": "s", "M3": "D", "F1S": "v"}
 
@@ -116,49 +120,14 @@ def load_renorm_factors():
     return variables
 
 # ============================================================
-# SIMPLIFIED FIT FUNCTION (NO CHIRAL LOGS)
+# FIT FUNCTION
 # ============================================================
 
 def fit_function(params, E_K, M_pi_sim, a, Lambda, Delta_X):
-    """
-    Simplified fit function WITHOUT chiral logarithms:
-    
-    f_X(M_π, E_K, a²) = [Λ / (E_K + Δ_X)] × 
-                        [c_X,0 +
-                         c_X,1 × ΔM_π²/Λ² +
-                         c_X,2 × E_K/Λ +
-                         c_X,3 × E_K²/Λ² +
-                         c_X,4 × (aΛ)²]
-    
-    Parameters:
-    -----------
-    params : array [c_X0, c_X1, c_X2, c_X3, c_X4]
-        Fit coefficients
-        c_X0: normalization
-        c_X1: analytic chiral correction (M_π² dependence)
-        c_X2: linear energy dependence
-        c_X3: quadratic energy dependence  
-        c_X4: discretization correction
-    E_K : float
-        Energy of daughter meson (Ds*) in GeV
-    M_pi_sim : float
-        Simulated pion mass in GeV
-    a : float
-        Lattice spacing in GeV^-1
-    Lambda : float
-        Scale parameter in GeV (fixed)
-    Delta_X : float
-        Pole offset in GeV (form-factor dependent)
-    """
     c_X0, c_X1, c_X2, c_X3, c_X4 = params
-    
-    # Pole structure (gives 1/E curvature)
     pole_factor = Lambda / (E_K + Delta_X)
-    
-    # ΔM_π² = (M_π^sim)² - (M_π^phys)²
     DeltaM_pi_sq = M_pi_sim**2 - M_pi_phys**2
     
-    # Polynomial expansion in dimensionless variables
     expansion = (
         c_X0 +
         c_X1 * (DeltaM_pi_sq / Lambda**2) +
@@ -171,7 +140,6 @@ def fit_function(params, E_K, M_pi_sim, a, Lambda, Delta_X):
 
 
 def evaluate_model(params, E_K_arr, M_pi_arr, a_arr, Lambda, Delta_X):
-    """Evaluate model for arrays of data."""
     return np.array([fit_function(params, E, M, a, Lambda, Delta_X)
                      for E, M, a in zip(E_K_arr, M_pi_arr, a_arr)])
 
@@ -180,8 +148,8 @@ def evaluate_model(params, E_K_arr, M_pi_arr, a_arr, Lambda, Delta_X):
 # DATA LOADING
 # ============================================================
 
-def build_jackknife_samples(FF, variables):
-    """Build jackknife samples for all ensembles."""
+def build_jackknife_samples(FF, variables, active_ensembles):
+    """Build jackknife samples for specified ensembles."""
     nsq_phys = nsq_list_for_FF(FF)
     ensemble_data = {}
     
@@ -192,7 +160,6 @@ def build_jackknife_samples(FF, variables):
         zvbb = variables.get(f"Zvbb_{ens}")
         
         if (rho is None) or (zacc is None) or (zvbb is None):
-            print(f"Warning: Missing renormalization for {ens}")
             continue
             
         prefactor = rho * np.sqrt(zacc * zvbb)
@@ -200,7 +167,6 @@ def build_jackknife_samples(FF, variables):
         m_choice = choose_m_for_ens(ens)
         path_bs = f"../Results/Crosschecks/AB/Crosscheck-excited-{ens}-{m_choice}-V-3pt.csv"
         if not os.path.exists(path_bs):
-            print(f"Warning: Missing Bs mass file for {ens}")
             continue
             
         MBs_latt = pd.read_csv(path_bs, sep="\t").iloc[0]["Value"]
@@ -209,7 +175,6 @@ def build_jackknife_samples(FF, variables):
         
         path_jk = f"../Results/{ens}/Charm/PhysResults-JK-{FF}.csv"
         if not os.path.exists(path_jk):
-            print(f"Warning: Missing jackknife file for {ens}")
             continue
             
         df_jk = pd.read_csv(path_jk)
@@ -227,18 +192,11 @@ def build_jackknife_samples(FF, variables):
                 
             jk_samples.append(prefactor * df_jk[col].to_numpy())
             
-            # Energy of Ds* in GeV
             aE = Ds_mass_phys[ens][nsq]
             E_phys = aE * a_inv
             E_K_vals.append(E_phys)
-            
-            # Also compute q² for plotting
             q2_vals.append((E_phys / MBs_phys)**2)
-            
-            # Simulated pion mass
             M_pi_vals.append(fit_inputs[ens]["MpiS_phys"])
-            
-            # Lattice spacing
             a_vals.append(fit_inputs[ens]["a_phys"])
         
         if len(jk_samples) == 0:
@@ -262,8 +220,6 @@ def create_combined_data(ensemble_data):
     jk_counts = [data['jk_samples'].shape[0] for data in ensemble_data.values()]
     N_jk_total = sum(jk_counts)
     
-    print(f"  Super-jackknife: {len(ensemble_data)} ensembles, {jk_counts} blocks, total {N_jk_total}")
-    
     E_K_all = np.zeros(n_total)
     M_pi_all = np.zeros(n_total)
     a_all = np.zeros(n_total)
@@ -273,7 +229,6 @@ def create_combined_data(ensemble_data):
     jk_combined = np.zeros((N_jk_total, n_total))
     y_central = np.zeros(n_total)
     
-    # Collect data
     idx = 0
     for ens, data in ensemble_data.items():
         n_pts = len(data['E_K'])
@@ -285,7 +240,6 @@ def create_combined_data(ensemble_data):
         y_central[idx:idx+n_pts] = np.mean(data['jk_samples'], axis=0)
         idx += n_pts
     
-    # Build super-jackknife
     jk_row = 0
     idx = 0
     for ens, data in ensemble_data.items():
@@ -322,14 +276,6 @@ def fit_with_jackknife(data_dict, Lambda, Delta_X):
     cov = (N_jk - 1) / N_jk * (diff.T @ diff)
     y_err = np.sqrt(np.diag(cov))
     
-    print(f"\n  Data summary:")
-    print(f"    Points: {len(y_mean)}")
-    print(f"    y range: [{y_mean.min():.3f}, {y_mean.max():.3f}]")
-    print(f"    E_K range: [{data_dict['E_K'].min():.3f}, {data_dict['E_K'].max():.3f}] GeV")
-    print(f"    M_π range: [{data_dict['M_pi'].min():.3f}, {data_dict['M_pi'].max():.3f}] GeV")
-    print(f"    Mean error: {y_err.mean():.4f} ({100*y_err.mean()/y_mean.mean():.1f}%)")
-    
-    # Use diagonal weights (more stable)
     weights = 1.0 / y_err
     
     def residuals(params):
@@ -337,42 +283,23 @@ def fit_with_jackknife(data_dict, Lambda, Delta_X):
                                  data_dict['a'], Lambda, Delta_X)
         return (y_mean - y_model) * weights
     
-    # Initial guess
     E_mean = np.mean(data_dict['E_K'])
     y_mean_val = np.mean(y_mean)
     c_X0_guess = y_mean_val * (E_mean + Delta_X) / Lambda
     
     p0 = np.array([c_X0_guess, 0.0, 0.0, 0.0, 0.0])
     
-    print(f"\n  Fit parameters:")
-    print(f"    Lambda = {Lambda:.3f} GeV (fixed)")
-    print(f"    Delta_X = {Delta_X:.3f} GeV (fixed)")
-    print(f"  Initial guess: c_X0={p0[0]:.3f}, c_X1={p0[1]:.3f}, c_X2={p0[2]:.3f}, c_X3={p0[3]:.3f}, c_X4={p0[4]:.3f}")
-    
     result = least_squares(residuals, p0, method='lm', ftol=1e-10, xtol=1e-10,
                           max_nfev=10000, verbose=0)
-    
-    if not result.success:
-        print(f"  WARNING: Fit did not converge properly!")
     
     params_central = result.x
     y_model = evaluate_model(params_central, data_dict['E_K'], data_dict['M_pi'],
                             data_dict['a'], Lambda, Delta_X)
     chi2_central = np.sum(((y_mean - y_model) / y_err)**2)
     
-    print(f"\n  Central fit results:")
-    print(f"    c_X,0 (norm)  = {params_central[0]:.4f}")
-    print(f"    c_X,1 (M_π²)  = {params_central[1]:.4f}")
-    print(f"    c_X,2 (E)     = {params_central[2]:.4f}")
-    print(f"    c_X,3 (E²)    = {params_central[3]:.4f}")
-    print(f"    c_X,4 (a²)    = {params_central[4]:.4f}")
-    print(f"    χ² = {chi2_central:.2f}")
-    
     # Jackknife resampling
     params_jk = np.zeros((N_jk, 5))
-    print(f"\n  Running {N_jk} jackknife fits...")
     
-    n_failed = 0
     for i in range(N_jk):
         y_jk = data_dict['jk_samples'][i]
         
@@ -388,10 +315,6 @@ def fit_with_jackknife(data_dict, Lambda, Delta_X):
             params_jk[i] = res_jk.x
         else:
             params_jk[i] = params_central
-            n_failed += 1
-    
-    if n_failed > 0:
-        print(f"  WARNING: {n_failed}/{N_jk} jackknife fits failed")
     
     params_mean = np.mean(params_jk, axis=0)
     params_err = np.sqrt((N_jk - 1) * np.mean((params_jk - params_mean)**2, axis=0))
@@ -406,82 +329,50 @@ def fit_with_jackknife(data_dict, Lambda, Delta_X):
         'chi2': chi2_central,
         'dof': dof,
         'p_value': p_value,
-        'cov': cov,
-        'y_central': y_mean,
-        'y_err': y_err,
         'Lambda': Lambda,
         'Delta_X': Delta_X
     }
 
 
-def plot_results(FF, ensemble_data, fit_result, data_dict):
+# ============================================================
+# COMPARISON PLOTTING
+# ============================================================
+
+def plot_continuum_comparison(FF, results_dict):
+    """
+    Plot continuum extrapolations from different ensemble sets.
+    
+    Args:
+        FF: Form factor name
+        results_dict: Dict with keys from ensemble_sets, values are fit_results
+    """
     fig, ax = plt.subplots(1, 1, figsize=(10, 8))
     
-    ensemble_colors = {
-        "F1S": "#43A047",
-        "M1": plt.cm.Blues(0.55),
-        "M2": plt.cm.Blues(0.70),
-        "M3": plt.cm.Blues(0.85),
-        "C1": plt.cm.Reds(0.55),
-        "C2": plt.cm.Reds(0.85),
+    colors = {
+        "With M1/M2": "#1f77b4",      # Blue
+        "Without M1/M2": "#d62728"    # Red
     }
     
-    # Plot data
-    idx = 0
-    for ens, data in ensemble_data.items():
-        n_pts = len(data['q2'])
-        x_vals = data['q2']
-        y_vals = data_dict['y_central'][idx:idx+n_pts]
-        y_err = fit_result['y_err'][idx:idx+n_pts]
-        
-        ax.errorbar(x_vals, y_vals, yerr=y_err, fmt=marker_styles[ens],
-                    color=ensemble_colors[ens], capsize=4, markersize=8,
-                    linewidth=1.5, label=f"{ens}", zorder=10)
-        idx += n_pts
+    linestyles = {
+        "With M1/M2": "-",
+        "Without M1/M2": "--"
+    }
     
-    # Plot fit curves with error bands
-    Lambda = fit_result['Lambda']
-    Delta_X = fit_result['Delta_X']
-    N_jk = fit_result['params_jk'].shape[0]
+    # Determine E_K range for plotting (use widest range from all sets)
+    E_K_min = min(results_dict[key]['E_K_range'][0] for key in results_dict)
+    E_K_max = max(results_dict[key]['E_K_range'][1] for key in results_dict)
     
-    for ens, data in ensemble_data.items():
-        E_K_min, E_K_max = data['E_K'].min(), data['E_K'].max()
-        E_K_fine = np.linspace(E_K_min, E_K_max, 100)
-        M_pi_ens = data['M_pi'][0]
-        a_ens = data['a'][0]
-        
-        # Central fit
-        y_fit = evaluate_model(fit_result['params'], E_K_fine,
-                              np.full_like(E_K_fine, M_pi_ens),
-                              np.full_like(E_K_fine, a_ens),
-                              Lambda, Delta_X)
-        
-        # Jackknife error band
-        y_jk_curves = np.zeros((N_jk, len(E_K_fine)))
-        for i in range(N_jk):
-            y_jk_curves[i] = evaluate_model(fit_result['params_jk'][i], E_K_fine,
-                                           np.full_like(E_K_fine, M_pi_ens),
-                                           np.full_like(E_K_fine, a_ens),
-                                           Lambda, Delta_X)
-        
-        y_mean = np.mean(y_jk_curves, axis=0)
-        y_std = np.sqrt((N_jk - 1) * np.mean((y_jk_curves - y_mean)**2, axis=0))
-        
-        # Convert E_K to q² for plotting
-        MBs = data['MBs']
-        q2_fine = (E_K_fine / MBs)**2
-        
-        # Plot central curve
-        ax.plot(q2_fine, y_fit, '-', color=ensemble_colors[ens],
-                linewidth=2.5, alpha=0.9, zorder=5)
-        
-        # Plot error band
-        ax.fill_between(q2_fine, y_fit - y_std, y_fit + y_std,
-                       color=ensemble_colors[ens], alpha=0.2, zorder=4)
+    # Average MBs for q² conversion
+    MBs_avg = 5.367  # GeV, approximate Bs mass
     
-    # Continuum limit with error band
-    if show_continuum:
-        E_K_cont = np.linspace(data_dict['E_K'].min(), data_dict['E_K'].max(), 200)
+    E_K_cont = np.linspace(E_K_min, E_K_max, 200)
+    q2_cont = (E_K_cont / MBs_avg)**2
+    
+    # Plot each continuum extrapolation
+    for set_name, fit_result in results_dict.items():
+        Lambda = fit_result['Lambda']
+        Delta_X = fit_result['Delta_X']
+        N_jk = fit_result['params_jk'].shape[0]
         
         # Central continuum curve
         y_cont = evaluate_model(fit_result['params'], E_K_cont,
@@ -489,7 +380,7 @@ def plot_results(FF, ensemble_data, fit_result, data_dict):
                                np.zeros_like(E_K_cont),
                                Lambda, Delta_X)
         
-        # Jackknife error band for continuum
+        # Jackknife error band
         y_cont_jk = np.zeros((N_jk, len(E_K_cont)))
         for i in range(N_jk):
             y_cont_jk[i] = evaluate_model(fit_result['params_jk'][i], E_K_cont,
@@ -500,61 +391,23 @@ def plot_results(FF, ensemble_data, fit_result, data_dict):
         y_cont_mean = np.mean(y_cont_jk, axis=0)
         y_cont_std = np.sqrt((N_jk - 1) * np.mean((y_cont_jk - y_cont_mean)**2, axis=0))
         
-        # Use average MBs for continuum curve
-        MBs_avg = np.mean([data['MBs'] for data in ensemble_data.values()])
-        q2_cont = (E_K_cont / MBs_avg)**2
-        
-        # Plot continuum curve and band
-        ax.plot(q2_cont, y_cont, 'k--', linewidth=3,
-                label='Continuum', zorder=3)
+        # Plot
+        label = f"{set_name} (χ²/dof={fit_result['chi2']/fit_result['dof']:.2f}, p={fit_result['p_value']:.3f})"
+        ax.plot(q2_cont, y_cont, linestyle=linestyles[set_name], 
+                color=colors[set_name], linewidth=3, zorder=5)
         ax.fill_between(q2_cont, y_cont - y_cont_std, y_cont + y_cont_std,
-                       color='gray', alpha=0.3, zorder=2)
+                       color=colors[set_name], alpha=0.25, zorder=3)
     
     ax.set_xlabel(r'$(E_{D_s^*}/M_{B_s})^2$', fontsize=20)
     ax.set_ylabel(f'{FF}', fontsize=20)
+    #ax.set_title(f'{FF} Form Factor: Continuum Extrapolation Comparison', 
+    #             fontsize=18, fontweight='bold', pad=20)
     ax.grid(True, alpha=0.3)
-    ax.legend(fontsize=11, framealpha=0.9, loc='best', ncol=2)
+    ax.legend(fontsize=12, framealpha=0.95, loc='best')
     ax.tick_params(labelsize=14)
-    ax.annotate(r'$\bf{preliminary}$', xy=(0.17, 0.03), xycoords='axes fraction',
-             fontsize=20, color='grey', alpha=.7)
     
     plt.tight_layout()
     return fig
-
-
-# ============================================================
-# SAVE FIT RESULTS
-# ============================================================
-
-def save_fit_results(FF, fit_result, Lambda, Delta_X, filename=None):
-    """Save fit results to CSV file."""
-    if filename is None:
-        filename = f"{FF}-Fit-Results.csv"
-    
-    # Create results dictionary
-    results = {
-        'FormFactor': [FF],
-        'Lambda_GeV': [Lambda],
-        'Delta_X_GeV': [Delta_X],
-        'chi2': [fit_result['chi2']],
-        'dof': [fit_result['dof']],
-        'chi2_dof': [fit_result['chi2'] / fit_result['dof']],
-        'p_value': [fit_result['p_value']],
-        'c0_norm': [fit_result['params'][0]],
-        'c0_norm_err': [fit_result['params_err'][0]],
-        'c1_Mpi2': [fit_result['params'][1]],
-        'c1_Mpi2_err': [fit_result['params_err'][1]],
-        'c2_E': [fit_result['params'][2]],
-        'c2_E_err': [fit_result['params_err'][2]],
-        'c3_E2': [fit_result['params'][3]],
-        'c3_E2_err': [fit_result['params_err'][3]],
-        'c4_a2': [fit_result['params'][4]],
-        'c4_a2_err': [fit_result['params_err'][4]],
-    }
-    
-    df = pd.DataFrame(results)
-    df.to_csv(filename, index=False, float_format='%.6f')
-    print(f"  Fit results saved to: {filename}")
 
 
 # ============================================================
@@ -564,49 +417,73 @@ def save_fit_results(FF, fit_result, Lambda, Delta_X, filename=None):
 def main():
     variables = load_renorm_factors()
     
-    # Form-factor-specific pole parameters for Bs → Ds*
     pole_params = {
         "V": {"Lambda": 1.0, "Delta_X": 0.04845},
         "A0": {"Lambda": 1.0, "Delta_X": 0.26209},
         "A1": {"Lambda": 1.0, "Delta_X": 0.46174},
     }
     
+    # Store results for comparison
+    all_results = {}
+    
     for FF in FF_list:
-        print(f"\n{'='*60}\nAnalyzing {FF}\n{'='*60}")
+        print(f"\n{'='*70}")
+        print(f"FORM FACTOR: {FF}")
+        print('='*70)
         
-        ensemble_data = build_jackknife_samples(FF, variables)
-        if not ensemble_data:
-            continue
-        
-        data_dict = create_combined_data(ensemble_data)
+        all_results[FF] = {}
         
         Lambda_fit = pole_params[FF]["Lambda"]
         Delta_X_fit = pole_params[FF]["Delta_X"]
         
-        print(f"\nPole parameters: Λ={Lambda_fit:.3f} GeV, Δ_X={Delta_X_fit:.3f} GeV")
+        # Fit with each ensemble set
+        for set_name, active_ensembles in ensemble_sets.items():
+            print(f"\n--- {set_name} ---")
+            print(f"Ensembles: {', '.join(active_ensembles)}")
+            
+            ensemble_data = build_jackknife_samples(FF, variables, active_ensembles)
+            if not ensemble_data:
+                print(f"  No data available")
+                continue
+            
+            data_dict = create_combined_data(ensemble_data)
+            
+            print(f"  Points: {len(data_dict['y_central'])}")
+            print(f"  Λ={Lambda_fit:.3f} GeV, Δ_X={Delta_X_fit:.3f} GeV")
+            
+            fit_result = fit_with_jackknife(data_dict, Lambda_fit, Delta_X_fit)
+            
+            print(f"  χ²/dof = {fit_result['chi2']/fit_result['dof']:.3f}")
+            print(f"  p-value = {fit_result['p_value']:.4f}")
+            print(f"  c0 = {fit_result['params'][0]:.4f} ± {fit_result['params_err'][0]:.4f}")
+            
+            # Store E_K range for plotting
+            fit_result['E_K_range'] = (data_dict['E_K'].min(), data_dict['E_K'].max())
+            
+            all_results[FF][set_name] = fit_result
         
-        fit_result = fit_with_jackknife(data_dict, Lambda_fit, Delta_X_fit)
-        
-        print(f"\n{'='*60}")
-        print(f"FINAL RESULTS FOR {FF}")
-        print(f"{'='*60}")
-        print(f"χ²/dof = {fit_result['chi2']/fit_result['dof']:.3f}")
-        print(f"p-value = {fit_result['p_value']:.4f}")
-        print(f"\nFitted parameters:")
-        print(f"  c_X,0 (norm)  = {fit_result['params'][0]:.4f} ± {fit_result['params_err'][0]:.4f}")
-        print(f"  c_X,1 (M_π²)  = {fit_result['params'][1]:.4f} ± {fit_result['params_err'][1]:.4f}")
-        print(f"  c_X,2 (E)     = {fit_result['params'][2]:.4f} ± {fit_result['params_err'][2]:.4f}")
-        print(f"  c_X,3 (E²)    = {fit_result['params'][3]:.4f} ± {fit_result['params_err'][3]:.4f}")
-        print(f"  c_X,4 (a²)    = {fit_result['params'][4]:.4f} ± {fit_result['params_err'][4]:.4f}")
-        
-        # Save fit results to CSV
-        save_fit_results(FF, fit_result, Lambda_fit, Delta_X_fit)
-        
-        fig = plot_results(FF, ensemble_data, fit_result, data_dict)
-        outname = f"{FF}-Fit-NoChiralLog-woM.png"
-        fig.savefig(outname, dpi=300, bbox_inches='tight')
-        print(f"\nPlot saved: {outname}")
-        plt.close()
+        # Create comparison plot
+        if len(all_results[FF]) == 2:
+            fig = plot_continuum_comparison(FF, all_results[FF])
+            outname = f"{FF}-Continuum-Comparison.png"
+            fig.savefig(outname, dpi=300, bbox_inches='tight')
+            print(f"\n  Comparison plot saved: {outname}")
+            plt.close()
+    
+    # Summary table
+    print(f"\n{'='*70}")
+    print("SUMMARY: Continuum Extrapolation Comparison")
+    print('='*70)
+    
+    for FF in FF_list:
+        print(f"\n{FF}:")
+        for set_name in ensemble_sets.keys():
+            if set_name in all_results[FF]:
+                res = all_results[FF][set_name]
+                c0 = res['params'][0]
+                c0_err = res['params_err'][0]
+                chi2_dof = res['chi2'] / res['dof']
+                print(f"  {set_name:20s}: c0 = {c0:.4f} ± {c0_err:.4f}  (χ²/dof = {chi2_dof:.2f})")
 
 
 if __name__ == "__main__":
